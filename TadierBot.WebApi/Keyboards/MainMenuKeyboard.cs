@@ -9,18 +9,26 @@ public static class MainMenuKeyboard
     public const string Categories = "🗂 Kategoriyalar";
     public const string Language = "🌐 Til bo'yicha tanlash";
     public const string Help = "ℹ️ Yordam";
+    public const string AdminPanel = "⚙️ Admin Panel";
 
-    public static ReplyKeyboardMarkup Create()
+    public static ReplyKeyboardMarkup Create(bool isAdmin = false)
     {
-        return new ReplyKeyboardMarkup(new[]
+        var rows = new List<KeyboardButton[]>
         {
             new[] { new KeyboardButton(Resources) },
             new[] { new KeyboardButton(Search), new KeyboardButton(Categories) },
             new[] { new KeyboardButton(Language), new KeyboardButton(Help) }
-        })
+        };
+
+        // Agar foydalanuvchi admin bo'lsa, pastiga alohida qator bo'lib Admin Panel chiqadi
+        if (isAdmin)
+        {
+            rows.Add(new[] { new KeyboardButton(AdminPanel) });
+        }
+
+        return new ReplyKeyboardMarkup(rows)
         {
             ResizeKeyboard = true
         };
     }
 }
-

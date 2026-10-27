@@ -23,7 +23,7 @@ builder.Services.AddHttpClient("telegram_bot_client")
         return new TelegramBotClient(botConfig.BotToken, httpClient);
     });
 
-// 4. MemoryCache (Keyingi FSM va kesh uchun)
+// 4. MemoryCache (FSM holatlari va kesh uchun)
 builder.Services.AddMemoryCache();
 
 // 5. Database Connection Factory (appsettings.json dagi DefaultConnection orqali)
@@ -31,6 +31,7 @@ builder.Services.AddSingleton<IDbConnectionFactory, DbConnectionFactory>();
 
 // 6. Repositories
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IAdminRepository, AdminRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IResourceRepository, ResourceRepository>();
 

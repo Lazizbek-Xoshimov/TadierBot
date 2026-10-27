@@ -14,6 +14,7 @@ public class UpdateHandlerService : IUpdateHandlerService
     private readonly IUserRepository _userRepository;
     private readonly IResourceRepository _resourceRepository;
     private readonly ICategoryRepository _categoryRepository;
+    private readonly IAdminRepository _adminRepository;
     private readonly ILogger<UpdateHandlerService> _logger;
 
     public UpdateHandlerService(
@@ -21,12 +22,14 @@ public class UpdateHandlerService : IUpdateHandlerService
         IUserRepository userRepository,
         IResourceRepository resourceRepository,
         ICategoryRepository categoryRepository,
+        IAdminRepository adminRepository,
         ILogger<UpdateHandlerService> logger)
     {
         _botClient = botClient;
         _userRepository = userRepository;
         _resourceRepository = resourceRepository;
         _categoryRepository = categoryRepository;
+        _adminRepository = adminRepository;
         _logger = logger;
     }
 
@@ -34,13 +37,21 @@ public class UpdateHandlerService : IUpdateHandlerService
     {
         try
         {
+            // 1. Callback query (Inline tugmalar bosilganda)
+            if (update.CallbackQuery is { } callbackQuery)
+            {
+                await HandleCallbackQueryAsync(callbackQuery, cancellationToken);
+                return;
+            }
+
+            // 2. Oddiy xabarlar
             if (update.Message is not { } message || message.From is null)
                 return;
 
             long telegramId = message.From.Id;
             long chatId = message.Chat.Id;
 
-            // 1. Foydalanuvchini bazada yangilash / qo'shish
+            // Foydalanuvchini bazada yangilash / qo'shish
             var user = new Models.User
             {
                 TelegramId = telegramId,
@@ -51,7 +62,7 @@ public class UpdateHandlerService : IUpdateHandlerService
 
             await _userRepository.AddOrUpdateAsync(user);
 
-            // 2. Ban tekshiruvi
+            // Ban tekshiruvi
             if (await _userRepository.IsBannedAsync(telegramId))
             {
                 await _botClient.SendMessage(
@@ -61,15 +72,23 @@ public class UpdateHandlerService : IUpdateHandlerService
                 return;
             }
 
-            // 3. Matnli xabarlarni qayta ishlash
+            // Matnli xabarlarni qayta ishlash
             if (string.IsNullOrWhiteSpace(message.Text))
                 return;
 
             string text = message.Text.Trim();
+            bool isAdmin = await _adminRepository.IsAdminAsync(telegramId);
 
             if (text == "/start")
             {
-                await HandleStartAsync(chatId, message.From.FirstName, cancellationToken);
+                await HandleStartAsync(chatId, message.From.FirstName, isAdmin, cancellationToken);
+            }
+            else if (text == MainMenuKeyboard.AdminPanel || text == "/admin")
+            {
+                if (isAdmin)
+                {
+                    await HandleAdminPanelAsync(chatId, cancellationToken);
+                }
             }
             else if (text == MainMenuKeyboard.Resources)
             {
@@ -84,7 +103,7 @@ public class UpdateHandlerService : IUpdateHandlerService
                 await _botClient.SendMessage(
                     chatId: chatId,
                     text: "ℹ️ Ushbu bot orqali siz foydali manbalar, kitoblar, darsliklar va maqolalarni topishingiz mumkin.",
-                    replyMarkup: MainMenuKeyboard.Create(),
+                    replyMarkup: MainMenuKeyboard.Create(isAdmin),
                     cancellationToken: cancellationToken);
             }
             else if (text == MainMenuKeyboard.Search || text == MainMenuKeyboard.Language)
@@ -92,7 +111,7 @@ public class UpdateHandlerService : IUpdateHandlerService
                 await _botClient.SendMessage(
                     chatId: chatId,
                     text: "⏳ Ushbu bo'lim ustida ish olib borilmoqda. Tez orada ishga tushadi!",
-                    replyMarkup: MainMenuKeyboard.Create(),
+                    replyMarkup: MainMenuKeyboard.Create(isAdmin),
                     cancellationToken: cancellationToken);
             }
             else
@@ -100,7 +119,7 @@ public class UpdateHandlerService : IUpdateHandlerService
                 await _botClient.SendMessage(
                     chatId: chatId,
                     text: "Iltimos, quyidagi menyudan birini tanlang 👇",
-                    replyMarkup: MainMenuKeyboard.Create(),
+                    replyMarkup: MainMenuKeyboard.Create(isAdmin),
                     cancellationToken: cancellationToken);
             }
         }
@@ -110,15 +129,70 @@ public class UpdateHandlerService : IUpdateHandlerService
         }
     }
 
-    private async Task HandleStartAsync(long chatId, string firstName, CancellationToken cancellationToken)
+    private async Task HandleStartAsync(long chatId, string firstName, bool isAdmin, CancellationToken cancellationToken)
     {
         string welcomeMessage = $"Assalomu alaykum, {firstName}!\nQuyidagi bo'limlardan birini tanlang 👇";
 
         await _botClient.SendMessage(
             chatId: chatId,
             text: welcomeMessage,
-            replyMarkup: MainMenuKeyboard.Create(),
+            replyMarkup: MainMenuKeyboard.Create(isAdmin),
             cancellationToken: cancellationToken);
+    }
+
+    private async Task HandleAdminPanelAsync(long chatId, CancellationToken cancellationToken)
+    {
+        string text = "🔧 <b>Admin Panel</b>\n\nQuyidagi amallardan birini tanlang:";
+
+        await _botClient.SendMessage(
+            chatId: chatId,
+            text: text,
+            parseMode: ParseMode.Html,
+            replyMarkup: AdminMenuKeyboard.Create(),
+            cancellationToken: cancellationToken);
+    }
+
+    private async Task HandleCallbackQueryAsync(CallbackQuery callbackQuery, CancellationToken cancellationToken)
+    {
+        if (callbackQuery.Message is null)
+            return;
+
+        long telegramId = callbackQuery.From.Id;
+        bool isAdmin = await _adminRepository.IsAdminAsync(telegramId);
+
+        // Faqat admin ruxsati bo'lsa
+        if (!isAdmin)
+        {
+            await _botClient.AnswerCallbackQuery(
+                callbackQueryId: callbackQuery.Id,
+                text: "Sizda admin huquqi yo'q!",
+                showAlert: true,
+                cancellationToken: cancellationToken);
+            return;
+        }
+
+        string action = callbackQuery.Data ?? string.Empty;
+
+        // Tugma bosilgandagi toast xabari
+        await _botClient.AnswerCallbackQuery(
+            callbackQueryId: callbackQuery.Id,
+            cancellationToken: cancellationToken);
+
+        if (action == "admin_add_resource")
+        {
+            await _botClient.SendMessage(
+                chatId: callbackQuery.Message.Chat.Id,
+                text: "📝 <b>1. Manba nomi kiriting:</b>",
+                parseMode: ParseMode.Html,
+                cancellationToken: cancellationToken);
+        }
+        else
+        {
+            await _botClient.SendMessage(
+                chatId: callbackQuery.Message.Chat.Id,
+                text: "⏳ Ushbu admin bo'limi keyingi qadamda to'liq ulanadi.",
+                cancellationToken: cancellationToken);
+        }
     }
 
     private async Task HandleLatestResourcesAsync(long chatId, CancellationToken cancellationToken)
@@ -130,7 +204,6 @@ public class UpdateHandlerService : IUpdateHandlerService
             await _botClient.SendMessage(
                 chatId: chatId,
                 text: "Hozircha biror manba qo'shilmagan. Tez orada yangi manbalar joylanadi!",
-                replyMarkup: MainMenuKeyboard.Create(),
                 cancellationToken: cancellationToken);
             return;
         }
@@ -152,7 +225,6 @@ public class UpdateHandlerService : IUpdateHandlerService
                 text: sb.ToString(),
                 cancellationToken: cancellationToken);
 
-            // Ko'rishlar sonini oshirib qo'yamiz
             await _resourceRepository.IncrementViewsCountAsync(item.Id);
         }
     }
@@ -166,7 +238,6 @@ public class UpdateHandlerService : IUpdateHandlerService
             await _botClient.SendMessage(
                 chatId: chatId,
                 text: "Hozircha kategoriyalar mavjud emas.",
-                replyMarkup: MainMenuKeyboard.Create(),
                 cancellationToken: cancellationToken);
             return;
         }
@@ -187,8 +258,6 @@ public class UpdateHandlerService : IUpdateHandlerService
             chatId: chatId,
             text: sb.ToString(),
             parseMode: ParseMode.Html,
-            replyMarkup: MainMenuKeyboard.Create(),
             cancellationToken: cancellationToken);
     }
 }
-
