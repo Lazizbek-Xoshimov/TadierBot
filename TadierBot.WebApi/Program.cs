@@ -35,7 +35,8 @@ builder.Services.AddScoped<IAdminRepository, AdminRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IResourceRepository, ResourceRepository>();
 
-// 7. Telegram Services
+// 7. Services
+builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<IUpdateHandlerService, UpdateHandlerService>();
 
 var app = builder.Build();
