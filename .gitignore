@@ -1,0 +1,22 @@
+## Visual Studio / .NET .gitignore
+
+# Build results
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio cache and settings
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider / JetBrains
+.idea/
+*.DotSettings.user
+
+# OS generated files
+.DS_Store
+Thumbs.db
