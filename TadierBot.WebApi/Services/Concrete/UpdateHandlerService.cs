@@ -18,6 +18,7 @@ public class UpdateHandlerService : IUpdateHandlerService
     private readonly IAdminRepository _adminRepository;
     private readonly IAdminService _adminService;
     private readonly IResourceService _resourceService;
+    private readonly IBroadcastService _broadcastService;
     private readonly ILogger<UpdateHandlerService> _logger;
 
     public UpdateHandlerService(
@@ -28,6 +29,7 @@ public class UpdateHandlerService : IUpdateHandlerService
         IAdminRepository adminRepository,
         IAdminService adminService,
         IResourceService resourceService,
+        IBroadcastService broadcastService,
         ILogger<UpdateHandlerService> logger)
     {
         _botClient = botClient;
@@ -37,6 +39,7 @@ public class UpdateHandlerService : IUpdateHandlerService
         _adminRepository = adminRepository;
         _adminService = adminService;
         _resourceService = resourceService;
+        _broadcastService = broadcastService;
         _logger = logger;
     }
 
@@ -89,11 +92,25 @@ public class UpdateHandlerService : IUpdateHandlerService
                 return;
             }
 
+            bool isAdmin = await _adminRepository.IsAdminAsync(telegramId);
+
+            // C. Agar admin e'lon yuborish holatida bo'lsa (matn, rasm, video, fayl qabul qilishi uchun Text tekshiruvidan oldin)
+            if (isAdmin && _broadcastService.IsAdminBroadcasting(telegramId))
+            {
+                if (message.Text?.Trim() == "/cancel")
+                {
+                    await _broadcastService.CancelBroadcastAsync(chatId, telegramId, cancellationToken);
+                    return;
+                }
+
+                await _broadcastService.HandleIncomingMessageAsync(message, cancellationToken);
+                return;
+            }
+
             if (string.IsNullOrWhiteSpace(message.Text))
                 return;
 
             string text = message.Text.Trim();
-            bool isAdmin = await _adminRepository.IsAdminAsync(telegramId);
 
             // A. Agar admin manba qo'shish holatida bo'lsa
             if (isAdmin && _resourceService.IsAdminAddingResource(telegramId))

@@ -117,5 +117,18 @@ public class UserRepository : IUserRepository
             """;
         return await connection.ExecuteScalarAsync<bool>(sql, new { UserId = userId });
     }
+
+    public async Task<IReadOnlyList<long>> GetActiveUserTelegramIdsAsync(long excludeTelegramId)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        const string sql = """
+            SELECT TelegramId 
+            FROM Users 
+            WHERE TelegramId != @ExcludeTelegramId 
+              AND IsBanned = 0;
+            """;
+        var result = await connection.QueryAsync<long>(sql, new { ExcludeTelegramId = excludeTelegramId });
+        return result.ToList();
+    }
 }
 

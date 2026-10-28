@@ -13,5 +13,6 @@ public interface IUserRepository
     Task<(int TotalUsers, int TodayActiveUsers, int BannedUsers)> GetUserCountsAsync();
     Task<PagedResult<User>> GetPagedUsersAsync(int pageNumber, int pageSize = 5);
     Task<bool> ToggleBanAsync(int userId);
+    Task<IReadOnlyList<long>> GetActiveUserTelegramIdsAsync(long excludeTelegramId);
 }
 

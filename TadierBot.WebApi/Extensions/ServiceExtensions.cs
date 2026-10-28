@@ -23,6 +23,7 @@ public static class ServiceExtensions
         // 3. Services
         services.AddScoped<IResourceService, ResourceService>();
         services.AddScoped<IStatisticsService, StatisticsService>();
+        services.AddScoped<IBroadcastService, BroadcastService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IAdminService, AdminService>();
         services.AddScoped<IUpdateHandlerService, UpdateHandlerService>();

@@ -13,6 +13,7 @@ public class AdminService : IAdminService
     private readonly IResourceService _resourceService;
     private readonly IStatisticsService _statisticsService;
     private readonly IUserService _userService;
+    private readonly IBroadcastService _broadcastService;
     private readonly ILogger<AdminService> _logger;
 
     public AdminService(
@@ -21,6 +22,7 @@ public class AdminService : IAdminService
         IResourceService resourceService,
         IStatisticsService statisticsService,
         IUserService userService,
+        IBroadcastService broadcastService,
         ILogger<AdminService> logger)
     {
         _botClient = botClient;
@@ -28,6 +30,7 @@ public class AdminService : IAdminService
         _resourceService = resourceService;
         _statisticsService = statisticsService;
         _userService = userService;
+        _broadcastService = broadcastService;
         _logger = logger;
     }
 
@@ -92,9 +95,16 @@ public class AdminService : IAdminService
             return;
         }
 
+        // 3. E'lon yuborish callbacklari (bc_ prefikslisi)
+        if (action.StartsWith("bc_"))
+        {
+            await _broadcastService.HandleCallbackAsync(callbackQuery, cancellationToken);
+            return;
+        }
+
         await _botClient.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: cancellationToken);
 
-        // 3. Admin panel asosiy menyu amallari
+        // 4. Admin panel asosiy menyu amallari
         if (action == "admin_add_resource")
         {
             await _resourceService.StartAddResourceAsync(chatId, telegramId, cancellationToken);
@@ -110,6 +120,10 @@ public class AdminService : IAdminService
         else if (action == "admin_users")
         {
             await _userService.ShowPagedUsersAsync(chatId, messageId, 1, cancellationToken);
+        }
+        else if (action == "admin_broadcast")
+        {
+            await _broadcastService.StartBroadcastAsync(chatId, telegramId, cancellationToken);
         }
         else
         {
