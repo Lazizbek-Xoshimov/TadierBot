@@ -56,7 +56,7 @@ public class UpdateHandlerService : IUpdateHandlerService
                     return;
                 }
 
-                // Qolgan callbacklar (admin yoki manba qo'shish) AdminService ga uzatiladi
+                // Qolgan callbacklar (admin yoki manba qo'shish/boshqarish) AdminService ga uzatiladi
                 await _adminService.HandleCallbackAsync(callbackQuery, cancellationToken);
                 return;
             }
@@ -95,7 +95,7 @@ public class UpdateHandlerService : IUpdateHandlerService
             string text = message.Text.Trim();
             bool isAdmin = await _adminRepository.IsAdminAsync(telegramId);
 
-            // Agar admin manba qo'shish holatida bo'lsa (Nom, Tavsif, Link kiritayotgan bo'lsa)
+            // A. Agar admin manba qo'shish holatida bo'lsa
             if (isAdmin && _resourceService.IsAdminAddingResource(telegramId))
             {
                 if (text == "/cancel")
@@ -105,6 +105,19 @@ public class UpdateHandlerService : IUpdateHandlerService
                 }
 
                 await _resourceService.HandleTextInputAsync(chatId, telegramId, text, cancellationToken);
+                return;
+            }
+
+            // B. Agar admin manbani tahrirlash holatida bo'lsa
+            if (isAdmin && _resourceService.IsAdminEditingResource(telegramId))
+            {
+                if (text == "/cancel")
+                {
+                    await _resourceService.CancelEditAsync(chatId, telegramId, cancellationToken);
+                    return;
+                }
+
+                await _resourceService.HandleAdminEditTextInputAsync(chatId, telegramId, text, cancellationToken);
                 return;
             }
 
@@ -126,7 +139,6 @@ public class UpdateHandlerService : IUpdateHandlerService
             }
             else if (text == MainMenuKeyboard.Resources)
             {
-                // Pagination orqali 1-sahifani chiqarish
                 await _resourceService.ShowPagedResourcesAsync(chatId, null, 1, cancellationToken);
             }
             else if (text == MainMenuKeyboard.Categories)

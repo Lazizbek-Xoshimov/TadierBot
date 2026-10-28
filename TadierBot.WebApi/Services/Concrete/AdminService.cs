@@ -44,6 +44,7 @@ public class AdminService : IAdminService
 
         long telegramId = callbackQuery.From.Id;
         long chatId = callbackQuery.Message.Chat.Id;
+        int messageId = callbackQuery.Message.MessageId;
         bool isAdmin = await _adminRepository.IsAdminAsync(telegramId);
 
         if (!isAdmin)
@@ -58,9 +59,22 @@ public class AdminService : IAdminService
 
         string action = callbackQuery.Data ?? string.Empty;
 
-        // 1. Manba qo'shishga tegishli callbacklar (res_ prefiksi bilan kelganlar)
-        if (action.StartsWith("res_"))
+        // 1. Manba qo'shish va Manbalarni boshqarish callbacklari (res_ va adm_ prefikslilari)
+        if (action.StartsWith("res_") || action.StartsWith("adm_"))
         {
+            if (action == "adm_back_to_menu")
+            {
+                await _botClient.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: cancellationToken);
+                await _botClient.EditMessageText(
+                    chatId: chatId,
+                    messageId: messageId,
+                    text: "🔧 <b>Admin Panel</b>\n\nQuyidagi amallardan birini tanlang:",
+                    parseMode: ParseMode.Html,
+                    replyMarkup: AdminMenuKeyboard.Create(),
+                    cancellationToken: cancellationToken);
+                return;
+            }
+
             await _resourceService.HandleCallbackAsync(callbackQuery, cancellationToken);
             return;
         }
@@ -71,6 +85,10 @@ public class AdminService : IAdminService
         if (action == "admin_add_resource")
         {
             await _resourceService.StartAddResourceAsync(chatId, telegramId, cancellationToken);
+        }
+        else if (action == "admin_manage_resources")
+        {
+            await _resourceService.ShowAdminPagedResourcesAsync(chatId, messageId, 1, cancellationToken);
         }
         else
         {
