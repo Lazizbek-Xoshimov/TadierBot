@@ -18,9 +18,12 @@ public static class ServiceExtensions
         services.AddScoped<IAdminRepository, AdminRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<IResourceRepository, ResourceRepository>();
+        services.AddScoped<IStatisticsRepository, StatisticsRepository>();
 
         // 3. Services
         services.AddScoped<IResourceService, ResourceService>();
+        services.AddScoped<IStatisticsService, StatisticsService>();
+        services.AddScoped<IUserService, UserService>();
         services.AddScoped<IAdminService, AdminService>();
         services.AddScoped<IUpdateHandlerService, UpdateHandlerService>();
 

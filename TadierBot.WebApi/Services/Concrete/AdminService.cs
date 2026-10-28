@@ -11,17 +11,23 @@ public class AdminService : IAdminService
     private readonly ITelegramBotClient _botClient;
     private readonly IAdminRepository _adminRepository;
     private readonly IResourceService _resourceService;
+    private readonly IStatisticsService _statisticsService;
+    private readonly IUserService _userService;
     private readonly ILogger<AdminService> _logger;
 
     public AdminService(
         ITelegramBotClient botClient,
         IAdminRepository adminRepository,
         IResourceService resourceService,
+        IStatisticsService statisticsService,
+        IUserService userService,
         ILogger<AdminService> logger)
     {
         _botClient = botClient;
         _adminRepository = adminRepository;
         _resourceService = resourceService;
+        _statisticsService = statisticsService;
+        _userService = userService;
         _logger = logger;
     }
 
@@ -79,9 +85,16 @@ public class AdminService : IAdminService
             return;
         }
 
+        // 2. Foydalanuvchilar boshqaruvi callbacklari (usr_ prefikslisi)
+        if (action.StartsWith("usr_"))
+        {
+            await _userService.HandleCallbackAsync(callbackQuery, cancellationToken);
+            return;
+        }
+
         await _botClient.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: cancellationToken);
 
-        // 2. Admin panel asosiy menyu amallari
+        // 3. Admin panel asosiy menyu amallari
         if (action == "admin_add_resource")
         {
             await _resourceService.StartAddResourceAsync(chatId, telegramId, cancellationToken);
@@ -89,6 +102,14 @@ public class AdminService : IAdminService
         else if (action == "admin_manage_resources")
         {
             await _resourceService.ShowAdminPagedResourcesAsync(chatId, messageId, 1, cancellationToken);
+        }
+        else if (action == "admin_statistics")
+        {
+            await _statisticsService.ShowStatisticsAsync(chatId, messageId, cancellationToken);
+        }
+        else if (action == "admin_users")
+        {
+            await _userService.ShowPagedUsersAsync(chatId, messageId, 1, cancellationToken);
         }
         else
         {
