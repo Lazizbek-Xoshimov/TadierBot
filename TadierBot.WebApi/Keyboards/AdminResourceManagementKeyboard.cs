@@ -1,5 +1,5 @@
 using Telegram.Bot.Types.ReplyMarkups;
-using TadierBot.WebApi.Common;
+using TadierBot.WebApi.Common.Constants;
 using TadierBot.WebApi.Models;
 
 namespace TadierBot.WebApi.Keyboards;

@@ -2,7 +2,7 @@ using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 
-namespace TadierBot.WebApi.Common;
+namespace TadierBot.WebApi.Extensions;
 
 public static class TelegramBotExtensions
 {

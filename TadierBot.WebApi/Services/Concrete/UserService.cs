@@ -4,6 +4,8 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using TadierBot.WebApi.Common;
+using TadierBot.WebApi.Extensions;
+using TadierBot.WebApi.Helpers;
 using TadierBot.WebApi.Keyboards;
 using TadierBot.WebApi.Repositories.Concrete;
 
@@ -104,8 +106,8 @@ public class UserService : IUserService
         {
             sb.AppendLine("• <b>Roli:</b> 🛡 Admin");
         }
-        sb.AppendLine($"• <b>Qo'shilgan:</b> {user.CreatedAt.AddHours(5):dd.MM.yyyy HH:mm}");
-        sb.AppendLine($"• <b>So'nggi faollik:</b> {user.LastActiveAt.AddHours(5):dd.MM.yyyy HH:mm}");
+        sb.AppendLine($"• <b>Qo'shilgan:</b> {user.CreatedAt.ToTashkentString()}");
+        sb.AppendLine($"• <b>So'nggi faollik:</b> {user.LastActiveAt.ToTashkentString()}");
 
         var keyboard = UserManagementKeyboard.CreateDetails(user, returnPage, isTargetAdmin);
 

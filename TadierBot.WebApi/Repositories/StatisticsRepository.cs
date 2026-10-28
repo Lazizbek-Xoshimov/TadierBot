@@ -20,7 +20,7 @@ public class StatisticsRepository : IStatisticsRepository
         const string sql = """
             -- 1. Foydalanuvchilar
             SELECT COUNT(1) FROM Users;
-            SELECT COUNT(1) FROM Users WHERE LastActiveAt >= CAST(SYSUTCDATETIME() AS DATE);
+            SELECT COUNT(1) FROM Users WHERE DATEADD(hour, 5, LastActiveAt) >= CAST(DATEADD(hour, 5, SYSUTCDATETIME()) AS DATE);
             SELECT COUNT(1) FROM Users WHERE IsBanned = 1;
 
             -- 2. Manbalar

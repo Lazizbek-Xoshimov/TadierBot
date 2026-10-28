@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace TadierBot.WebApi.Common;
+namespace TadierBot.WebApi.Helpers;
 
 public static class TelegramLinkHelper
 {

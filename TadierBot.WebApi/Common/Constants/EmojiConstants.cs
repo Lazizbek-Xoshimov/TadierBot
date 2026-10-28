@@ -1,4 +1,4 @@
-namespace TadierBot.WebApi.Common;
+namespace TadierBot.WebApi.Common.Constants;
 
 public static class EmojiConstants
 {

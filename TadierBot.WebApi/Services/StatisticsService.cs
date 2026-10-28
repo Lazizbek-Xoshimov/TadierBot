@@ -3,6 +3,8 @@ using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using TadierBot.WebApi.Common;
+using TadierBot.WebApi.Extensions;
+using TadierBot.WebApi.Helpers;
 using TadierBot.WebApi.Repositories;
 
 namespace TadierBot.WebApi.Services;
@@ -28,7 +30,7 @@ public class StatisticsService : IStatisticsService
         var stats = await _statisticsRepository.GetStatisticsAsync();
 
         var sb = new StringBuilder();
-        sb.AppendLine("📊 <b>Bot Statistikasi:</b>\n");
+        sb.AppendLine($"📊 <b>Bot Statistikasi</b> <i>({DateTime.UtcNow.ToTashkentString()} holatiga)</i>:\n");
 
         sb.AppendLine("👥 <b>Foydalanuvchilar:</b>");
         sb.AppendLine($"• Jami: <b>{stats.TotalUsers}</b> ta");

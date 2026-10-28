@@ -6,6 +6,8 @@ using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using TadierBot.WebApi.Common;
 using TadierBot.WebApi.DTOs;
+using TadierBot.WebApi.Extensions;
+using TadierBot.WebApi.Helpers;
 using TadierBot.WebApi.Keyboards;
 using TadierBot.WebApi.Models;
 using TadierBot.WebApi.Repositories;
@@ -668,6 +670,11 @@ public class ResourceService : IResourceService
         sb.AppendLine($"🌐 <b>Tili:</b> {resource.Language}");
         sb.AppendLine($"👁 <b>Ko'rishlar soni:</b> {resource.ViewsCount} ta");
         sb.AppendLine($"🔗 <b>Havolasi:</b> {resource.Url}");
+        sb.AppendLine($"📅 <b>Yuklangan:</b> {resource.CreatedAt.ToTashkentString()}");
+        if (resource.UpdatedAt.HasValue)
+        {
+            sb.AppendLine($"🔄 <b>Tahrirlangan:</b> {resource.UpdatedAt.ToTashkentString()}");
+        }
 
         var keyboard = AdminResourceManagementKeyboard.CreateActions(resourceId, returnPage);
 

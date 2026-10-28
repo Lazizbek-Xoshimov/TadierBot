@@ -73,7 +73,7 @@ public class UserRepository : IUserRepository
         const string sql = """
             SELECT 
                 COUNT(1) AS TotalUsers,
-                COUNT(CASE WHEN LastActiveAt >= CAST(SYSUTCDATETIME() AS DATE) THEN 1 END) AS TodayActiveUsers,
+                COUNT(CASE WHEN DATEADD(hour, 5, LastActiveAt) >= CAST(DATEADD(hour, 5, SYSUTCDATETIME()) AS DATE) THEN 1 END) AS TodayActiveUsers,
                 COUNT(CASE WHEN IsBanned = 1 THEN 1 END) AS BannedUsers
             FROM Users;
             """;
