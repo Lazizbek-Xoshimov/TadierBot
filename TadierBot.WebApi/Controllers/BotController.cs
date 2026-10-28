@@ -3,7 +3,7 @@ using Microsoft.Extensions.Options;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using TadierBot.WebApi.Configurations;
-using TadierBot.WebApi.Services;
+using TadierBot.WebApi.Services.Concrete;
 
 namespace TadierBot.WebApi.Controllers;
 
@@ -76,4 +76,3 @@ public class BotController : ControllerBase
         return Ok(info);
     }
 }
-

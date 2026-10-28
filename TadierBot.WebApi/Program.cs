@@ -1,9 +1,7 @@
 using Microsoft.Extensions.Options;
 using Telegram.Bot;
 using TadierBot.WebApi.Configurations;
-using TadierBot.WebApi.Data;
-using TadierBot.WebApi.Repositories;
-using TadierBot.WebApi.Services;
+using TadierBot.WebApi.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,21 +21,11 @@ builder.Services.AddHttpClient("telegram_bot_client")
         return new TelegramBotClient(botConfig.BotToken, httpClient);
     });
 
-// 4. MemoryCache (FSM holatlari va kesh uchun)
+// 4. MemoryCache
 builder.Services.AddMemoryCache();
 
-// 5. Database Connection Factory (appsettings.json dagi DefaultConnection orqali)
-builder.Services.AddSingleton<IDbConnectionFactory, DbConnectionFactory>();
-
-// 6. Repositories
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IAdminRepository, AdminRepository>();
-builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
-builder.Services.AddScoped<IResourceRepository, ResourceRepository>();
-
-// 7. Services
-builder.Services.AddScoped<IAdminService, AdminService>();
-builder.Services.AddScoped<IUpdateHandlerService, UpdateHandlerService>();
+// 5. Application Services (Database, Repositories va Services)
+builder.Services.AddApplicationServices();
 
 var app = builder.Build();
 

@@ -1,6 +1,6 @@
 using Telegram.Bot.Types.ReplyMarkups;
 
-namespace TadierBot.WebApi.Keyboards;
+namespace TadierBot.WebApi.Keyboards.MainKeyboards;
 
 public static class MainMenuKeyboard
 {
@@ -20,7 +20,6 @@ public static class MainMenuKeyboard
             new[] { new KeyboardButton(Language), new KeyboardButton(Help) }
         };
 
-        // Agar foydalanuvchi admin bo'lsa, pastiga alohida qator bo'lib Admin Panel chiqadi
         if (isAdmin)
         {
             rows.Add(new[] { new KeyboardButton(AdminPanel) });
@@ -32,3 +31,4 @@ public static class MainMenuKeyboard
         };
     }
 }
+

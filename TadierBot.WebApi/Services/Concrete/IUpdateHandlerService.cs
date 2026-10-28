@@ -1,6 +1,6 @@
 using Telegram.Bot.Types;
 
-namespace TadierBot.WebApi.Services;
+namespace TadierBot.WebApi.Services.Concrete;
 
 public interface IUpdateHandlerService
 {

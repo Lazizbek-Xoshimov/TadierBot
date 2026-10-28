@@ -2,11 +2,12 @@ using System.Text;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using TadierBot.WebApi.Keyboards;
+using TadierBot.WebApi.Keyboards.MainKeyboards;
 using TadierBot.WebApi.Models;
 using TadierBot.WebApi.Repositories;
+using TadierBot.WebApi.Repositories.Concrete;
 
-namespace TadierBot.WebApi.Services;
+namespace TadierBot.WebApi.Services.Concrete;
 
 public class UpdateHandlerService : IUpdateHandlerService
 {
@@ -16,6 +17,7 @@ public class UpdateHandlerService : IUpdateHandlerService
     private readonly ICategoryRepository _categoryRepository;
     private readonly IAdminRepository _adminRepository;
     private readonly IAdminService _adminService;
+    private readonly IResourceService _resourceService;
     private readonly ILogger<UpdateHandlerService> _logger;
 
     public UpdateHandlerService(
@@ -25,6 +27,7 @@ public class UpdateHandlerService : IUpdateHandlerService
         ICategoryRepository categoryRepository,
         IAdminRepository adminRepository,
         IAdminService adminService,
+        IResourceService resourceService,
         ILogger<UpdateHandlerService> logger)
     {
         _botClient = botClient;
@@ -33,6 +36,7 @@ public class UpdateHandlerService : IUpdateHandlerService
         _categoryRepository = categoryRepository;
         _adminRepository = adminRepository;
         _adminService = adminService;
+        _resourceService = resourceService;
         _logger = logger;
     }
 
@@ -40,9 +44,19 @@ public class UpdateHandlerService : IUpdateHandlerService
     {
         try
         {
-            // 1. Inline tugmalar (Callback) bosilganda -> AdminService ga yo'naltiriladi
+            // 1. Inline tugmalar (Callback) bosilganda
             if (update.CallbackQuery is { } callbackQuery)
             {
+                string data = callbackQuery.Data ?? string.Empty;
+
+                // Foydalanuvchi pagination yoki manbani ko'rish callbacklari
+                if (data.StartsWith("res_page_") || data.StartsWith("res_view_") || data == "res_noop")
+                {
+                    await _resourceService.HandleCallbackAsync(callbackQuery, cancellationToken);
+                    return;
+                }
+
+                // Qolgan callbacklar (admin yoki manba qo'shish) AdminService ga uzatiladi
                 await _adminService.HandleCallbackAsync(callbackQuery, cancellationToken);
                 return;
             }
@@ -81,6 +95,19 @@ public class UpdateHandlerService : IUpdateHandlerService
             string text = message.Text.Trim();
             bool isAdmin = await _adminRepository.IsAdminAsync(telegramId);
 
+            // Agar admin manba qo'shish holatida bo'lsa (Nom, Tavsif, Link kiritayotgan bo'lsa)
+            if (isAdmin && _resourceService.IsAdminAddingResource(telegramId))
+            {
+                if (text == "/cancel")
+                {
+                    await _resourceService.CancelAddResourceAsync(chatId, telegramId, cancellationToken);
+                    return;
+                }
+
+                await _resourceService.HandleTextInputAsync(chatId, telegramId, text, cancellationToken);
+                return;
+            }
+
             // 3. Routing (Komandalar va menyu tugmalarini yo'naltirish)
             if (text == "/start")
             {
@@ -99,7 +126,8 @@ public class UpdateHandlerService : IUpdateHandlerService
             }
             else if (text == MainMenuKeyboard.Resources)
             {
-                await HandleLatestResourcesAsync(chatId, cancellationToken);
+                // Pagination orqali 1-sahifani chiqarish
+                await _resourceService.ShowPagedResourcesAsync(chatId, null, 1, cancellationToken);
             }
             else if (text == MainMenuKeyboard.Categories)
             {
@@ -141,9 +169,6 @@ public class UpdateHandlerService : IUpdateHandlerService
 
     private async Task HandleHelpAsync(long chatId, bool isAdmin, CancellationToken cancellationToken)
     {
-        // Kelajakda ushbu joyga video yo'riqnoma qo'shish juda oson:
-        // await _botClient.SendVideo(chatId: chatId, video: InputFile.FromUri("video_link"), caption: "...", ...);
-
         string helpText = """
             ℹ️ <b>Botdan foydalanish bo'yicha yo'riqnoma:</b>
 
@@ -161,40 +186,6 @@ public class UpdateHandlerService : IUpdateHandlerService
             parseMode: ParseMode.Html,
             replyMarkup: MainMenuKeyboard.Create(isAdmin),
             cancellationToken: cancellationToken);
-    }
-
-    private async Task HandleLatestResourcesAsync(long chatId, CancellationToken cancellationToken)
-    {
-        var resources = (await _resourceRepository.GetLatestAsync(5)).ToList();
-
-        if (!resources.Any())
-        {
-            await _botClient.SendMessage(
-                chatId: chatId,
-                text: "Hozircha biror manba qo'shilmagan. Tez orada yangi manbalar joylanadi!",
-                cancellationToken: cancellationToken);
-            return;
-        }
-
-        foreach (var item in resources)
-        {
-            var sb = new StringBuilder();
-            sb.AppendLine($"📘 {item.Title}");
-            
-            if (!string.IsNullOrWhiteSpace(item.Description))
-                sb.AppendLine($"📄 Tavsif: {item.Description}");
-
-            sb.AppendLine($"🗂 Kategoriya: {item.CategoryName ?? "Umumiy"}");
-            sb.AppendLine($"🌐 Til: {item.Language}");
-            sb.AppendLine($"🔗 {item.Url}");
-
-            await _botClient.SendMessage(
-                chatId: chatId,
-                text: sb.ToString(),
-                cancellationToken: cancellationToken);
-
-            await _resourceRepository.IncrementViewsCountAsync(item.Id);
-        }
     }
 
     private async Task HandleCategoriesAsync(long chatId, CancellationToken cancellationToken)

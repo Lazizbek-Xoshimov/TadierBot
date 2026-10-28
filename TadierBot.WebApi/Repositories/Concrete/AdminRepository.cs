@@ -2,7 +2,7 @@ using Dapper;
 using TadierBot.WebApi.Data;
 using TadierBot.WebApi.Models;
 
-namespace TadierBot.WebApi.Repositories;
+namespace TadierBot.WebApi.Repositories.Concrete;
 
 public class AdminRepository : IAdminRepository
 {

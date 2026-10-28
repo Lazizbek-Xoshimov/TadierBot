@@ -1,4 +1,5 @@
 using Dapper;
+using TadierBot.WebApi.Common;
 using TadierBot.WebApi.Data;
 using TadierBot.WebApi.Models;
 
@@ -11,6 +12,52 @@ public class ResourceRepository : IResourceRepository
     public ResourceRepository(IDbConnectionFactory connectionFactory)
     {
         _connectionFactory = connectionFactory;
+    }
+
+    public async Task<int> AddAsync(Resource resource)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        const string sql = """
+            INSERT INTO Resources 
+                (Title, Description, Url, Type, Language, CategoryId, AddedByAdminId, TelegramChannelId, MessageId, ViewsCount, CreatedAt)
+            OUTPUT INSERTED.Id
+            VALUES 
+                (@Title, @Description, @Url, @Type, @Language, @CategoryId, @AddedByAdminId, @TelegramChannelId, @MessageId, 0, SYSUTCDATETIME());
+            """;
+
+        return await connection.ExecuteScalarAsync<int>(sql, resource);
+    }
+
+    public async Task<PagedResult<Resource>> GetPagedAsync(int pageNumber, int pageSize = 5)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        pageNumber = Math.Max(pageNumber, 1);
+        int offset = (pageNumber - 1) * pageSize;
+
+        const string countSql = "SELECT COUNT(1) FROM Resources";
+        int totalCount = await connection.ExecuteScalarAsync<int>(countSql);
+
+        const string itemsSql = """
+            SELECT 
+                r.Id, r.Title, r.Description, r.Url, r.Type, r.Language, 
+                r.CategoryId, r.AddedByAdminId, r.TelegramChannelId, 
+                r.MessageId, r.ViewsCount, r.CreatedAt, r.UpdatedAt,
+                c.Name AS CategoryName
+            FROM Resources r
+            INNER JOIN Categories c ON r.CategoryId = c.Id
+            ORDER BY r.CreatedAt DESC
+            OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+            """;
+
+        var items = await connection.QueryAsync<Resource>(itemsSql, new { Offset = offset, PageSize = pageSize });
+
+        return new PagedResult<Resource>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
     }
 
     public async Task<IEnumerable<Resource>> GetLatestAsync(int count = 5)
@@ -72,4 +119,3 @@ public class ResourceRepository : IResourceRepository
         await connection.ExecuteAsync(sql, new { Id = resourceId });
     }
 }
-

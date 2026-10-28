@@ -1,6 +1,6 @@
 using Telegram.Bot.Types.ReplyMarkups;
 
-namespace TadierBot.WebApi.Keyboards;
+namespace TadierBot.WebApi.Keyboards.MainKeyboards;
 
 public static class AdminMenuKeyboard
 {

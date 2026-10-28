@@ -1,6 +1,6 @@
 using TadierBot.WebApi.Models;
 
-namespace TadierBot.WebApi.Repositories;
+namespace TadierBot.WebApi.Repositories.Concrete;
 
 public interface IUserRepository
 {
