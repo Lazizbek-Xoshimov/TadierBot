@@ -26,6 +26,7 @@ public static class ServiceExtensions
         services.AddScoped<IStatisticsService, StatisticsService>();
         services.AddScoped<IBroadcastService, BroadcastService>();
         services.AddScoped<ISearchService, SearchService>();
+        services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IAdminService, AdminService>();
         services.AddScoped<IUpdateHandlerService, UpdateHandlerService>();

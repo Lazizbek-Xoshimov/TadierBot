@@ -103,12 +103,12 @@ public static class AdminResourceManagementKeyboard
         {
             var row = new List<InlineKeyboardButton>
             {
-                InlineKeyboardButton.WithCallbackData(categories[i].Name, $"adm_setcat_{resourceId}_{returnPage}_{categories[i].Id}")
+                InlineKeyboardButton.WithCallbackData($"{CategoryKeyboard.GetCategoryIcon(categories[i].Name)} {categories[i].Name}", $"adm_setcat_{resourceId}_{returnPage}_{categories[i].Id}")
             };
 
             if (i + 1 < categories.Count)
             {
-                row.Add(InlineKeyboardButton.WithCallbackData(categories[i + 1].Name, $"adm_setcat_{resourceId}_{returnPage}_{categories[i + 1].Id}"));
+                row.Add(InlineKeyboardButton.WithCallbackData($"{CategoryKeyboard.GetCategoryIcon(categories[i + 1].Name)} {categories[i + 1].Name}", $"adm_setcat_{resourceId}_{returnPage}_{categories[i + 1].Id}"));
             }
 
             rows.Add(row.ToArray());

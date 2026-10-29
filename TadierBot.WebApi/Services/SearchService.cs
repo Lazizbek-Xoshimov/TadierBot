@@ -5,6 +5,7 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using TadierBot.WebApi.Common.Constants;
 using TadierBot.WebApi.Extensions;
+using TadierBot.WebApi.Helpers;
 using TadierBot.WebApi.Keyboards;
 using TadierBot.WebApi.Models;
 using TadierBot.WebApi.Repositories;
@@ -112,7 +113,7 @@ public class SearchService : ISearchService
         {
             string numEmoji = i < EmojiConstants.NumberEmojis.Length ? EmojiConstants.NumberEmojis[i] : $"{i + 1}.";
             string lang = !string.IsNullOrWhiteSpace(items[i].Language) ? items[i].Language.ToUpper() : "UZ";
-            sb.AppendLine($"{numEmoji} <b>{items[i].Title}</b> — {items[i].Type} ({lang})");
+            sb.AppendLine($"{numEmoji} <b>{items[i].Title}</b> - {lang}");
         }
 
         sb.AppendLine("\n<i>Batafsil ma'lumot va manba linki uchun quyidagi raqamlardan birini tanlang 👇</i>");
@@ -214,25 +215,12 @@ public class SearchService : ISearchService
         // Ko'rishlar sonini oshiramiz
         await _resourceRepository.IncrementViewsCountAsync(resourceId);
 
-        var sb = new StringBuilder();
-        sb.AppendLine($"📘 <b>{resource.Title}</b>\n");
-
-        if (!string.IsNullOrWhiteSpace(resource.Description))
-        {
-            sb.AppendLine($"📄 <b>Tavsif:</b> {resource.Description}\n");
-        }
-
-        sb.AppendLine($"📁 <b>Turi:</b> {resource.Type}");
-        sb.AppendLine($"🗂 <b>Kategoriya:</b> {resource.CategoryName ?? "Umumiy"}");
-        sb.AppendLine($"🌐 <b>Tili:</b> {resource.Language.ToUpper()}");
-        sb.AppendLine($"🔗 <b>Havola:</b> {resource.Url}");
-
         var keyboard = SearchKeyboard.CreateDetails(returnPage);
 
         await _botClient.EditMessageText(
             chatId: chatId,
             messageId: messageId,
-            text: sb.ToString(),
+            text: resource.ToDetailsHtml(),
             parseMode: ParseMode.Html,
             replyMarkup: keyboard,
             cancellationToken: cancellationToken);

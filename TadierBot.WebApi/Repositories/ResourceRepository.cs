@@ -12,7 +12,7 @@ public class ResourceRepository : IResourceRepository
     // DRY: Barcha metodlar uchun yagona asosiy SELECT so'rovi
     private const string BaseSelectSql = """
         SELECT 
-            r.Id, r.Title, r.Description, r.Url, r.Type, r.Language, 
+            r.Id, r.Title, r.Description, r.Url, r.Language, 
             r.CategoryId, r.AddedByAdminId, r.TelegramChannelId, 
             r.MessageId, r.ViewsCount, r.CreatedAt, r.UpdatedAt,
             c.Name AS CategoryName
@@ -30,10 +30,10 @@ public class ResourceRepository : IResourceRepository
         using var connection = _connectionFactory.CreateConnection();
         const string sql = """
             INSERT INTO Resources 
-                (Title, Description, Url, Type, Language, CategoryId, AddedByAdminId, TelegramChannelId, MessageId, ViewsCount, CreatedAt)
+                (Title, Description, Url, Language, CategoryId, AddedByAdminId, TelegramChannelId, MessageId, ViewsCount, CreatedAt)
             OUTPUT INSERTED.Id
             VALUES 
-                (@Title, @Description, @Url, @Type, @Language, @CategoryId, @AddedByAdminId, @TelegramChannelId, @MessageId, 0, SYSUTCDATETIME());
+                (@Title, @Description, @Url, @Language, @CategoryId, @AddedByAdminId, @TelegramChannelId, @MessageId, 0, SYSUTCDATETIME());
             """;
 
         return await connection.ExecuteScalarAsync<int>(sql, resource);
@@ -47,7 +47,6 @@ public class ResourceRepository : IResourceRepository
             SET Title = @Title,
                 Description = @Description,
                 Url = @Url,
-                Type = @Type,
                 Language = @Language,
                 CategoryId = @CategoryId,
                 TelegramChannelId = @TelegramChannelId,
@@ -140,6 +139,33 @@ public class ResourceRepository : IResourceRepository
         using var connection = _connectionFactory.CreateConnection();
         string sql = $"{BaseSelectSql} WHERE r.CategoryId = @CategoryId ORDER BY r.CreatedAt DESC;";
         return await connection.QueryAsync<Resource>(sql, new { CategoryId = categoryId });
+    }
+
+    public async Task<PagedResult<Resource>> GetPagedByCategoryIdAsync(int categoryId, int pageNumber, int pageSize = 5)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        pageNumber = Math.Max(pageNumber, 1);
+        int offset = (pageNumber - 1) * pageSize;
+
+        const string countSql = "SELECT COUNT(1) FROM Resources WHERE CategoryId = @CategoryId;";
+        int totalCount = await connection.ExecuteScalarAsync<int>(countSql, new { CategoryId = categoryId });
+
+        string itemsSql = $"""
+            {BaseSelectSql} 
+            WHERE r.CategoryId = @CategoryId 
+            ORDER BY r.CreatedAt DESC 
+            OFFSET @Offset ROWS 
+            FETCH NEXT @PageSize ROWS ONLY;
+            """;
+        var items = await connection.QueryAsync<Resource>(itemsSql, new { CategoryId = categoryId, Offset = offset, PageSize = pageSize });
+
+        return new PagedResult<Resource>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
     }
 
     public async Task<Resource?> GetByIdAsync(int id)

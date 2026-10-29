@@ -6,7 +6,6 @@ public class Resource
     public string Title { get; set; } = string.Empty;
     public string? Description { get; set; }
     public string Url { get; set; } = string.Empty;
-    public string Type { get; set; } = string.Empty; // 'Book', 'Video', 'Article'
     public string Language { get; set; } = "uz";
     public int CategoryId { get; set; }
     public int? AddedByAdminId { get; set; }

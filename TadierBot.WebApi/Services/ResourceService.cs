@@ -80,9 +80,9 @@ public class ResourceService : IResourceService
 
             case ResourceAddStep.Description:
                 state.Description = text.Trim();
-                state.CurrentStep = ResourceAddStep.Type;
+                state.CurrentStep = ResourceAddStep.Category;
                 SetAddState(telegramId, state);
-                await PromptTypeStepAsync(chatId, cancellationToken);
+                await PromptCategoryStepAsync(chatId, cancellationToken);
                 break;
 
             case ResourceAddStep.Url:
@@ -236,20 +236,12 @@ public class ResourceService : IResourceService
         if (data == "res_skip_desc" && state.CurrentStep == ResourceAddStep.Description)
         {
             state.Description = null;
-            state.CurrentStep = ResourceAddStep.Type;
-            SetAddState(telegramId, state);
-            await PromptTypeStepAsync(chatId, cancellationToken);
-            return;
-        }
-
-        if (data.StartsWith("res_type_") && state.CurrentStep == ResourceAddStep.Type)
-        {
-            state.Type = data.Replace("res_type_", "");
             state.CurrentStep = ResourceAddStep.Category;
             SetAddState(telegramId, state);
             await PromptCategoryStepAsync(chatId, cancellationToken);
             return;
         }
+
 
         if (data.StartsWith("res_cat_") && state.CurrentStep == ResourceAddStep.Category)
         {
@@ -299,16 +291,10 @@ public class ResourceService : IResourceService
                 await PromptTitleStepAsync(chatId, cancellationToken);
                 break;
 
-            case ResourceAddStep.Type:
+            case ResourceAddStep.Category:
                 state.CurrentStep = ResourceAddStep.Description;
                 SetAddState(telegramId, state);
                 await PromptDescriptionStepAsync(chatId, cancellationToken);
-                break;
-
-            case ResourceAddStep.Category:
-                state.CurrentStep = ResourceAddStep.Type;
-                SetAddState(telegramId, state);
-                await PromptTypeStepAsync(chatId, cancellationToken);
                 break;
 
             case ResourceAddStep.Language:
@@ -338,7 +324,6 @@ public class ResourceService : IResourceService
             Title = state.Title,
             Description = state.Description,
             Url = state.Url,
-            Type = state.Type,
             Language = state.Language,
             CategoryId = state.CategoryId,
             AddedByAdminId = state.AddedByAdminId,
@@ -391,31 +376,6 @@ public class ResourceService : IResourceService
             cancellationToken: cancellationToken);
     }
 
-    private async Task PromptTypeStepAsync(long chatId, CancellationToken cancellationToken)
-    {
-        var keyboard = new InlineKeyboardMarkup(new[]
-        {
-            new[]
-            {
-                InlineKeyboardButton.WithCallbackData("📘 Kitob", "res_type_Kitob"),
-                InlineKeyboardButton.WithCallbackData("🎬 Video", "res_type_Video"),
-                InlineKeyboardButton.WithCallbackData("📄 Maqola", "res_type_Maqola")
-            },
-            new[]
-            {
-                InlineKeyboardButton.WithCallbackData("⬅️ Ortga", "res_back"),
-                InlineKeyboardButton.WithCallbackData("❌ Bekor qilish", "res_cancel")
-            }
-        });
-
-        await _botClient.SendMessage(
-            chatId: chatId,
-            text: "📁 <b>3-qadam:</b> Fayl turini tanlang:",
-            parseMode: ParseMode.Html,
-            replyMarkup: keyboard,
-            cancellationToken: cancellationToken);
-    }
-
     private async Task PromptCategoryStepAsync(long chatId, CancellationToken cancellationToken)
     {
         var categories = (await _categoryRepository.GetAllAsync()).ToList();
@@ -423,14 +383,14 @@ public class ResourceService : IResourceService
 
         for (int i = 0; i < categories.Count; i += 2)
         {
-            var row = new List<InlineKeyboardButton>
-            {
-                InlineKeyboardButton.WithCallbackData(categories[i].Name, $"res_cat_{categories[i].Id}")
-            };
+            var row = new List<InlineKeyboardButton>();
+            string icon1 = CategoryKeyboard.GetCategoryIcon(categories[i].Name);
+            row.Add(InlineKeyboardButton.WithCallbackData($"{icon1} {categories[i].Name}", $"res_cat_{categories[i].Id}"));
 
             if (i + 1 < categories.Count)
             {
-                row.Add(InlineKeyboardButton.WithCallbackData(categories[i + 1].Name, $"res_cat_{categories[i + 1].Id}"));
+                string icon2 = CategoryKeyboard.GetCategoryIcon(categories[i + 1].Name);
+                row.Add(InlineKeyboardButton.WithCallbackData($"{icon2} {categories[i + 1].Name}", $"res_cat_{categories[i + 1].Id}"));
             }
 
             rows.Add(row.ToArray());
@@ -444,7 +404,7 @@ public class ResourceService : IResourceService
 
         await _botClient.SendMessage(
             chatId: chatId,
-            text: "🗂 <b>4-qadam:</b> Kategoriyani tanlang:",
+            text: "🗂 <b>3-qadam:</b> Kategoriyani tanlang:",
             parseMode: ParseMode.Html,
             replyMarkup: new InlineKeyboardMarkup(rows),
             cancellationToken: cancellationToken);
@@ -456,9 +416,9 @@ public class ResourceService : IResourceService
         {
             new[]
             {
-                InlineKeyboardButton.WithCallbackData("🇺🇿 O'zbek", "res_lang_O'zbek"),
-                InlineKeyboardButton.WithCallbackData("🇷🇺 Rus", "res_lang_Rus"),
-                InlineKeyboardButton.WithCallbackData("🇬🇧 Ingliz", "res_lang_Ingliz")
+                InlineKeyboardButton.WithCallbackData("🇺🇿 O'zbek", "res_lang_uz"),
+                InlineKeyboardButton.WithCallbackData("🇷🇺 Rus", "res_lang_ru"),
+                InlineKeyboardButton.WithCallbackData("🇬🇧 Ingliz", "res_lang_en")
             },
             new[]
             {
@@ -469,7 +429,7 @@ public class ResourceService : IResourceService
 
         await _botClient.SendMessage(
             chatId: chatId,
-            text: "🌐 <b>5-qadam:</b> Manba tilini tanlang:",
+            text: "🌐 <b>4-qadam:</b> Manba tilini tanlang:",
             parseMode: ParseMode.Html,
             replyMarkup: keyboard,
             cancellationToken: cancellationToken);
@@ -488,7 +448,7 @@ public class ResourceService : IResourceService
 
         await _botClient.SendMessage(
             chatId: chatId,
-            text: "🔗 <b>6-qadam:</b> Manba havolasini (link) yuboring:\n<i>(Masalan: kanal posti linki https://t.me/kanal/123)</i>",
+            text: "🔗 <b>5-qadam:</b> Manba havolasini (link) yuboring:\n<i>(Masalan: kanal posti linki https://t.me/kanal/123)</i>",
             parseMode: ParseMode.Html,
             replyMarkup: keyboard,
             cancellationToken: cancellationToken);
@@ -500,9 +460,8 @@ public class ResourceService : IResourceService
         sb.AppendLine("📋 <b>Kiritilgan ma'lumotlarni tekshiring:</b>\n");
         sb.AppendLine($"📘 <b>Nomi:</b> {state.Title}");
         sb.AppendLine($"📄 <b>Tavsifi:</b> {state.Description ?? "<i>(Mavjud emas)</i>"}");
-        sb.AppendLine($"📁 <b>Turi:</b> {state.Type}");
         sb.AppendLine($"🗂 <b>Kategoriya:</b> {state.CategoryName}");
-        sb.AppendLine($"🌐 <b>Tili:</b> {state.Language}");
+        sb.AppendLine($"🌐 <b>Tili:</b> {state.Language.ToUpper()}");
         sb.AppendLine($"🔗 <b>Havola:</b> {state.Url}");
         sb.AppendLine("\n<i>Ushbu manbani bazaga saqlaysizmi?</i>");
 
@@ -661,24 +620,10 @@ public class ResourceService : IResourceService
             return;
         }
 
-        var sb = new StringBuilder();
-        sb.AppendLine("📌 <b>Manba ma'lumotlari:</b>\n");
-        sb.AppendLine($"📘 <b>Nomi:</b> {resource.Title}");
-        sb.AppendLine($"📄 <b>Tavsifi:</b> {resource.Description ?? "<i>(Mavjud emas)</i>"}");
-        sb.AppendLine($"📁 <b>Turi:</b> {resource.Type}");
-        sb.AppendLine($"🗂 <b>Kategoriya:</b> {resource.CategoryName ?? "Umumiy"}");
-        sb.AppendLine($"🌐 <b>Tili:</b> {resource.Language}");
-        sb.AppendLine($"👁 <b>Ko'rishlar soni:</b> {resource.ViewsCount} ta");
-        sb.AppendLine($"🔗 <b>Havolasi:</b> {resource.Url}");
-        sb.AppendLine($"📅 <b>Yuklangan:</b> {resource.CreatedAt.ToTashkentString()}");
-        if (resource.UpdatedAt.HasValue)
-        {
-            sb.AppendLine($"🔄 <b>Tahrirlangan:</b> {resource.UpdatedAt.ToTashkentString()}");
-        }
-
+        string detailsHtml = resource.ToDetailsHtml(isAdmin: true);
         var keyboard = AdminResourceManagementKeyboard.CreateActions(resourceId, returnPage);
 
-        await _botClient.EditMessageText(chatId, messageId, sb.ToString(), ParseMode.Html, replyMarkup: keyboard, cancellationToken: cancellationToken);
+        await _botClient.EditMessageText(chatId, messageId, detailsHtml, ParseMode.Html, replyMarkup: keyboard, cancellationToken: cancellationToken);
     }
 
     public async Task PromptDeleteResourceAsync(long chatId, int messageId, int resourceId, int returnPage, CancellationToken cancellationToken)
@@ -828,3 +773,4 @@ public class ResourceService : IResourceService
 
     #endregion
 }
+

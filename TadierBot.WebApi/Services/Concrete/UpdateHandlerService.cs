@@ -20,6 +20,7 @@ public class UpdateHandlerService : IUpdateHandlerService
     private readonly IResourceService _resourceService;
     private readonly IBroadcastService _broadcastService;
     private readonly ISearchService _searchService;
+    private readonly ICategoryService _categoryService;
     private readonly ILogger<UpdateHandlerService> _logger;
 
     public UpdateHandlerService(
@@ -32,6 +33,7 @@ public class UpdateHandlerService : IUpdateHandlerService
         IResourceService resourceService,
         IBroadcastService broadcastService,
         ISearchService searchService,
+        ICategoryService categoryService,
         ILogger<UpdateHandlerService> logger)
     {
         _botClient = botClient;
@@ -43,6 +45,7 @@ public class UpdateHandlerService : IUpdateHandlerService
         _resourceService = resourceService;
         _broadcastService = broadcastService;
         _searchService = searchService;
+        _categoryService = categoryService;
         _logger = logger;
     }
 
@@ -66,6 +69,13 @@ public class UpdateHandlerService : IUpdateHandlerService
                 if (data.StartsWith("search_"))
                 {
                     await _searchService.HandleCallbackAsync(callbackQuery, cancellationToken);
+                    return;
+                }
+
+                // Kategoriyalar callbacklari
+                if (data.StartsWith("cat_"))
+                {
+                    await _categoryService.HandleCallbackAsync(callbackQuery, cancellationToken);
                     return;
                 }
 
@@ -183,7 +193,7 @@ public class UpdateHandlerService : IUpdateHandlerService
             }
             else if (text == MainMenuKeyboard.Categories)
             {
-                await HandleCategoriesAsync(chatId, cancellationToken);
+                await _categoryService.ShowCategoriesAsync(chatId, null, cancellationToken);
             }
             else if (text == MainMenuKeyboard.Search)
             {
@@ -241,38 +251,6 @@ public class UpdateHandlerService : IUpdateHandlerService
             text: helpText,
             parseMode: ParseMode.Html,
             replyMarkup: MainMenuKeyboard.Create(isAdmin),
-            cancellationToken: cancellationToken);
-    }
-
-    private async Task HandleCategoriesAsync(long chatId, CancellationToken cancellationToken)
-    {
-        var categories = (await _categoryRepository.GetAllAsync()).ToList();
-
-        if (!categories.Any())
-        {
-            await _botClient.SendMessage(
-                chatId: chatId,
-                text: "Hozircha kategoriyalar mavjud emas.",
-                cancellationToken: cancellationToken);
-            return;
-        }
-
-        var sb = new StringBuilder();
-        sb.AppendLine("🗂 <b>Mavjud kategoriyalar:</b>\n");
-
-        for (int i = 0; i < categories.Count; i++)
-        {
-            sb.AppendLine($"{i + 1}. {categories[i].Name}");
-            if (!string.IsNullOrWhiteSpace(categories[i].Description))
-            {
-                sb.AppendLine($"   <i>{categories[i].Description}</i>");
-            }
-        }
-
-        await _botClient.SendMessage(
-            chatId: chatId,
-            text: sb.ToString(),
-            parseMode: ParseMode.Html,
             cancellationToken: cancellationToken);
     }
 }

@@ -25,9 +25,9 @@ public class StatisticsRepository : IStatisticsRepository
 
             -- 2. Manbalar
             SELECT COUNT(1) FROM Resources;
-            SELECT COUNT(1) FROM Resources WHERE Type = 'Kitob';
-            SELECT COUNT(1) FROM Resources WHERE Type = 'Video';
-            SELECT COUNT(1) FROM Resources WHERE Type = 'Maqola';
+            SELECT COUNT(1) FROM Resources r JOIN Categories c ON r.CategoryId = c.Id WHERE c.Name LIKE N'%Kitob%';
+            SELECT COUNT(1) FROM Resources r JOIN Categories c ON r.CategoryId = c.Id WHERE c.Name LIKE N'%Video%';
+            SELECT COUNT(1) FROM Resources r JOIN Categories c ON r.CategoryId = c.Id WHERE c.Name LIKE N'%Maqola%';
 
             -- 3. Top 5 ko'rilgan manbalar
             SELECT TOP 5 Title, ViewsCount 
