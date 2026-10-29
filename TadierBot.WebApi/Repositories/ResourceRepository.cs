@@ -89,6 +89,45 @@ public class ResourceRepository : IResourceRepository
         };
     }
 
+    public async Task<PagedResult<Resource>> SearchPagedAsync(string query, int pageNumber = 1, int pageSize = 5)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        pageNumber = Math.Max(pageNumber, 1);
+        int offset = (pageNumber - 1) * pageSize;
+
+        string searchPattern = $"%{query.Trim()}%";
+
+        // Hozircha Title bo'yicha qidiruv.
+        // Kelajakda Description va CategoryName'ni ham qo'shish uchun:
+        // const string whereClause = "WHERE (r.Title LIKE @Pattern OR r.Description LIKE @Pattern OR c.Name LIKE @Pattern)";
+        const string whereClause = "WHERE r.Title LIKE @Pattern";
+
+        string countSql = $"""
+            SELECT COUNT(1) 
+            FROM Resources r 
+            INNER JOIN Categories c ON r.CategoryId = c.Id 
+            {whereClause};
+            """;
+        int totalCount = await connection.ExecuteScalarAsync<int>(countSql, new { Pattern = searchPattern });
+
+        string itemsSql = $"""
+            {BaseSelectSql} 
+            {whereClause} 
+            ORDER BY r.CreatedAt DESC 
+            OFFSET @Offset ROWS 
+            FETCH NEXT @PageSize ROWS ONLY;
+            """;
+        var items = await connection.QueryAsync<Resource>(itemsSql, new { Pattern = searchPattern, Offset = offset, PageSize = pageSize });
+
+        return new PagedResult<Resource>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
+    }
+
     public async Task<IEnumerable<Resource>> GetLatestAsync(int count = 5)
     {
         using var connection = _connectionFactory.CreateConnection();

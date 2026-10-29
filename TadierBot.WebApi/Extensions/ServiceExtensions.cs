@@ -19,11 +19,13 @@ public static class ServiceExtensions
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<IResourceRepository, ResourceRepository>();
         services.AddScoped<IStatisticsRepository, StatisticsRepository>();
+        services.AddScoped<ISearchHistoryRepository, SearchHistoryRepository>();
 
         // 3. Services
         services.AddScoped<IResourceService, ResourceService>();
         services.AddScoped<IStatisticsService, StatisticsService>();
         services.AddScoped<IBroadcastService, BroadcastService>();
+        services.AddScoped<ISearchService, SearchService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IAdminService, AdminService>();
         services.AddScoped<IUpdateHandlerService, UpdateHandlerService>();

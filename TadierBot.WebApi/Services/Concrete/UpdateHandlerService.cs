@@ -19,6 +19,7 @@ public class UpdateHandlerService : IUpdateHandlerService
     private readonly IAdminService _adminService;
     private readonly IResourceService _resourceService;
     private readonly IBroadcastService _broadcastService;
+    private readonly ISearchService _searchService;
     private readonly ILogger<UpdateHandlerService> _logger;
 
     public UpdateHandlerService(
@@ -30,6 +31,7 @@ public class UpdateHandlerService : IUpdateHandlerService
         IAdminService adminService,
         IResourceService resourceService,
         IBroadcastService broadcastService,
+        ISearchService searchService,
         ILogger<UpdateHandlerService> logger)
     {
         _botClient = botClient;
@@ -40,6 +42,7 @@ public class UpdateHandlerService : IUpdateHandlerService
         _adminService = adminService;
         _resourceService = resourceService;
         _broadcastService = broadcastService;
+        _searchService = searchService;
         _logger = logger;
     }
 
@@ -56,6 +59,13 @@ public class UpdateHandlerService : IUpdateHandlerService
                 if (data.StartsWith("res_page_") || data.StartsWith("res_view_") || data == "res_noop")
                 {
                     await _resourceService.HandleCallbackAsync(callbackQuery, cancellationToken);
+                    return;
+                }
+
+                // Qidiruv callbacklari
+                if (data.StartsWith("search_"))
+                {
+                    await _searchService.HandleCallbackAsync(callbackQuery, cancellationToken);
                     return;
                 }
 
@@ -138,6 +148,19 @@ public class UpdateHandlerService : IUpdateHandlerService
                 return;
             }
 
+            // C. Agar foydalanuvchi qidiruv holatida bo'lsa
+            if (_searchService.IsUserSearching(telegramId))
+            {
+                if (text == "/cancel")
+                {
+                    await _searchService.CancelSearchAsync(chatId, telegramId, cancellationToken);
+                    return;
+                }
+
+                await _searchService.HandleSearchInputAsync(chatId, telegramId, text, cancellationToken);
+                return;
+            }
+
             // 3. Routing (Komandalar va menyu tugmalarini yo'naltirish)
             if (text == "/start")
             {
@@ -162,11 +185,15 @@ public class UpdateHandlerService : IUpdateHandlerService
             {
                 await HandleCategoriesAsync(chatId, cancellationToken);
             }
-            else if (text == MainMenuKeyboard.Search || text == MainMenuKeyboard.Language)
+            else if (text == MainMenuKeyboard.Search)
+            {
+                await _searchService.StartSearchPromptAsync(chatId, telegramId, cancellationToken);
+            }
+            else if (text == MainMenuKeyboard.Language)
             {
                 await _botClient.SendMessage(
                     chatId: chatId,
-                    text: "⏳ Ushbu bo'lim ustida ish olib borilmoqda. Tez orada ishga tushadi!",
+                    text: "⏳ Tilni tanlash bo'limi tez orada ishga tushadi!",
                     replyMarkup: MainMenuKeyboard.Create(isAdmin),
                     cancellationToken: cancellationToken);
             }
