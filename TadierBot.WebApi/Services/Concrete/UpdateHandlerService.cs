@@ -21,6 +21,7 @@ public class UpdateHandlerService : IUpdateHandlerService
     private readonly IBroadcastService _broadcastService;
     private readonly ISearchService _searchService;
     private readonly ICategoryService _categoryService;
+    private readonly ILanguageService _languageService;
     private readonly ILogger<UpdateHandlerService> _logger;
 
     public UpdateHandlerService(
@@ -34,6 +35,7 @@ public class UpdateHandlerService : IUpdateHandlerService
         IBroadcastService broadcastService,
         ISearchService searchService,
         ICategoryService categoryService,
+        ILanguageService languageService,
         ILogger<UpdateHandlerService> logger)
     {
         _botClient = botClient;
@@ -46,6 +48,7 @@ public class UpdateHandlerService : IUpdateHandlerService
         _broadcastService = broadcastService;
         _searchService = searchService;
         _categoryService = categoryService;
+        _languageService = languageService;
         _logger = logger;
     }
 
@@ -76,6 +79,13 @@ public class UpdateHandlerService : IUpdateHandlerService
                 if (data.StartsWith("cat_"))
                 {
                     await _categoryService.HandleCallbackAsync(callbackQuery, cancellationToken);
+                    return;
+                }
+
+                // Til bo'yicha saralash callbacklari
+                if (data.StartsWith("lang_"))
+                {
+                    await _languageService.HandleCallbackAsync(callbackQuery, cancellationToken);
                     return;
                 }
 
@@ -201,11 +211,7 @@ public class UpdateHandlerService : IUpdateHandlerService
             }
             else if (text == MainMenuKeyboard.Language)
             {
-                await _botClient.SendMessage(
-                    chatId: chatId,
-                    text: "⏳ Tilni tanlash bo'limi tez orada ishga tushadi!",
-                    replyMarkup: MainMenuKeyboard.Create(isAdmin),
-                    cancellationToken: cancellationToken);
+                await _languageService.ShowLanguagesAsync(chatId, null, cancellationToken);
             }
             else
             {
@@ -243,7 +249,7 @@ public class UpdateHandlerService : IUpdateHandlerService
             • <b>🔍 Qidiruv</b> — kerakli kalit so'z orqali qidirish.
             • <b>🌐 Til</b> — interfeys tilini tanlash.
 
-            Savol va takliflar uchun admin bilan bog'lanishingiz mumkin.
+            Savol va takliflar uchun <a href="https://t.me/deutschmax_admin">admin</a> bilan bog'lanishingiz mumkin.
             """;
 
         await _botClient.SendMessage(

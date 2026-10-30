@@ -168,6 +168,33 @@ public class ResourceRepository : IResourceRepository
         };
     }
 
+    public async Task<PagedResult<Resource>> GetPagedByLanguageAsync(string language, int pageNumber, int pageSize = 5)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        pageNumber = Math.Max(pageNumber, 1);
+        int offset = (pageNumber - 1) * pageSize;
+
+        const string countSql = "SELECT COUNT(1) FROM Resources WHERE Language = @Language;";
+        int totalCount = await connection.ExecuteScalarAsync<int>(countSql, new { Language = language });
+
+        string itemsSql = $"""
+            {BaseSelectSql} 
+            WHERE r.Language = @Language 
+            ORDER BY r.CreatedAt DESC 
+            OFFSET @Offset ROWS 
+            FETCH NEXT @PageSize ROWS ONLY;
+            """;
+        var items = await connection.QueryAsync<Resource>(itemsSql, new { Language = language, Offset = offset, PageSize = pageSize });
+
+        return new PagedResult<Resource>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
+    }
+
     public async Task<Resource?> GetByIdAsync(int id)
     {
         using var connection = _connectionFactory.CreateConnection();

@@ -13,6 +13,7 @@ public interface IResourceRepository
     Task<IEnumerable<Resource>> GetLatestAsync(int count = 5);
     Task<IEnumerable<Resource>> GetByCategoryIdAsync(int categoryId);
     Task<PagedResult<Resource>> GetPagedByCategoryIdAsync(int categoryId, int pageNumber, int pageSize = 5);
+    Task<PagedResult<Resource>> GetPagedByLanguageAsync(string language, int pageNumber, int pageSize = 5);
     Task<Resource?> GetByIdAsync(int id);
     Task IncrementViewsCountAsync(int resourceId);
 }
