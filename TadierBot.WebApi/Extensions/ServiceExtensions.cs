@@ -1,3 +1,4 @@
+using TadierBot.WebApi.BackgroundServices;
 using TadierBot.WebApi.Data;
 using TadierBot.WebApi.Repositories;
 using TadierBot.WebApi.Repositories.Concrete;
@@ -30,6 +31,9 @@ public static class ServiceExtensions
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IAdminService, AdminService>();
         services.AddScoped<IUpdateHandlerService, UpdateHandlerService>();
+
+        // 4. Background Services (24/7 Telegram Polling)
+        services.AddHostedService<TelegramPollingService>();
 
         return services;
     }
