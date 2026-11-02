@@ -1,5 +1,7 @@
 # 📚 TadierBot — Ta'limiy Manbalar Telegram Boti
 
+> 🤖 **Telegram Bot manzili:** [@Tadier_bot](https://t.me/Tadier_bot)
+
 **TadierBot** — foydalanuvchilarga sifatli ta'limiy materiallar (kitoblar, video darsliklar, audio mashqlar va maqolalar)ni qulay qidirish, saralash va o'rganish imkoniyatini taqdim etuvchi zamonaviy Telegram bot.
 
 Loyiha yuqori unumdorlikka ega **ASP.NET Core (.NET 10)** texnologiyasi, **Microsoft SQL Server** va **Dapper ORM** asosida Clean Architecture tamoyillariga muvofiq ishlab chiqilgan.
