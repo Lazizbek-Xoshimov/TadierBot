@@ -247,7 +247,7 @@ public class UpdateHandlerService : IUpdateHandlerService
             • <b>📚 Manbalar bo'limi</b> — eng so'nggi yuklangan foydali materiallarni ko'rish.
             • <b>🗂 Kategoriyalar</b> — barcha mavzular bo'yicha manbalarni saralab topish.
             • <b>🔍 Qidiruv</b> — kerakli kalit so'z orqali qidirish.
-            • <b>🌐 Til</b> — interfeys tilini tanlash.
+            • <b>🌐 Til bo'yicha tanlash</b> — materiallarni O'zbek, Rus yoki Ingliz tillari bo'yicha filtrlash.
 
             Savol va takliflar uchun <a href="https://t.me/deutschmax_admin">admin</a> bilan bog'lanishingiz mumkin.
             """;

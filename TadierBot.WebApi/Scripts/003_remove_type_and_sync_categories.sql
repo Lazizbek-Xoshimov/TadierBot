@@ -1,4 +1,4 @@
--- ========================================================
+﻿-- ========================================================
 -- 003_remove_type_and_sync_categories.sql
 -- 1. Resources jadvalidan IX_Resources_Type indeksi va Type ustunini olib tashlash
 -- 2. Kategoriyalarni faqat siz belgilagan 4 tasiga keltirish:

@@ -1,4 +1,4 @@
--- ========================================================
+﻿-- ========================================================
 -- Script: 001_initial_tables.sql
 -- Database: Microsoft SQL Server (T-SQL)
 -- Description: TadierBotDb bazasi, jadvallari va indekslari
