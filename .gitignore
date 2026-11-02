@@ -24,3 +24,8 @@ Thumbs.db
 # Configuration
 appsettings.json
 appsettings.*.json
+
+# Publish profiles
+*.pubxml
+*.pubxml.user
+publish_out/
