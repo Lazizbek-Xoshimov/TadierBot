@@ -208,7 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('btn-prof-contact')?.addEventListener('click', () => {
     triggerHaptic('light');
-    notify('💬 Bot ustoziga savolingiz bo‘lsa, to‘g‘ridan-to‘g'ri bot chatiga yozishingiz mumkin.');
+    notify('💬 Bot ustoziga savolingiz bo‘lsa, to‘g‘ridan-to‘g‘ri bot chatiga yozishingiz mumkin.');
   });
 
   // Nemischa so'zni ovozli o'qish (Web Speech API)
