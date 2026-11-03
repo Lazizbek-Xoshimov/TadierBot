@@ -1,0 +1,282 @@
+/* ==========================================================================
+   TadierBot Mini App — Asosiy uslublar
+   Telegram Color Scheme (Dark / Light) avtomatik moslashuvchan dizayn
+   ========================================================================== */
+
+:root {
+  /* Telegram Theme o'zgaruvchilari (fallback qiymatlar bilan) */
+  --bg-color: var(--tg-theme-bg-color, #ffffff);
+  --secondary-bg-color: var(--tg-theme-secondary-bg-color, #f4f5f7);
+  --text-color: var(--tg-theme-text-color, #1a1a1a);
+  --hint-color: var(--tg-theme-hint-color, #8e8e93);
+  --link-color: var(--tg-theme-link-color, #2481cc);
+  --button-color: var(--tg-theme-button-color, #2481cc);
+  --button-text-color: var(--tg-theme-button-text-color, #ffffff);
+  --header-bg-color: var(--tg-theme-header-bg-color, var(--bg-color));
+  --border-color: rgba(128, 128, 128, 0.15);
+  
+  /* Zamonaviy radius va soyalar */
+  --radius-lg: 20px;
+  --radius-md: 14px;
+  --radius-sm: 8px;
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  line-height: 1.5;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  max-width: 480px;
+  margin: 0 auto;
+  position: relative;
+  background-color: var(--bg-color);
+}
+
+/* ==========================================================================
+   Header (Foydalanuvchi qismi)
+   ========================================================================== */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background-color: var(--bg-color);
+  border-bottom: 1px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(10px);
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--button-color), #6366f1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: #fff;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.user-details .greeting {
+  font-size: 12px;
+  color: var(--hint-color);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.user-details .user-name {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.header-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background-color: var(--secondary-bg-color);
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--hint-color);
+}
+
+.badge-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #22c55e;
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
+}
+
+/* ==========================================================================
+   Asosiy kontent maydoni
+   ========================================================================== */
+.app-content {
+  flex: 1;
+  padding: 20px;
+  padding-bottom: 84px; /* pastki navigatsiya uchun joy */
+}
+
+.tab-pane {
+  display: none;
+  animation: fadeIn 0.25s ease-in-out;
+}
+
+.tab-pane.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==========================================================================
+   Kartochkalar (Cards)
+   ========================================================================== */
+.placeholder-card {
+  background-color: var(--secondary-bg-color);
+  border-radius: var(--radius-lg);
+  padding: 30px 20px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  margin-bottom: 16px;
+}
+
+.hero-card {
+  background: linear-gradient(145deg, var(--secondary-bg-color), rgba(99, 102, 241, 0.08));
+}
+
+.card-icon {
+  font-size: 44px;
+  margin-bottom: 12px;
+  display: inline-block;
+  animation: bounce 2s infinite ease-in-out;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.placeholder-card h3 {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.placeholder-card p {
+  font-size: 14px;
+  color: var(--hint-color);
+  margin-bottom: 20px;
+}
+
+.primary-btn {
+  background-color: var(--button-color);
+  color: var(--button-text-color);
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: var(--shadow-sm);
+}
+
+.primary-btn:active {
+  transform: scale(0.96);
+  opacity: 0.9;
+}
+
+.info-card {
+  background-color: var(--secondary-bg-color);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  border: 1px solid var(--border-color);
+}
+
+.info-card h4 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.info-card p {
+  font-size: 13px;
+  color: var(--hint-color);
+}
+
+/* ==========================================================================
+   Pastki navigatsiya (Bottom Navigation)
+   ========================================================================== */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-width: 480px;
+  margin: 0 auto;
+  background-color: var(--bg-color);
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-around;
+  padding: 8px 12px 14px 12px;
+  z-index: 100;
+  backdrop-filter: blur(12px);
+}
+
+.nav-item {
+  background: none;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+  color: var(--hint-color);
+}
+
+.nav-item .nav-icon {
+  font-size: 20px;
+  transition: transform 0.2s ease;
+}
+
+.nav-item .nav-label {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.nav-item.active {
+  color: var(--button-color);
+}
+
+.nav-item.active .nav-icon {
+  transform: translateY(-2px);
+}
+

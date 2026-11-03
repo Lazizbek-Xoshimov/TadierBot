@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Tadier App</title>
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Header: Foydalanuvchi ma'lumotlari -->
+    <header class="app-header">
+      <div class="user-info">
+        <div class="avatar" id="user-avatar">
+          <span id="avatar-fallback">👤</span>
+        </div>
+        <div class="user-details">
+          <span class="greeting">Salom,</span>
+          <h2 class="user-name" id="user-name">Foydalanuvchi</h2>
+        </div>
+      </div>
+      <div class="header-badge">
+        <span class="badge-dot"></span>
+        <span>Online</span>
+      </div>
+    </header>
+
+    <!-- Asosiy kontent maydoni (Bo'sh shablon) -->
+    <main class="app-content">
+      <!-- 1. Bosh sahifa (Home) bo'limi -->
+      <section id="tab-home" class="tab-pane active">
+        <div class="placeholder-card hero-card">
+          <div class="card-icon">🚀</div>
+          <h3>Tadier Mini App</h3>
+          <p>Tez orada bu yerda yangi va qiziqarli ta'limiy imkoniyatlar paydo bo'ladi.</p>
+          <button class="primary-btn" id="btn-action">
+            <span>✨ Test tugmasi</span>
+          </button>
+        </div>
+
+        <div class="info-card">
+          <h4>💡 Tizim holati</h4>
+          <p id="platform-info">Telegram WebApp muvaffaqiyatli ishga tushdi.</p>
+        </div>
+      </section>
+
+      <!-- 2. Testlar (kelajak uchun tayyor joy) -->
+      <section id="tab-tests" class="tab-pane">
+        <div class="placeholder-card">
+          <div class="card-icon">🎓</div>
+          <h3>Interaktiv Testlar</h3>
+          <p>Ushbu bo'lim tez orada ishga tushadi.</p>
+        </div>
+      </section>
+
+      <!-- 3. So'zlar / Flesh-kartalar (kelajak uchun tayyor joy) -->
+      <section id="tab-cards" class="tab-pane">
+        <div class="placeholder-card">
+          <div class="card-icon">🗂</div>
+          <h3>Flesh-kartochkalar</h3>
+          <p>Nemis tili so'zlarini yodlash trenajyori tez orada!</p>
+        </div>
+      </section>
+
+      <!-- 4. Profil / Saqlanganlar -->
+      <section id="tab-profile" class="tab-pane">
+        <div class="placeholder-card">
+          <div class="card-icon">⭐</div>
+          <h3>Shaxsiy kabinet</h3>
+          <p>Natijalaringiz va faolligingiz shu yerda aks etadi.</p>
+        </div>
+      </section>
+    </main>
+
+    <!-- Pastki navigatsiya paneli (Bottom Navigation) -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" data-tab="tab-home">
+        <span class="nav-icon">🏠</span>
+        <span class="nav-label">Asosiy</span>
+      </button>
+      <button class="nav-item" data-tab="tab-tests">
+        <span class="nav-icon">🎓</span>
+        <span class="nav-label">Testlar</span>
+      </button>
+      <button class="nav-item" data-tab="tab-cards">
+        <span class="nav-icon">🗂</span>
+        <span class="nav-label">Lug'at</span>
+      </button>
+      <button class="nav-item" data-tab="tab-profile">
+        <span class="nav-icon">👤</span>
+        <span class="nav-label">Profil</span>
+      </button>
+    </nav>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
+
