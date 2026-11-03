@@ -5,22 +5,41 @@
 
 :root {
   /* Telegram Theme o'zgaruvchilari (fallback qiymatlar bilan) */
-  --bg-color: var(--tg-theme-bg-color, #ffffff);
-  --secondary-bg-color: var(--tg-theme-secondary-bg-color, #f4f5f7);
-  --text-color: var(--tg-theme-text-color, #1a1a1a);
-  --hint-color: var(--tg-theme-hint-color, #8e8e93);
-  --link-color: var(--tg-theme-link-color, #2481cc);
-  --button-color: var(--tg-theme-button-color, #2481cc);
+  --bg-color: var(--tg-theme-bg-color, #18222d);
+  --secondary-bg-color: var(--tg-theme-secondary-bg-color, #131b24);
+  --text-color: var(--tg-theme-text-color, #ffffff);
+  --hint-color: var(--tg-theme-hint-color, #8e9ca8);
+  --link-color: var(--tg-theme-link-color, #2ea6ff);
+  --button-color: var(--tg-theme-button-color, #2ea6ff);
   --button-text-color: var(--tg-theme-button-text-color, #ffffff);
-  --header-bg-color: var(--tg-theme-header-bg-color, var(--bg-color));
-  --border-color: rgba(128, 128, 128, 0.15);
-  
-  /* Zamonaviy radius va soyalar */
-  --radius-lg: 20px;
-  --radius-md: 14px;
+  --border-color: rgba(255, 255, 255, 0.08);
+
+  /* Rang palitrasi & kartalar */
+  --card-bg: rgba(255, 255, 255, 0.05);
+  --card-border: rgba(255, 255, 255, 0.09);
+  --accent-green: #31b545;
+  --accent-gold: #ffb703;
+  --accent-purple: #9d4edd;
+  --accent-red: #ff3b30;
+
+  /* Radius va soyalar */
+  --radius-xl: 20px;
+  --radius-lg: 16px;
+  --radius-md: 12px;
   --radius-sm: 8px;
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* Light mode moslashuvi */
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg-color: var(--tg-theme-bg-color, #f4f5f8);
+    --secondary-bg-color: var(--tg-theme-secondary-bg-color, #ffffff);
+    --text-color: var(--tg-theme-text-color, #1c1c1e);
+    --hint-color: var(--tg-theme-hint-color, #8e8e93);
+    --border-color: rgba(0, 0, 0, 0.08);
+    --card-bg: #ffffff;
+    --card-border: rgba(0, 0, 0, 0.06);
+  }
 }
 
 * {
@@ -32,7 +51,7 @@
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background-color: var(--bg-color);
   color: var(--text-color);
   line-height: 1.5;
@@ -50,6 +69,10 @@ body {
   background-color: var(--bg-color);
 }
 
+.hidden {
+  display: none !important;
+}
+
 /* ==========================================================================
    Header (Foydalanuvchi qismi)
    ========================================================================== */
@@ -57,13 +80,13 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
+  padding: 14px 18px;
   background-color: var(--bg-color);
   border-bottom: 1px solid var(--border-color);
   position: sticky;
   top: 0;
   z-index: 100;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
 }
 
 .user-info {
@@ -73,17 +96,18 @@ body {
 }
 
 .avatar {
-  width: 44px;
-  height: 44px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--button-color), #6366f1);
+  background: linear-gradient(135deg, #2ea6ff, #9d4edd);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
-  color: #fff;
   overflow: hidden;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 12px rgba(46, 166, 255, 0.25);
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
 }
 
 .avatar img {
@@ -93,51 +117,55 @@ body {
 }
 
 .user-details .greeting {
-  font-size: 12px;
-  color: var(--hint-color);
-  font-weight: 500;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  color: var(--hint-color);
+  font-weight: 600;
 }
 
 .user-details .user-name {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
-  line-height: 1.2;
+  color: var(--text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
 }
 
 .header-badge {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
-  background-color: var(--secondary-bg-color);
+  background-color: rgba(49, 181, 69, 0.12);
+  color: var(--accent-green);
+  padding: 4px 10px;
   border-radius: 20px;
   font-size: 12px;
   font-weight: 600;
-  color: var(--hint-color);
 }
 
 .badge-dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background-color: #22c55e;
-  box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
+  background-color: var(--accent-green);
+  box-shadow: 0 0 8px var(--accent-green);
 }
 
 /* ==========================================================================
-   Asosiy kontent maydoni
+   Asosiy kontent maydoni & Tablar
    ========================================================================== */
 .app-content {
   flex: 1;
-  padding: 20px;
-  padding-bottom: 84px; /* pastki navigatsiya uchun joy */
+  padding: 16px;
+  padding-bottom: 85px; /* Nav bar balandligi */
 }
 
 .tab-pane {
   display: none;
-  animation: fadeIn 0.25s ease-in-out;
+  animation: fadeIn 0.22s ease-out;
 }
 
 .tab-pane.active {
@@ -149,88 +177,687 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* ==========================================================================
-   Kartochkalar (Cards)
-   ========================================================================== */
-.placeholder-card {
-  background-color: var(--secondary-bg-color);
-  border-radius: var(--radius-lg);
-  padding: 30px 20px;
+/* Banner qutilari */
+.banner-box {
+  border-radius: var(--radius-xl);
+  padding: 18px;
   text-align: center;
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-color);
-  margin-bottom: 16px;
+  margin-bottom: 18px;
+  border: 1px solid var(--card-border);
 }
 
-.hero-card {
-  background: linear-gradient(145deg, var(--secondary-bg-color), rgba(99, 102, 241, 0.08));
-}
-
-.card-icon {
-  font-size: 44px;
-  margin-bottom: 12px;
-  display: inline-block;
-  animation: bounce 2s infinite ease-in-out;
-}
-
-@keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
-}
-
-.placeholder-card h3 {
-  font-size: 18px;
-  font-weight: 700;
-  margin-bottom: 8px;
-}
-
-.placeholder-card p {
-  font-size: 14px;
-  color: var(--hint-color);
-  margin-bottom: 20px;
-}
-
-.primary-btn {
-  background-color: var(--button-color);
-  color: var(--button-text-color);
-  border: none;
-  padding: 12px 24px;
-  border-radius: var(--radius-md);
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  box-shadow: var(--shadow-sm);
-}
-
-.primary-btn:active {
-  transform: scale(0.96);
-  opacity: 0.9;
-}
-
-.info-card {
-  background-color: var(--secondary-bg-color);
-  border-radius: var(--radius-md);
-  padding: 16px;
-  border: 1px solid var(--border-color);
-}
-
-.info-card h4 {
-  font-size: 14px;
-  font-weight: 600;
+.banner-icon {
+  font-size: 34px;
   margin-bottom: 6px;
 }
 
-.info-card p {
-  font-size: 13px;
+.banner-box h3 {
+  font-size: 17px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.banner-box p {
+  font-size: 12px;
   color: var(--hint-color);
 }
 
+.banner-gold {
+  background: linear-gradient(135deg, rgba(255, 183, 3, 0.15), rgba(251, 133, 0, 0.1));
+  border-color: rgba(255, 183, 3, 0.3);
+}
+
+.banner-emerald {
+  background: linear-gradient(135deg, rgba(49, 181, 69, 0.15), rgba(46, 166, 255, 0.1));
+  border-color: rgba(49, 181, 69, 0.3);
+}
+
+.banner-purple {
+  background: linear-gradient(135deg, rgba(157, 78, 221, 0.2), rgba(46, 166, 255, 0.12));
+  border-color: rgba(157, 78, 221, 0.35);
+}
+
 /* ==========================================================================
-   Pastki navigatsiya (Bottom Navigation)
+   TAB 1: ASOSIY SAHIFA
+   ========================================================================== */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.stat-pill {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  padding: 10px 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stat-icon {
+  font-size: 20px;
+}
+
+.stat-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-val {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.text-accent {
+  color: var(--link-color);
+}
+
+.stat-lbl {
+  font-size: 11px;
+  color: var(--hint-color);
+}
+
+/* Kunlik so'z */
+.daily-word-card {
+  background: linear-gradient(135deg, rgba(46, 166, 255, 0.15), rgba(157, 78, 221, 0.15));
+  border: 1px solid rgba(46, 166, 255, 0.25);
+  border-radius: var(--radius-xl);
+  padding: 16px 18px;
+  margin-bottom: 20px;
+}
+
+.daily-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.daily-tag {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  color: var(--link-color);
+}
+
+.audio-mini-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+}
+
+.daily-de {
+  font-size: 20px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.daily-uz {
+  font-size: 14px;
+  color: var(--hint-color);
+  margin-bottom: 10px;
+}
+
+.daily-example {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-size: 12px;
+}
+
+.section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 18px 0 12px 0;
+}
+
+.section-title h4 {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.section-hint {
+  font-size: 11px;
+  color: var(--hint-color);
+}
+
+/* 2x2 Grid */
+.quick-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.grid-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 115px;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+  position: relative;
+}
+
+.grid-card:active {
+  transform: scale(0.97);
+}
+
+.grid-icon {
+  font-size: 26px;
+  margin-bottom: 8px;
+}
+
+.grid-info h5 {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.grid-info p {
+  font-size: 11px;
+  color: var(--hint-color);
+}
+
+.grid-arrow {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  font-size: 12px;
+  color: var(--hint-color);
+}
+
+/* Tavsiya ro'yxati */
+.recommended-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mini-resource-item {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.res-icon {
+  font-size: 24px;
+}
+
+.res-details {
+  flex: 1;
+}
+
+.res-title {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.res-meta {
+  display: block;
+  font-size: 11px;
+  color: var(--hint-color);
+}
+
+.res-btn {
+  background: var(--button-color);
+  color: var(--button-text-color);
+  border: none;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   TAB 2: REYTING (LEADERBOARD)
+   ========================================================================== */
+.ranking-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rank-item {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.rank-badge {
+  width: 44px;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.rank-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.rank-name {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.rank-meta {
+  font-size: 11px;
+  color: var(--hint-color);
+}
+
+.rank-score {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.rank-top-1 {
+  background: rgba(255, 183, 3, 0.1);
+  border-color: rgba(255, 183, 3, 0.3);
+}
+.rank-top-1 .rank-score { color: var(--accent-gold); }
+
+.rank-top-2 {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.rank-top-3 {
+  background: rgba(251, 133, 0, 0.08);
+}
+
+.rank-current-user {
+  background: rgba(46, 166, 255, 0.12);
+  border-color: rgba(46, 166, 255, 0.4);
+}
+.rank-current-user .rank-name,
+.rank-current-user .rank-score { color: var(--link-color); }
+
+/* ==========================================================================
+   TAB 3: TADBIRLAR
+   ========================================================================== */
+.events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.event-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.event-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.event-tag {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+}
+
+.tag-live {
+  background: rgba(49, 181, 69, 0.2);
+  color: var(--accent-green);
+}
+
+.tag-webinar {
+  background: rgba(46, 166, 255, 0.2);
+  color: var(--link-color);
+}
+
+.event-time {
+  font-size: 11px;
+  color: var(--hint-color);
+}
+
+.event-title {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.event-desc {
+  font-size: 12px;
+  color: var(--hint-color);
+}
+
+.event-btn {
+  width: 100%;
+  padding: 10px;
+  border-radius: var(--radius-md);
+  border: none;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+.btn-primary {
+  background: var(--accent-green);
+  color: #fff;
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-color);
+  border: 1px solid var(--card-border);
+}
+
+/* ==========================================================================
+   TAB 4: PROFIL
+   ========================================================================== */
+.profile-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-xl);
+  padding: 18px;
+  margin-bottom: 16px;
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.profile-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2ea6ff, #9d4edd);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.profile-meta h3 {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.profile-tag {
+  font-size: 11px;
+  color: var(--accent-gold);
+  font-weight: 600;
+}
+
+.profile-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: var(--radius-md);
+  padding: 10px 4px;
+  text-align: center;
+}
+
+.p-val {
+  display: block;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--link-color);
+}
+
+.p-lbl {
+  font-size: 10px;
+  color: var(--hint-color);
+}
+
+.profile-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.profile-menu-item {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.profile-menu-item:active {
+  transform: scale(0.98);
+}
+
+.p-menu-icon { font-size: 18px; }
+.p-menu-title { flex: 1; font-size: 13px; font-weight: 600; }
+.p-menu-arrow { color: var(--hint-color); font-size: 12px; }
+
+/* ==========================================================================
+   TAB 5: ADMIN BOSHQARUV PANELI
+   ========================================================================== */
+.admin-subnav {
+  display: flex;
+  gap: 8px;
+  padding: 4px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-md);
+  margin-bottom: 16px;
+}
+
+.admin-tab-btn {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  background: transparent;
+  color: var(--hint-color);
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.admin-tab-btn.active {
+  background: var(--button-color);
+  color: #fff;
+}
+
+.admin-section {
+  display: none;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.admin-section.active {
+  display: block;
+}
+
+.crud-form-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-xl);
+  padding: 16px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--link-color);
+}
+
+.badge-mini {
+  font-size: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.form-row-cols {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 10px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.form-group label {
+  font-size: 11px;
+  color: var(--hint-color);
+}
+
+.form-control {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  color: var(--text-color);
+  font-size: 13px;
+  outline: none;
+  font-family: inherit;
+}
+
+.form-control:focus {
+  border-color: var(--button-color);
+}
+
+.form-control-sm {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  color: var(--text-color);
+  font-size: 11px;
+  font-family: inherit;
+}
+
+.option-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  border: none;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  color: #fff;
+  margin-top: 6px;
+}
+
+.btn-blue { background: #2ea6ff; }
+.btn-purple { background: #9d4edd; }
+.btn-emerald { background: #31b545; }
+
+.crud-list-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-xl);
+  padding: 16px;
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.hint-count {
+  font-size: 11px;
+  color: var(--hint-color);
+}
+
+.items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.crud-item {
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.crud-item-info strong {
+  font-size: 13px;
+}
+
+.crud-item-info small {
+  display: block;
+  font-size: 11px;
+  color: var(--hint-color);
+}
+
+.action-btn-sm {
+  border: none;
+  background: rgba(255, 59, 48, 0.15);
+  color: var(--accent-red);
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   Bottom Navigation
    ========================================================================== */
 .bottom-nav {
   position: fixed;
@@ -239,44 +866,45 @@ body {
   right: 0;
   max-width: 480px;
   margin: 0 auto;
+  height: 68px;
   background-color: var(--bg-color);
   border-top: 1px solid var(--border-color);
   display: flex;
+  align-items: center;
   justify-content: space-around;
-  padding: 8px 12px 14px 12px;
-  z-index: 100;
+  padding: 0 4px;
+  z-index: 1000;
   backdrop-filter: blur(12px);
 }
 
 .nav-item {
-  background: none;
-  border: none;
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  background: transparent;
+  border: none;
   cursor: pointer;
-  padding: 6px 12px;
-  border-radius: var(--radius-md);
-  transition: all 0.2s ease;
+  padding: 6px 0;
   color: var(--hint-color);
+  transition: all 0.2s ease;
 }
 
-.nav-item .nav-icon {
+.nav-icon {
   font-size: 20px;
-  transition: transform 0.2s ease;
+  margin-bottom: 2px;
 }
 
-.nav-item .nav-label {
+.nav-label {
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .nav-item.active {
   color: var(--button-color);
 }
 
-.nav-item.active .nav-icon {
-  transform: translateY(-2px);
+.nav-admin-item.active {
+  color: var(--accent-purple);
 }
-

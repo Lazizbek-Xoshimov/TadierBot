@@ -9,7 +9,7 @@
   <!-- Google Fonts: Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -17,11 +17,11 @@
     <!-- Header: Foydalanuvchi ma'lumotlari -->
     <header class="app-header">
       <div class="user-info">
-        <div class="avatar" id="user-avatar">
+        <div class="avatar" id="user-avatar" title="Rejimni o'zgartirish">
           <span id="avatar-fallback">👤</span>
         </div>
         <div class="user-details">
-          <span class="greeting">Salom,</span>
+          <span class="greeting">SALOM,</span>
           <h2 class="user-name" id="user-name">Foydalanuvchi</h2>
         </div>
       </div>
@@ -31,70 +31,462 @@
       </div>
     </header>
 
-    <!-- Asosiy kontent maydoni (Bo'sh shablon) -->
+    <!-- Asosiy kontent maydoni -->
     <main class="app-content">
-      <!-- 1. Bosh sahifa (Home) bo'limi -->
+
+      <!-- ==========================================
+           TAB 1: ASOSIY SAHIFA
+           ========================================== -->
       <section id="tab-home" class="tab-pane active">
-        <div class="placeholder-card hero-card">
-          <div class="card-icon">🚀</div>
-          <h3>Tadier Mini App</h3>
-          <p>Tez orada bu yerda yangi va qiziqarli ta'limiy imkoniyatlar paydo bo'ladi.</p>
-          <button class="primary-btn" id="btn-action">
-            <span>✨ Test tugmasi</span>
-          </button>
+        <!-- 1. Foydalanuvchi qisqa statistikasi -->
+        <div class="stats-row">
+          <div class="stat-pill">
+            <span class="stat-icon">🔥</span>
+            <div class="stat-text">
+              <span class="stat-val" id="stat-streak">3 kun</span>
+              <span class="stat-lbl">Streak</span>
+            </div>
+          </div>
+          <div class="stat-pill">
+            <span class="stat-icon">⭐</span>
+            <div class="stat-text">
+              <span class="stat-val" id="stat-score">180</span>
+              <span class="stat-lbl">Ball</span>
+            </div>
+          </div>
+          <div class="stat-pill">
+            <span class="stat-icon">🎯</span>
+            <div class="stat-text">
+              <span class="stat-val text-accent" id="stat-level">A2</span>
+              <span class="stat-lbl">Daraja</span>
+            </div>
+          </div>
         </div>
 
-        <div class="info-card">
-          <h4>💡 Tizim holati</h4>
-          <p id="platform-info">Telegram WebApp muvaffaqiyatli ishga tushdi.</p>
+        <!-- 2. Kunlik so'z banneri (Wort des Tages) -->
+        <div class="daily-word-card">
+          <div class="daily-header">
+            <span class="daily-tag">🇩🇪 KUN SO'ZI</span>
+            <button class="audio-mini-btn" id="btn-speak-daily" title="Tinglash">🔊</button>
+          </div>
+          <h3 class="daily-de" id="daily-word-de">die Herausforderung</h3>
+          <p class="daily-uz" id="daily-word-uz">sinov, qiyinchilik, chaqiriq</p>
+          <div class="daily-example">
+            <em id="daily-example-de">"Deutsch lernen ist eine schöne Herausforderung!"</em>
+          </div>
+        </div>
+
+        <!-- 3. Asosiy O'quv Bo'limlari (2x2 Grid) -->
+        <div class="section-title">
+          <h4>🚀 O'quv bo'limlari</h4>
+          <span class="section-hint">Tanlang</span>
+        </div>
+
+        <div class="quick-grid">
+          <div class="grid-card" id="card-open-tests">
+            <div class="grid-icon">🎓</div>
+            <div class="grid-info">
+              <h5>Placement Test</h5>
+              <p>Darajani aniqlash (A1-B1)</p>
+            </div>
+            <span class="grid-arrow">➔</span>
+          </div>
+
+          <div class="grid-card" id="card-open-cards">
+            <div class="grid-icon">🗂</div>
+            <div class="grid-info">
+              <h5>So'z trenajyori</h5>
+              <p>Flesh-kartochkalar</p>
+            </div>
+            <span class="grid-arrow">➔</span>
+          </div>
+
+          <div class="grid-card" id="card-open-books">
+            <div class="grid-icon">📚</div>
+            <div class="grid-info">
+              <h5>Kitoblar (44 ta)</h5>
+              <p>Barcha qo'llanmalar</p>
+            </div>
+            <span class="grid-arrow">➔</span>
+          </div>
+
+          <div class="grid-card" id="card-open-audio">
+            <div class="grid-icon">🎧</div>
+            <div class="grid-info">
+              <h5>Hören (Audio)</h5>
+              <p>Tinglab tushunish</p>
+            </div>
+            <span class="grid-arrow">➔</span>
+          </div>
+        </div>
+
+        <!-- 4. Tavsiya etiladigan materiallar -->
+        <div class="section-title">
+          <h4>🔥 Tavsiya etiladigan materiallar</h4>
+        </div>
+        <div class="recommended-list">
+          <div class="mini-resource-item">
+            <div class="res-icon">📖</div>
+            <div class="res-details">
+              <span class="res-title">Nemis tili grammatikasi (A1-B1)</span>
+              <span class="res-meta">O'zbekcha izohli PDF kitob</span>
+            </div>
+            <button class="res-btn" id="btn-read-grammar">O'qish</button>
+          </div>
+          <div class="mini-resource-item">
+            <div class="res-icon">📗</div>
+            <div class="res-details">
+              <span class="res-title">Start Deutsch A1 lug'ati</span>
+              <span class="res-meta">Goethe instituti • 650 ta so'z</span>
+            </div>
+            <button class="res-btn" id="btn-read-vocab">O'qish</button>
+          </div>
         </div>
       </section>
 
-      <!-- 2. Testlar (kelajak uchun tayyor joy) -->
-      <section id="tab-tests" class="tab-pane">
-        <div class="placeholder-card">
-          <div class="card-icon">🎓</div>
-          <h3>Interaktiv Testlar</h3>
-          <p>Ushbu bo'lim tez orada ishga tushadi.</p>
+
+      <!-- ==========================================
+           TAB 2: REYTING (LEADERBOARD)
+           ========================================== -->
+      <section id="tab-leaderboard" class="tab-pane">
+        <div class="banner-box banner-gold">
+          <div class="banner-icon">🏆</div>
+          <h3>O'quvchilar Reytingi</h3>
+          <p>Haftalik faollik va yechilgan testlar bo'yicha</p>
+        </div>
+
+        <div class="ranking-list" id="ranking-list">
+          <div class="rank-item rank-top-1">
+            <div class="rank-badge">🥇 1</div>
+            <div class="rank-info">
+              <span class="rank-name">Malika Karimova</span>
+              <span class="rank-meta">24 ta test • 980 ball</span>
+            </div>
+            <span class="rank-score">980 ⭐</span>
+          </div>
+
+          <div class="rank-item rank-top-2">
+            <div class="rank-badge">🥈 2</div>
+            <div class="rank-info">
+              <span class="rank-name">Javohir Aliyev</span>
+              <span class="rank-meta">19 ta test • 820 ball</span>
+            </div>
+            <span class="rank-score">820 ⭐</span>
+          </div>
+
+          <div class="rank-item rank-top-3">
+            <div class="rank-badge">🥉 3</div>
+            <div class="rank-info">
+              <span class="rank-name">Shahzoda Umarova</span>
+              <span class="rank-meta">15 ta test • 640 ball</span>
+            </div>
+            <span class="rank-score">640 ⭐</span>
+          </div>
+
+          <!-- Joriy foydalanuvchi joyi -->
+          <div class="rank-item rank-current-user">
+            <div class="rank-badge">#14</div>
+            <div class="rank-info">
+              <span class="rank-name" id="rank-my-name">Siz (Foydalanuvchi)</span>
+              <span class="rank-meta">4 ta test • 180 ball</span>
+            </div>
+            <span class="rank-score">180 ⭐</span>
+          </div>
         </div>
       </section>
 
-      <!-- 3. So'zlar / Flesh-kartalar (kelajak uchun tayyor joy) -->
-      <section id="tab-cards" class="tab-pane">
-        <div class="placeholder-card">
-          <div class="card-icon">🗂</div>
-          <h3>Flesh-kartochkalar</h3>
-          <p>Nemis tili so'zlarini yodlash trenajyori tez orada!</p>
+
+      <!-- ==========================================
+           TAB 3: TADBIRLAR VA JONLI DARSLAR
+           ========================================== -->
+      <section id="tab-events" class="tab-pane">
+        <div class="banner-box banner-emerald">
+          <div class="banner-icon">🗓</div>
+          <h3>Jonli Darslar & Vebinarlar</h3>
+          <p>O'qituvchi bilan jonli muloqot va yangi guruhlar</p>
+        </div>
+
+        <div class="events-list" id="events-list">
+          <div class="event-card">
+            <div class="event-top">
+              <span class="event-tag tag-live">ZOOM DARSI</span>
+              <span class="event-time">Bugun • 20:00</span>
+            </div>
+            <h4 class="event-title">A1: Nemis tilida eng ko'p ishlatiladigan 50 ta fe'l</h4>
+            <p class="event-desc">Dinara ustoz bilan jonli amaliyot va savol-javoblar.</p>
+            <button class="event-btn btn-primary" id="btn-join-zoom">Qatnashish (Havola)</button>
+          </div>
+
+          <div class="event-card">
+            <div class="event-top">
+              <span class="event-tag tag-webinar">VEBINAR</span>
+              <span class="event-time">Juma • 19:30</span>
+            </div>
+            <h4 class="event-title">Goethe A1/A2 imtihoniga 1 oyda tayyorlanish sirlari</h4>
+            <p class="event-desc">Barcha talablar, namunaviy testlar va maslahatlar.</p>
+            <button class="event-btn btn-secondary" id="btn-set-reminder">Eslatma qo'yish 🔔</button>
+          </div>
         </div>
       </section>
 
-      <!-- 4. Profil / Saqlanganlar -->
-      <section id="tab-profile" class="tab-pane">
-        <div class="placeholder-card">
-          <div class="card-icon">⭐</div>
-          <h3>Shaxsiy kabinet</h3>
-          <p>Natijalaringiz va faolligingiz shu yerda aks etadi.</p>
+
+      <!-- ==========================================
+           TAB 4: SHAXSIY KABINET
+           ========================================== -->
+      <section id="tab-cabinet" class="tab-pane">
+        <div class="profile-card">
+          <div class="profile-header">
+            <div class="profile-avatar" id="prof-avatar">👤</div>
+            <div class="profile-meta">
+              <h3 id="prof-name">Foydalanuvchi</h3>
+              <span class="profile-tag">🏅 Faol o'quvchi (Bronze)</span>
+            </div>
+          </div>
+
+          <div class="profile-stats-grid">
+            <div class="p-stat-box">
+              <span class="p-val">4</span>
+              <span class="p-lbl">Testlar</span>
+            </div>
+            <div class="p-stat-box">
+              <span class="p-val">35</span>
+              <span class="p-lbl">Yodlangan so'z</span>
+            </div>
+            <div class="p-stat-box">
+              <span class="p-val">180</span>
+              <span class="p-lbl">Ball</span>
+            </div>
+            <div class="p-stat-box">
+              <span class="p-val">A2</span>
+              <span class="p-lbl">Daraja</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="profile-menu">
+          <div class="profile-menu-item" id="btn-prof-favorites">
+            <span class="p-menu-icon">⭐</span>
+            <span class="p-menu-title">Saqlangan materiallar</span>
+            <span class="p-menu-arrow">➔</span>
+          </div>
+          <div class="profile-menu-item" id="btn-prof-certificates">
+            <span class="p-menu-icon">📜</span>
+            <span class="p-menu-title">Sertifikatlarim</span>
+            <span class="p-menu-arrow">➔</span>
+          </div>
+          <div class="profile-menu-item" id="btn-prof-contact">
+            <span class="p-menu-icon">💬</span>
+            <span class="p-menu-title">Ustoz bilan bog'lanish</span>
+            <span class="p-menu-arrow">➔</span>
+          </div>
         </div>
       </section>
+
+
+      <!-- ==========================================
+           TAB 5: ADMIN BOSHQARUV PANELI (Faqat Admin)
+           ========================================== -->
+      <section id="tab-admin" class="tab-pane">
+        <div class="banner-box banner-purple">
+          <div class="banner-icon">⚙️</div>
+          <h3>Boshqaruv Markazi</h3>
+          <p>Ma'lumotlar bazasiga ma'lumot kiritish va boshqarish</p>
+        </div>
+
+        <!-- Admin ichki bo'limlari tanlagichi -->
+        <div class="admin-subnav">
+          <button class="admin-tab-btn active" data-admin-sec="sec-words">🗂 So'zlar</button>
+          <button class="admin-tab-btn" data-admin-sec="sec-tests">🎓 Testlar</button>
+          <button class="admin-tab-btn" data-admin-sec="sec-events">🗓 Tadbirlar</button>
+        </div>
+
+        <!-- 1. So'zlar boshqaruvi (Flashcards CRUD) -->
+        <div id="sec-words" class="admin-section active">
+          <div class="crud-form-card">
+            <div class="form-title">
+              <span>➕ Yangi so'z qo'shish</span>
+              <span class="badge-mini">Lug'at</span>
+            </div>
+
+            <div class="form-row-cols">
+              <div class="form-group form-col-1">
+                <label for="inp-word-article">Artikl</label>
+                <select id="inp-word-article" class="form-control">
+                  <option value="der">der</option>
+                  <option value="die">die</option>
+                  <option value="das">das</option>
+                  <option value="">— (yo'q)</option>
+                </select>
+              </div>
+              <div class="form-group form-col-2">
+                <label for="inp-word-de">Nemischa so'z</label>
+                <input type="text" id="inp-word-de" class="form-control" placeholder="masalan: Buch">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="inp-word-uz">O'zbekcha tarjimasi</label>
+              <input type="text" id="inp-word-uz" class="form-control" placeholder="masalan: Kitob">
+            </div>
+
+            <div class="form-group">
+              <label for="inp-word-sample-de">Misol gap (Nemischa)</label>
+              <input type="text" id="inp-word-sample-de" class="form-control" placeholder="Das Buch ist gut">
+            </div>
+
+            <div class="form-group">
+              <label for="inp-word-sample-uz">Misol gap tarjimasi (O'zbekcha)</label>
+              <input type="text" id="inp-word-sample-uz" class="form-control" placeholder="Kitob yaxshi">
+            </div>
+
+            <button class="submit-btn btn-blue" id="btn-save-word">
+              💾 Saqlash (Baza ga qo'shish)
+            </button>
+          </div>
+
+          <div class="crud-list-card">
+            <div class="list-header">
+              <span>Mavjud so'zlar ro'yxati</span>
+              <span class="hint-count" id="words-count">2 ta</span>
+            </div>
+            <div class="items-list" id="admin-words-list">
+              <div class="crud-item">
+                <div class="crud-item-info">
+                  <strong>der Apfel</strong> <span>— Olma</span>
+                  <small>Ich esse einen Apfel</small>
+                </div>
+                <div class="crud-actions">
+                  <button class="action-btn-sm btn-delete">🗑</button>
+                </div>
+              </div>
+              <div class="crud-item">
+                <div class="crud-item-info">
+                  <strong>das Buch</strong> <span>— Kitob</span>
+                  <small>Das Buch ist interessant</small>
+                </div>
+                <div class="crud-actions">
+                  <button class="action-btn-sm btn-delete">🗑</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Testlar boshqaruvi (Quiz CRUD) -->
+        <div id="sec-tests" class="admin-section">
+          <div class="crud-form-card">
+            <div class="form-title">
+              <span>➕ Yangi test savoli qo'shish</span>
+              <select id="inp-test-level" class="form-control-sm">
+                <option value="A1">A1 Daraja</option>
+                <option value="A2">A2 Daraja</option>
+                <option value="B1">B1 Daraja</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="inp-test-question">Savol matni</label>
+              <textarea id="inp-test-question" class="form-control" rows="2" placeholder="Ich _____ aus Usbekistan."></textarea>
+            </div>
+
+            <div class="form-group">
+              <label>Variantlar (To'g'ri javobni belgilang):</label>
+              <div class="option-input-row">
+                <input type="radio" name="admin_correct_opt" value="0" checked>
+                <input type="text" id="inp-test-opt0" class="form-control" placeholder="A variant (To'g'ri)">
+              </div>
+              <div class="option-input-row">
+                <input type="radio" name="admin_correct_opt" value="1">
+                <input type="text" id="inp-test-opt1" class="form-control" placeholder="B variant">
+              </div>
+              <div class="option-input-row">
+                <input type="radio" name="admin_correct_opt" value="2">
+                <input type="text" id="inp-test-opt2" class="form-control" placeholder="C variant">
+              </div>
+              <div class="option-input-row">
+                <input type="radio" name="admin_correct_opt" value="3">
+                <input type="text" id="inp-test-opt3" class="form-control" placeholder="D variant">
+              </div>
+            </div>
+
+            <button class="submit-btn btn-purple" id="btn-save-test">
+              💾 Savolni saqlash
+            </button>
+          </div>
+        </div>
+
+        <!-- 3. Tadbirlar boshqaruvi (Events CRUD) -->
+        <div id="sec-events" class="admin-section">
+          <div class="crud-form-card">
+            <div class="form-title">
+              <span>➕ Yangi tadbir yoki jonli dars</span>
+              <span class="badge-mini">E'lon</span>
+            </div>
+
+            <div class="form-group">
+              <label for="inp-event-title">Dars mavzusi / Nomi</label>
+              <input type="text" id="inp-event-title" class="form-control" placeholder="A1: 50 ta muhim fe'l">
+            </div>
+
+            <div class="form-row-cols">
+              <div class="form-group form-col-1">
+                <label for="inp-event-type">Turi</label>
+                <select id="inp-event-type" class="form-control">
+                  <option value="Zoom">Zoom darsi</option>
+                  <option value="Webinar">Vebinar</option>
+                  <option value="Group">Yangi guruh</option>
+                </select>
+              </div>
+              <div class="form-group form-col-2">
+                <label for="inp-event-time">Sana va vaqt</label>
+                <input type="text" id="inp-event-time" class="form-control" placeholder="Bugun, 20:00">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="inp-event-link">Havola (Link)</label>
+              <input type="text" id="inp-event-link" class="form-control" placeholder="https://zoom.us/j/...">
+            </div>
+
+            <button class="submit-btn btn-emerald" id="btn-save-event">
+              📢 E'lon qilish
+            </button>
+          </div>
+        </div>
+      </section>
+
     </main>
 
-    <!-- Pastki navigatsiya paneli (Bottom Navigation) -->
-    <nav class="bottom-nav">
+    <!-- Pastki navigatsiya paneli (Bottom Navigation Bar) -->
+    <nav class="bottom-nav" id="bottom-nav">
+      <!-- 1. Asosiy -->
       <button class="nav-item active" data-tab="tab-home">
         <span class="nav-icon">🏠</span>
         <span class="nav-label">Asosiy</span>
       </button>
-      <button class="nav-item" data-tab="tab-tests">
-        <span class="nav-icon">🎓</span>
-        <span class="nav-label">Testlar</span>
+
+      <!-- 2. Reyting -->
+      <button class="nav-item" data-tab="tab-leaderboard">
+        <span class="nav-icon">🏆</span>
+        <span class="nav-label">Reyting</span>
       </button>
-      <button class="nav-item" data-tab="tab-cards">
-        <span class="nav-icon">🗂</span>
-        <span class="nav-label">Lug'at</span>
+
+      <!-- 3. Tadbirlar -->
+      <button class="nav-item" data-tab="tab-events">
+        <span class="nav-icon">🗓</span>
+        <span class="nav-label">Tadbirlar</span>
       </button>
-      <button class="nav-item" data-tab="tab-profile">
+
+      <!-- 4. Kabinet -->
+      <button class="nav-item" data-tab="tab-cabinet">
         <span class="nav-icon">👤</span>
-        <span class="nav-label">Profil</span>
+        <span class="nav-label">Kabinet</span>
+      </button>
+
+      <!-- 5. Boshqaruv (Admin kirganda avtomatik ochiladi) -->
+      <button class="nav-item nav-admin-item hidden" id="nav-btn-admin" data-tab="tab-admin">
+        <span class="nav-icon">⚙️</span>
+        <span class="nav-label">Boshqaruv</span>
       </button>
     </nav>
   </div>
@@ -102,4 +494,3 @@
   <script src="app.js"></script>
 </body>
 </html>
-
