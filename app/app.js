@@ -6,14 +6,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   // 1. Telegram WebApp obyektini sozlash
   const tg = window.Telegram?.WebApp;
-
-  // Admin Telegram ID lari (Kelgusida backend/baza orqali ham tekshiriladi)
-  const ADMIN_TELEGRAM_IDS = [
-    // Masalan: 123456789 (O'zingizning Telegram ID raqamingiz)
-  ];
-
-  let currentUserId = null;
-  let isAdmin = false;
+  const BACKEND_API_URL = 'https://tadierbot.runasp.net';
 
   // Xabarlarni chiqarish yordamchi funksiyasi
   function notify(msg) {
@@ -38,7 +31,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Foydalanuvchi ma'lumotlarini o'qish
     const user = tg.initDataUnsafe?.user;
     if (user) {
-      currentUserId = user.id;
       const displayName = [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username || 'Foydalanuvchi';
       
       // Header va Profil nomlarini to'ldirish
@@ -55,25 +47,55 @@ document.addEventListener('DOMContentLoaded', () => {
         const initial = (user.first_name || 'U')[0].toUpperCase();
         document.getElementById('avatar-fallback').textContent = initial;
       }
-
-      // Adminlikni tekshirish
-      if (ADMIN_TELEGRAM_IDS.includes(user.id)) {
-        isAdmin = true;
-      }
     }
   }
 
-  // URL parametri orqali yoki avtomatik sinash uchun admin rejimini tekshirish
-  const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get('admin') === 'true' || ADMIN_TELEGRAM_IDS.length === 0) {
-    isAdmin = true; // Sinov davrida Boshqaruv tugmasi ochiq turadi
+  // 2. Backend (MonsterASP) bilan xavfsiz bog'lanish va rolni aniqlash
+  async function loadUserProfile() {
+    const roleBadge = document.getElementById('user-role');
+    const adminNavBtn = document.getElementById('nav-btn-admin');
+
+    // Telegram orqali ochilganda initData ni tekshirish
+    if (tg?.initData) {
+      try {
+        const response = await fetch(`${BACKEND_API_URL}/api/user/profile`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ initData: tg.initData })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+
+          // 1-rasm: Ism ostidagi rolni yangilash (Admin / Foydalanuvchi)
+          if (roleBadge) {
+            roleBadge.textContent = data.role;
+            roleBadge.classList.toggle('is-admin', data.isAdmin);
+          }
+
+          // 2-rasm: Admin bo'lsa 5-tugma "Boshqaruv" ochiladi, aks holda yashiriladi
+          if (adminNavBtn) {
+            adminNavBtn.classList.toggle('hidden', !data.isAdmin);
+          }
+          return;
+        }
+      } catch (err) {
+        console.warn('Backenddan rolni yuklashda xatolik:', err);
+      }
+    }
+
+    // Brauzerda test qilish uchun (?admin=true bo'lsa admin qilib ko'rsatish)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('admin') === 'true') {
+      if (roleBadge) {
+        roleBadge.textContent = 'Admin';
+        roleBadge.classList.add('is-admin');
+      }
+      adminNavBtn?.classList.remove('hidden');
+    }
   }
 
-  // Admin tugmasini yoqish
-  const adminNavBtn = document.getElementById('nav-btn-admin');
-  if (isAdmin && adminNavBtn) {
-    adminNavBtn.classList.remove('hidden');
-  }
+  loadUserProfile();
 
   // Avatarga ketma-ket 3 marta bosganda admin rejimini yoqish/o'chirish (Sinov uchun)
   let avatarTapCount = 0;
@@ -81,15 +103,22 @@ document.addEventListener('DOMContentLoaded', () => {
     avatarTapCount++;
     if (avatarTapCount === 3) {
       avatarTapCount = 0;
-      isAdmin = !isAdmin;
-      adminNavBtn?.classList.toggle('hidden', !isAdmin);
+      const adminNavBtn = document.getElementById('nav-btn-admin');
+      const roleBadge = document.getElementById('user-role');
+      const currentlyHidden = adminNavBtn?.classList.contains('hidden');
+      
+      adminNavBtn?.classList.toggle('hidden', !currentlyHidden);
+      if (roleBadge) {
+        roleBadge.textContent = currentlyHidden ? 'Admin' : 'Foydalanuvchi';
+        roleBadge.classList.toggle('is-admin', currentlyHidden);
+      }
       triggerHaptic('heavy');
-      notify(isAdmin ? '👑 Admin boshqaruv tugmasi yoqildi!' : '👤 Oddiy o‘quvchi rejimiga o‘tildi');
+      notify(currentlyHidden ? '👑 Admin boshqaruv tugmasi yoqildi!' : '👤 Oddiy o‘quvchi rejimiga o‘tildi');
     }
   });
 
 
-  // 2. Asosiy Tab Navigatsiyasi (Pastki menyu)
+  // 3. Asosiy Tab Navigatsiyasi (Pastki menyu)
   const navItems = document.querySelectorAll('.nav-item');
   const tabPanes = document.querySelectorAll('.tab-pane');
 
@@ -195,7 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 
-  // 3. Admin Boshqaruv Markazi (Subnav & CRUD)
+  // 4. Admin Boshqaruv Markazi (Subnav & CRUD)
   const adminTabBtns = document.querySelectorAll('.admin-tab-btn');
   const adminSections = document.querySelectorAll('.admin-section');
 
@@ -213,7 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // 3.1. Admin: Yangi so'z saqlash
+  // 4.1. Admin: Yangi so'z saqlash
   document.getElementById('btn-save-word')?.addEventListener('click', () => {
     const article = document.getElementById('inp-word-article').value;
     const deWord = document.getElementById('inp-word-de').value.trim();
@@ -258,7 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
     notify(`✅ "${fullWord}" so‘zi muvaffaqiyatli saqlandi!`);
   });
 
-  // 3.2. Admin: Yangi test savoli saqlash
+  // 4.2. Admin: Yangi test savoli saqlash
   document.getElementById('btn-save-test')?.addEventListener('click', () => {
     const qText = document.getElementById('inp-test-question').value.trim();
     const opt0 = document.getElementById('inp-test-opt0').value.trim();
@@ -274,7 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('inp-test-opt0').value = '';
   });
 
-  // 3.3. Admin: Yangi tadbir e'lon qilish
+  // 4.3. Admin: Yangi tadbir e'lon qilish
   document.getElementById('btn-save-event')?.addEventListener('click', () => {
     const title = document.getElementById('inp-event-title').value.trim();
     if (!title) {
