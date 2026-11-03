@@ -6,7 +6,6 @@
 document.addEventListener('DOMContentLoaded', () => {
   // 1. Telegram WebApp obyektini sozlash
   const tg = window.Telegram?.WebApp;
-  const BACKEND_API_URL = 'https://tadierbot.runasp.net';
 
   // Xabarlarni chiqarish yordamchi funksiyasi
   function notify(msg) {
@@ -50,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 2. Backend (MonsterASP) bilan xavfsiz bog'lanish va rolni aniqlash
+  // 2. Vercel Reverse Proxy orqali Backend bilan xavfsiz bog'lanish va rolni aniqlash
   async function loadUserProfile() {
     const roleBadge = document.getElementById('user-role');
     const adminNavBtn = document.getElementById('nav-btn-admin');
@@ -58,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Telegram orqali ochilganda initData ni tekshirish
     if (tg?.initData) {
       try {
-        const response = await fetch(`${BACKEND_API_URL}/api/user/profile`, {
+        const response = await fetch('/api/user/profile', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ initData: tg.initData })

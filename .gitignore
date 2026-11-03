@@ -32,4 +32,4 @@ publish_out/
 
 # Local documentation and configs
 MINI_APP_ROADMAP.md
-vercel.json
+/vercel.json

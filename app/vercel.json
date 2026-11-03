@@ -1,0 +1,9 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "http://tadierbot.runasp.net/api/:path*"
+    }
+  ]
+}
+
