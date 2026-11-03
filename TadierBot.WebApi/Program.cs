@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Options;
 using Telegram.Bot;
 using TadierBot.WebApi.Configurations;
 using TadierBot.WebApi.Extensions;
@@ -8,6 +8,25 @@ var builder = WebApplication.CreateBuilder(args);
 // 1. Controllerlar va OpenAPI
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+
+// 2. CORS - Konfiguratsiyadan ruxsat etilgan domenlarni dinamik yuklash
+const string telegramMiniAppPolicy = "TelegramMiniAppPolicy";
+var allowedOrigins = builder.Configuration
+    .GetSection("CorsSettings:AllowedOrigins")
+    .Get<string[]>() ?? [];
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(telegramMiniAppPolicy, policy =>
+    {
+        if (allowedOrigins.Length > 0)
+        {
+            policy.WithOrigins(allowedOrigins)
+                  .AllowAnyMethod()
+                  .AllowAnyHeader();
+        }
+    });
+});
 
 // 2. Bot konfiguratsiyasi
 builder.Services.Configure<BotConfiguration>(
@@ -36,6 +55,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors(telegramMiniAppPolicy);
 
 app.UseAuthorization();
 
