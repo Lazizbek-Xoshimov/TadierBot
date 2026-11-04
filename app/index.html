@@ -325,6 +325,22 @@
               </div>
             </div>
 
+            <div class="form-row-cols">
+              <div class="form-group form-col-1">
+                <label for="inp-word-level">Darajasi</label>
+                <select id="inp-word-level" class="form-control">
+                  <option value="A1">A1</option>
+                  <option value="A2">A2</option>
+                  <option value="B1">B1</option>
+                  <option value="B2">B2</option>
+                </select>
+              </div>
+              <div class="form-group form-col-2">
+                <label for="inp-word-category">Mavzu / Kategoriya</label>
+                <input type="text" id="inp-word-category" class="form-control" placeholder="masalan: Kundalik">
+              </div>
+            </div>
+
             <div class="form-group">
               <label for="inp-word-uz">O'zbekcha tarjimasi</label>
               <input type="text" id="inp-word-uz" class="form-control" placeholder="masalan: Kitob">
@@ -457,6 +473,96 @@
       </section>
 
     </main>
+
+    <!-- Flashcard So'z Trenajyori Modali -->
+    <div id="trainer-modal" class="trainer-modal hidden">
+      <div class="trainer-backdrop" id="trainer-backdrop"></div>
+      <div class="trainer-sheet">
+        <div class="trainer-header">
+          <div class="trainer-title-wrap">
+            <span class="trainer-icon">🗂</span>
+            <div>
+              <h3>So'z trenajyori</h3>
+              <p class="trainer-sub">Flesh-kartochkalar orqali yodlash</p>
+            </div>
+          </div>
+          <button class="modal-close-btn" id="btn-close-trainer" title="Yopish">✕</button>
+        </div>
+
+        <!-- 3-rasm: Daraja tanlash pills -->
+        <div class="trainer-levels">
+          <button class="level-pill active" data-level="A1">A1</button>
+          <button class="level-pill" data-level="A2">A2</button>
+          <button class="level-pill" data-level="B1">B1</button>
+          <button class="level-pill" data-level="B2">B2</button>
+        </div>
+
+        <!-- Progress bar va hisoblagich -->
+        <div class="trainer-meta-row">
+          <span class="trainer-counter" id="trainer-card-counter">Kartochka 1 / 10</span>
+          <span class="score-badge-mini" id="trainer-earned-chip">+0 ball</span>
+        </div>
+        <div class="trainer-progress-bar">
+          <div class="progress-fill" id="trainer-progress-fill" style="width: 10%;"></div>
+        </div>
+
+        <!-- Flesh-karta container (Old va Orqa tomoni) -->
+        <div class="flashcard-container" id="flashcard-container">
+          <div class="flashcard" id="flashcard">
+            <!-- Old tomoni (Nemischa) -->
+            <div class="card-face card-front">
+              <span class="card-hint">Old tomoni • Aylantirish uchun bosing</span>
+              <div class="card-body-center">
+                <span class="card-article" id="card-article">die</span>
+                <h2 class="card-word" id="card-german">Herausforderung</h2>
+              </div>
+              <button class="card-audio-btn" id="btn-speak-card" title="Tinglash">🔊 Talaffuz</button>
+            </div>
+
+            <!-- Orqa tomoni (O'zbekcha) -->
+            <div class="card-face card-back">
+              <span class="card-hint">Orqa tomoni • Tarjimasi</span>
+              <div class="card-body-center">
+                <h3 class="card-trans" id="card-uzbek">sinov, chaqiriq</h3>
+                <div class="card-example-box" id="card-example-wrap">
+                  <p class="ex-de" id="card-sample-de">"Deutsch lernen ist eine schöne Herausforderung!"</p>
+                  <p class="ex-uz" id="card-sample-uz">Nemis tilini o'rganish ajoyib bir chaqiriqdir!</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Javob tugmalari -->
+        <div class="trainer-actions" id="trainer-actions">
+          <button class="btn-action-again" id="btn-trainer-again">
+            <span class="btn-action-icon">🔄</span>
+            <div class="btn-action-text">
+              <strong>Qaytarish</strong>
+              <small>+2 ball</small>
+            </div>
+          </button>
+          <button class="btn-action-know" id="btn-trainer-know">
+            <span class="btn-action-icon">✅</span>
+            <div class="btn-action-text">
+              <strong>Bilaman</strong>
+              <small>+10 ball</small>
+            </div>
+          </button>
+        </div>
+
+        <!-- Mashg'ulot yakunlangandagi ekran -->
+        <div class="trainer-finished hidden" id="trainer-finished">
+          <div class="finished-icon">🎉</div>
+          <h3>Mashg'ulot yakunlandi!</h3>
+          <p id="finished-desc">10 ta so'z muvaffaqiyatli mashq qilindi.</p>
+          <div class="finished-stat" id="finished-total-score">+100 ball to'plandi</div>
+          <button class="submit-btn btn-blue" id="btn-trainer-restart">
+            🔄 Yana mashq qilish
+          </button>
+        </div>
+      </div>
+    </div>
 
     <!-- Pastki navigatsiya paneli (Bottom Navigation Bar) -->
     <nav class="bottom-nav" id="bottom-nav">
