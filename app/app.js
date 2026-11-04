@@ -180,11 +180,12 @@ document.addEventListener('DOMContentLoaded', () => {
   let trainerWords = [];
   let trainerIndex = 0;
   let currentTrainerLevel = 'A1';
+  let currentTrainerUnit = null;
 
   // Trenajyor modali ochish
   document.getElementById('card-open-cards')?.addEventListener('click', () => {
     triggerHaptic('medium');
-    openTrainer(currentTrainerLevel);
+    openTrainer(currentTrainerLevel, currentTrainerUnit);
   });
 
   document.getElementById('btn-close-trainer')?.addEventListener('click', closeTrainer);
@@ -267,10 +268,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Backenddan daraja bo'yicha kartochkalarni olish
-  async function loadTrainerSession(level) {
+  // Backenddan daraja va unit bo'yicha kartochkalarni olish
+  async function loadTrainerSession(level, unit = null) {
     try {
-      const res = await fetch(`/api/words/trainer?level=${encodeURIComponent(level)}&count=10`);
+      const url = (unit !== null && unit !== undefined)
+        ? `/api/words/trainer?level=${encodeURIComponent(level)}&unit=${encodeURIComponent(unit)}&count=10`
+        : `/api/words/trainer?level=${encodeURIComponent(level)}&count=10`;
+
+      const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
         trainerWords = data.words || [];
@@ -282,37 +287,39 @@ document.addEventListener('DOMContentLoaded', () => {
       trainerWords = [];
     }
 
-    // Fallback sinov kartochkalari
+    trainerIndex = 0;
+
+    const btnSpeak = document.getElementById('btn-speak-card');
+    const cardArt = document.getElementById('card-article');
+    const cardDe = document.getElementById('card-german');
+    const cardUz = document.getElementById('card-uzbek');
+    const cardSampleDe = document.getElementById('card-sample-de');
+    const cardSampleUz = document.getElementById('card-sample-uz');
+    const counterEl = document.getElementById('trainer-card-counter');
+    const progressFill = document.getElementById('trainer-progress-fill');
+
     if (trainerWords.length === 0) {
-      trainerWords = [
-        {
-          id: 1,
-          article: 'die',
-          germanWord: 'Herausforderung',
-          uzbekTranslation: 'sinov, qiyinchilik, chaqiriq',
-          exampleSentenceDe: 'Deutsch lernen ist eine schöne Herausforderung!',
-          exampleSentenceUz: 'Nemis tilini o\'rganish ajoyib bir chaqiriqdir!'
-        },
-        {
-          id: 2,
-          article: 'der',
-          germanWord: 'Apfel',
-          uzbekTranslation: 'olma',
-          exampleSentenceDe: 'Ich esse einen frischen Apfel.',
-          exampleSentenceUz: 'Men yangi olma yeyapman.'
-        },
-        {
-          id: 3,
-          article: 'das',
-          germanWord: 'Buch',
-          uzbekTranslation: 'kitob',
-          exampleSentenceDe: 'Das Buch ist sehr interessant.',
-          exampleSentenceUz: 'Kitob juda qiziqarli.'
-        }
-      ];
+      flashcard?.classList.remove('flipped');
+      if (cardArt) cardArt.textContent = '';
+      if (cardDe) cardDe.textContent = (unit !== null && unit !== undefined)
+        ? `Unit ${unit} da hali so‘zlar yo‘q`
+        : "Bu darajada unitsiz so‘zlar yo‘q";
+      if (cardUz) cardUz.textContent = "Boshqa unit yoki darajani tanlang";
+      if (cardSampleDe) cardSampleDe.textContent = '';
+      if (cardSampleUz) cardSampleUz.textContent = '';
+
+      if (counterEl) counterEl.textContent = 'Kartochka 0 / 0';
+      if (progressFill) progressFill.style.width = '0%';
+
+      if (btnSpeak) btnSpeak.style.display = 'none';
+      if (btnTrainerPrev) btnTrainerPrev.disabled = true;
+      if (btnTrainerNext) btnTrainerNext.disabled = true;
+      return;
     }
 
-    trainerIndex = 0;
+    if (btnSpeak) btnSpeak.style.display = '';
+    if (btnTrainerPrev) btnTrainerPrev.disabled = false;
+    if (btnTrainerNext) btnTrainerNext.disabled = false;
     renderCurrentCard();
   }
 
@@ -362,6 +369,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Kartochkani aylantirish (Flip)
   flashcard?.addEventListener('click', (e) => {
     if (e.target.closest('#btn-speak-card')) return;
+    if (trainerWords.length === 0) return;
     triggerHaptic('light');
     flashcard.classList.toggle('flipped');
   });
@@ -369,6 +377,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Kartochkadagi audio talaffuz
   document.getElementById('btn-speak-card')?.addEventListener('click', (e) => {
     e.stopPropagation();
+    if (trainerWords.length === 0) return;
     triggerHaptic('light');
     const card = trainerWords[trainerIndex];
     if (card) {
@@ -379,6 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Oldingi kartaga qaytish
   btnTrainerPrev?.addEventListener('click', () => {
+    if (trainerWords.length === 0) return;
     if (trainerIndex > 0) {
       triggerHaptic('light');
       trainerIndex--;
@@ -388,6 +398,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Keyingi kartaga o'tish
   btnTrainerNext?.addEventListener('click', () => {
+    if (trainerWords.length === 0) return;
     triggerHaptic('light');
     if (trainerIndex < trainerWords.length - 1) {
       trainerIndex++;
@@ -401,12 +412,14 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('flashcard-container')?.classList.add('hidden');
     document.getElementById('trainer-actions')?.classList.add('hidden');
     const finishedBox = document.getElementById('trainer-finished');
+    const descEl = document.getElementById('finished-desc');
+    if (descEl) descEl.textContent = `${trainerWords.length} ta so'z muvaffaqiyatli mashq qilindi.`;
     finishedBox?.classList.remove('hidden');
   }
 
   document.getElementById('btn-trainer-restart')?.addEventListener('click', () => {
     triggerHaptic('medium');
-    openTrainer(currentTrainerLevel);
+    openTrainer(currentTrainerLevel, currentTrainerUnit);
   });
 
   // ==========================================
