@@ -22,6 +22,7 @@ public static class ServiceExtensions
         services.AddScoped<IStatisticsRepository, StatisticsRepository>();
         services.AddScoped<ISearchHistoryRepository, SearchHistoryRepository>();
         services.AddScoped<IWordRepository, WordRepository>();
+        services.AddScoped<IEventRepository, EventRepository>();
 
         // 3. Services
         services.AddScoped<IResourceService, ResourceService>();
@@ -34,6 +35,7 @@ public static class ServiceExtensions
         services.AddScoped<IAdminService, AdminService>();
         services.AddScoped<IUpdateHandlerService, UpdateHandlerService>();
         services.AddScoped<IWordService, WordService>();
+        services.AddScoped<IEventService, EventService>();
 
         // 4. Background Services (24/7 Telegram Polling)
         services.AddHostedService<TelegramPollingService>();
