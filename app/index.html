@@ -305,7 +305,8 @@
         <div id="sec-words" class="admin-section active">
           <div class="crud-form-card">
             <div class="form-title">
-              <span>➕ Yangi so'z qo'shish</span>
+              <span id="form-words-title">➕ Yangi so'z qo'shish</span>
+              <button type="button" class="btn-cancel-edit hidden" id="btn-cancel-edit">✕ Bekor qilish</button>
               <span class="badge-mini">Lug'at</span>
             </div>
 
@@ -362,6 +363,11 @@
           </div>
 
           <div class="crud-list-card">
+            <!-- 2-rasm: So'zlarni qidirish qatori -->
+            <div class="search-bar-row">
+              <input type="text" id="inp-search-words" class="form-control" placeholder="🔍 Qidirish (nemischa yoki o'zbekcha)...">
+              <button type="button" class="btn-search-submit" id="btn-search-words">Qidiruv</button>
+            </div>
             <div class="list-header">
               <span>Mavjud so'zlar ro'yxati</span>
               <span class="hint-count" id="words-count">2 ta</span>
@@ -500,7 +506,7 @@
         <!-- Progress bar va hisoblagich -->
         <div class="trainer-meta-row">
           <span class="trainer-counter" id="trainer-card-counter">Kartochka 1 / 10</span>
-          <span class="score-badge-mini" id="trainer-earned-chip">+0 ball</span>
+
         </div>
         <div class="trainer-progress-bar">
           <div class="progress-fill" id="trainer-progress-fill" style="width: 10%;"></div>
@@ -534,8 +540,15 @@
         </div>
 
         <!-- Javob tugmalari -->
-        <div class="trainer-actions" id="trainer-actions">
-          <button class="btn-action-again" id="btn-trainer-again">
+        <div class="trainer-nav-row" id="trainer-actions">
+          <button type="button" class="btn-nav-prev" id="btn-trainer-prev" title="Oldingi karta">
+            <span>⬅️ Oldingi</span>
+          </button>
+          <button type="button" class="btn-nav-next" id="btn-trainer-next" title="Keyingi karta">
+            <span>Keyingi ➔</span>
+          </button>
+        </div>
+        <div style="display:none">
             <span class="btn-action-icon">🔄</span>
             <div class="btn-action-text">
               <strong>Qaytarish</strong>
@@ -556,9 +569,9 @@
           <div class="finished-icon">🎉</div>
           <h3>Mashg'ulot yakunlandi!</h3>
           <p id="finished-desc">10 ta so'z muvaffaqiyatli mashq qilindi.</p>
-          <div class="finished-stat" id="finished-total-score">+100 ball to'plandi</div>
+          <p class="finished-hint">Siz ushbu to‘plamdagi barcha so‘zlarni ko‘rib chiqdingiz.</p>
           <button class="submit-btn btn-blue" id="btn-trainer-restart">
-            🔄 Yana mashq qilish
+            🔄 Boshidan ko‘rish
           </button>
         </div>
       </div>

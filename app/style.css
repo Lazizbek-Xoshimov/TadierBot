@@ -1285,3 +1285,115 @@ body {
   color: var(--accent-gold);
   margin: 14px 0 18px;
 }
+
+
+/* ==========================================================================
+   So'z Trenajyori Navigatsiya & Admin Qidiruv/Tahrirlash Uslublari
+   ========================================================================== */
+.trainer-nav-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.btn-nav-prev,
+.btn-nav-next {
+  flex: 1;
+  padding: 14px 16px;
+  border-radius: 16px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.btn-nav-prev {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+}
+
+.btn-nav-prev:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-nav-prev:not(:disabled):active {
+  transform: scale(0.96);
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.btn-nav-next {
+  background: var(--button-color);
+  border: none;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(46, 166, 255, 0.3);
+}
+
+.btn-nav-next:active {
+  transform: scale(0.96);
+}
+
+/* Admin: Qidiruv qatori */
+.search-bar-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.search-bar-row .form-control {
+  flex: 1;
+}
+
+.btn-search-submit {
+  background: var(--button-color);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 0 16px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.btn-search-submit:active {
+  transform: scale(0.95);
+}
+
+/* Admin: Tahrirlash holati */
+.btn-cancel-edit {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #f87171;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-left: 8px;
+  transition: all 0.2s ease;
+}
+
+.btn-cancel-edit:active {
+  transform: scale(0.95);
+}
+
+.crud-item {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.crud-item:hover {
+  border-color: rgba(46, 166, 255, 0.35);
+}
+
+.crud-item.is-editing {
+  border-color: var(--accent-gold);
+  background: rgba(255, 183, 3, 0.08);
+}

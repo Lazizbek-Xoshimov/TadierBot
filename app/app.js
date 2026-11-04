@@ -141,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (exEl) exEl.textContent = word.exampleSentenceDe ? `"${word.exampleSentenceDe}"` : '';
       }
     } catch (err) {
-      console.warn('Kun so\'zini yuklashda xatolik (standart so\'z ishlatiladi):', err);
+      console.warn('Kun so\'zini yuklashda xatolik:', err);
     }
   }
 
@@ -153,16 +153,17 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ==========================================
-  // 4. So'z Trenajyori (Flesh-kartochkalar)
+  // 4. So'z Trenajyori (Flesh-kartochkalar — Sof Ta'limiy Rejim)
   // ==========================================
   const trainerModal = document.getElementById('trainer-modal');
   const flashcard = document.getElementById('flashcard');
   const levelPills = document.querySelectorAll('.level-pill');
+  const btnTrainerPrev = document.getElementById('btn-trainer-prev');
+  const btnTrainerNext = document.getElementById('btn-trainer-next');
 
   let trainerWords = [];
   let trainerIndex = 0;
   let currentTrainerLevel = 'A1';
-  let sessionEarnedScore = 0;
 
   // Trenajyor modali ochish
   document.getElementById('card-open-cards')?.addEventListener('click', () => {
@@ -175,12 +176,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function openTrainer(level = 'A1') {
     currentTrainerLevel = level;
-    sessionEarnedScore = 0;
     trainerModal?.classList.remove('hidden');
     document.getElementById('trainer-finished')?.classList.add('hidden');
     document.getElementById('flashcard-container')?.classList.remove('hidden');
     document.getElementById('trainer-actions')?.classList.remove('hidden');
-    document.getElementById('trainer-earned-chip').textContent = '+0 ball';
 
     // Level tugmalarini faollashtirish
     levelPills.forEach(pill => {
@@ -218,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
       trainerWords = [];
     }
 
-    // Fallback: Agar bazada so'z bo'lmasa, sinov kartochkalari
+    // Fallback sinov kartochkalari
     if (trainerWords.length === 0) {
       trainerWords = [
         {
@@ -234,8 +233,8 @@ document.addEventListener('DOMContentLoaded', () => {
           article: 'der',
           germanWord: 'Apfel',
           uzbekTranslation: 'olma',
-          exampleSentenceDe: 'Ich esse einen Apfel.',
-          exampleSentenceUz: 'Men olma yeyapman.'
+          exampleSentenceDe: 'Ich esse einen frischen Apfel.',
+          exampleSentenceUz: 'Men yangi olma yeyapman.'
         },
         {
           id: 3,
@@ -254,6 +253,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Kartani ekranga chiqarish
   function renderCurrentCard() {
+    if (trainerWords.length === 0) return;
+
     if (trainerIndex >= trainerWords.length) {
       showTrainerFinished();
       return;
@@ -282,11 +283,19 @@ document.addEventListener('DOMContentLoaded', () => {
       const pct = Math.round(((trainerIndex + 1) / trainerWords.length) * 100);
       progressFill.style.width = `${pct}%`;
     }
+
+    // Navigatsiya tugmalari holati
+    if (btnTrainerPrev) {
+      btnTrainerPrev.disabled = (trainerIndex === 0);
+    }
+    if (btnTrainerNext) {
+      const isLast = (trainerIndex === trainerWords.length - 1);
+      btnTrainerNext.innerHTML = isLast ? '<span>Tugatish ✓</span>' : '<span>Keyingi ➔</span>';
+    }
   }
 
   // Kartochkani aylantirish (Flip)
   flashcard?.addEventListener('click', (e) => {
-    // Audio tugmasi bosilganda kartochka aylanmasligi uchun
     if (e.target.closest('#btn-speak-card')) return;
     triggerHaptic('light');
     flashcard.classList.toggle('flipped');
@@ -303,65 +312,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Javob berish: "Bilaman" (+10 ball) yoki "Qaytarish" (+2 ball)
-  document.getElementById('btn-trainer-know')?.addEventListener('click', () => handleTrainerAnswer(true));
-  document.getElementById('btn-trainer-again')?.addEventListener('click', () => handleTrainerAnswer(false));
-
-  async function handleTrainerAnswer(isRemembered) {
-    const card = trainerWords[trainerIndex];
-    if (!card) return;
-
-    triggerHaptic(isRemembered ? 'heavy' : 'medium');
-
-    const addedScore = isRemembered ? 10 : 2;
-    sessionEarnedScore += addedScore;
-    document.getElementById('trainer-earned-chip').textContent = `+${sessionEarnedScore} ball`;
-
-    // Backendga javob yuborish
-    if (tg?.initData) {
-      try {
-        const res = await fetch('/api/words/answer', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            initData: tg.initData,
-            wordId: card.id,
-            isRemembered: isRemembered
-          })
-        });
-
-        if (res.ok) {
-          const ansData = await res.json();
-          // Headerdagi ball va streakni darhol yangilash
-          const scoreEl = document.getElementById('stat-score');
-          const streakEl = document.getElementById('stat-streak');
-          if (scoreEl && ansData.totalScore !== undefined) scoreEl.textContent = ansData.totalScore;
-          if (streakEl && ansData.streakDays !== undefined) streakEl.textContent = `${ansData.streakDays} kun`;
-        }
-      } catch (err) {
-        console.warn('Javobni backendga saqlashda xatolik:', err);
-      }
-    } else {
-      // Offline / Test rejimda ballni lokal oshirib ko'rsatish
-      const scoreEl = document.getElementById('stat-score');
-      if (scoreEl) {
-        const cur = parseInt(scoreEl.textContent, 10) || 0;
-        scoreEl.textContent = cur + addedScore;
-      }
+  // Oldingi kartaga qaytish
+  btnTrainerPrev?.addEventListener('click', () => {
+    if (trainerIndex > 0) {
+      triggerHaptic('light');
+      trainerIndex--;
+      renderCurrentCard();
     }
+  });
 
-    trainerIndex++;
-    renderCurrentCard();
-  }
+  // Keyingi kartaga o'tish
+  btnTrainerNext?.addEventListener('click', () => {
+    triggerHaptic('light');
+    if (trainerIndex < trainerWords.length - 1) {
+      trainerIndex++;
+      renderCurrentCard();
+    } else {
+      showTrainerFinished();
+    }
+  });
 
   function showTrainerFinished() {
     document.getElementById('flashcard-container')?.classList.add('hidden');
     document.getElementById('trainer-actions')?.classList.add('hidden');
     const finishedBox = document.getElementById('trainer-finished');
     finishedBox?.classList.remove('hidden');
-
-    const scoreBox = document.getElementById('finished-total-score');
-    if (scoreBox) scoreBox.textContent = `+${sessionEarnedScore} ball to'plandi! 🏆`;
   }
 
   document.getElementById('btn-trainer-restart')?.addEventListener('click', () => {
@@ -370,17 +345,27 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ==========================================
-  // 5. Admin Boshqaruv Markazi (Words CRUD - 4-rasm)
+  // 5. Admin Boshqaruv Markazi (Qidiruv & Tahrirlash)
   // ==========================================
+  let editingWordId = null;
+  const formWordsTitle = document.getElementById('form-words-title');
+  const btnSaveWord = document.getElementById('btn-save-word');
+  const btnCancelEdit = document.getElementById('btn-cancel-edit');
+  const inpSearchWords = document.getElementById('inp-search-words');
+  const btnSearchWords = document.getElementById('btn-search-words');
 
-  // Admin so'zlar ro'yxatini yuklash
-  async function loadAdminWords() {
+  // Admin so'zlar ro'yxatini yuklash (Qidiruv bilan)
+  async function loadAdminWords(searchQuery = '') {
     const wordsList = document.getElementById('admin-words-list');
     const countEl = document.getElementById('words-count');
     if (!wordsList) return;
 
     try {
-      const res = await fetch('/api/words?pageNumber=1&pageSize=50');
+      const url = searchQuery 
+        ? `/api/words?pageNumber=1&pageSize=50&search=${encodeURIComponent(searchQuery)}`
+        : '/api/words?pageNumber=1&pageSize=50';
+
+      const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
         const words = data.items || [];
@@ -388,7 +373,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         wordsList.innerHTML = '';
         if (words.length === 0) {
-          wordsList.innerHTML = '<div style="padding:16px;text-align:center;color:var(--hint-color);font-size:13px;">Hozircha biror so‘z qo‘shilmagan.</div>';
+          wordsList.innerHTML = `<div style="padding:16px;text-align:center;color:var(--hint-color);font-size:13px;">
+            ${searchQuery ? 'Qidiruv bo‘yicha so‘z topilmadi.' : 'Hozircha biror so‘z qo‘shilmagan.'}
+          </div>`;
           return;
         }
 
@@ -396,6 +383,10 @@ document.addEventListener('DOMContentLoaded', () => {
           const fullWord = w.article ? `${w.article} ${w.germanWord}` : w.germanWord;
           const item = document.createElement('div');
           item.className = 'crud-item';
+          if (editingWordId === w.id) {
+            item.classList.add('is-editing');
+          }
+
           item.innerHTML = `
             <div class="crud-item-info">
               <strong>${fullWord}</strong> <span>— ${w.uzbekTranslation}</span>
@@ -406,7 +397,15 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
           `;
 
-          item.querySelector('.btn-delete').addEventListener('click', async () => {
+          // So'z ustiga bosganda tahrirlash (Edit) rejimiga o'tish
+          item.addEventListener('click', (e) => {
+            if (e.target.closest('.btn-delete')) return;
+            startEditWord(w, item);
+          });
+
+          // O'chirish
+          item.querySelector('.btn-delete').addEventListener('click', async (e) => {
+            e.stopPropagation();
             if (!confirm(`"${fullWord}" so‘zini o‘chirishni tasdiqlaysizmi?`)) return;
             triggerHaptic('medium');
             await deleteAdminWord(w.id, item);
@@ -419,6 +418,74 @@ document.addEventListener('DOMContentLoaded', () => {
       console.warn('Admin so‘zlarini yuklashda xatolik:', err);
     }
   }
+
+  // Tahrirlash rejimini boshlash
+  function startEditWord(word, itemElement) {
+    triggerHaptic('medium');
+    editingWordId = word.id;
+
+    // Formaga mavjud qiymatlarni to'ldirish
+    document.getElementById('inp-word-article').value = word.article || '';
+    document.getElementById('inp-word-de').value = word.germanWord || '';
+    document.getElementById('inp-word-uz').value = word.uzbekTranslation || '';
+    if (document.getElementById('inp-word-level')) {
+      document.getElementById('inp-word-level').value = word.level || 'A1';
+    }
+    if (document.getElementById('inp-word-category')) {
+      document.getElementById('inp-word-category').value = word.category || 'Kundalik';
+    }
+    document.getElementById('inp-word-sample-de').value = word.exampleSentenceDe || '';
+    document.getElementById('inp-word-sample-uz').value = word.exampleSentenceUz || '';
+
+    // Forma sarlavhasi va tugmasini yangilash
+    if (formWordsTitle) formWordsTitle.textContent = `✏️ So‘zni tahrirlash (#${word.id})`;
+    if (btnSaveWord) btnSaveWord.innerHTML = '💾 O‘zgarishlarni saqlash';
+    btnCancelEdit?.classList.remove('hidden');
+
+    // Ro'yxatdagi kartochkani belgilash
+    document.querySelectorAll('.crud-item').forEach(el => el.classList.remove('is-editing'));
+    itemElement?.classList.add('is-editing');
+
+    // Formaga siljitish
+    document.getElementById('sec-words')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // Tahrirlashni bekor qilish
+  function cancelEditWord() {
+    editingWordId = null;
+    document.getElementById('inp-word-article').value = 'der';
+    document.getElementById('inp-word-de').value = '';
+    document.getElementById('inp-word-uz').value = '';
+    document.getElementById('inp-word-sample-de').value = '';
+    document.getElementById('inp-word-sample-uz').value = '';
+
+    if (formWordsTitle) formWordsTitle.textContent = '➕ Yangi so‘z qo‘shish';
+    if (btnSaveWord) btnSaveWord.innerHTML = '💾 Saqlash (Baza ga qo‘shish)';
+    btnCancelEdit?.classList.add('hidden');
+
+    document.querySelectorAll('.crud-item').forEach(el => el.classList.remove('is-editing'));
+  }
+
+  btnCancelEdit?.addEventListener('click', () => {
+    triggerHaptic('light');
+    cancelEditWord();
+  });
+
+  // Qidiruv tugmasi va Enter orqali qidirish
+  btnSearchWords?.addEventListener('click', () => {
+    triggerHaptic('light');
+    const query = inpSearchWords?.value.trim() || '';
+    loadAdminWords(query);
+  });
+
+  inpSearchWords?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      triggerHaptic('light');
+      const query = inpSearchWords?.value.trim() || '';
+      loadAdminWords(query);
+    }
+  });
 
   // Admin so'zni o'chirish
   async function deleteAdminWord(wordId, element) {
@@ -434,7 +501,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (res.ok) {
         element.remove();
         notify('🗑 So‘z muvaffaqiyatli o‘chirildi!');
-        loadAdminWords();
+        if (editingWordId === wordId) {
+          cancelEditWord();
+        }
+        loadAdminWords(inpSearchWords?.value.trim() || '');
       } else {
         notify('❌ So‘zni o‘chirishda xatolik yuz berdi.');
       }
@@ -443,8 +513,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Admin yangi so'z saqlash
-  document.getElementById('btn-save-word')?.addEventListener('click', async () => {
+  // Admin saqlash (Yangi qo'shish yoki Mavjudini yangilash)
+  btnSaveWord?.addEventListener('click', async () => {
     const article = document.getElementById('inp-word-article').value;
     const deWord = document.getElementById('inp-word-de').value.trim();
     const uzWord = document.getElementById('inp-word-uz').value.trim();
@@ -460,41 +530,71 @@ document.addEventListener('DOMContentLoaded', () => {
 
     triggerHaptic('heavy');
 
-    const newWordPayload = {
-      article: article || null,
-      germanWord: deWord,
-      uzbekTranslation: uzWord,
-      exampleSentenceDe: sampleDe || null,
-      exampleSentenceUz: sampleUz || null,
-      level: level,
-      category: category,
-      isDailyWord: false
-    };
+    const headers = { 'Content-Type': 'application/json' };
+    if (tg?.initData) headers['X-Telegram-Init-Data'] = tg.initData;
 
     try {
-      const headers = { 'Content-Type': 'application/json' };
-      if (tg?.initData) headers['X-Telegram-Init-Data'] = tg.initData;
+      if (editingWordId) {
+        // PUT /api/words/{id} (Tahrirlash)
+        const updatePayload = {
+          id: editingWordId,
+          article: article || null,
+          germanWord: deWord,
+          uzbekTranslation: uzWord,
+          exampleSentenceDe: sampleDe || null,
+          exampleSentenceUz: sampleUz || null,
+          level: level,
+          category: category,
+          isDailyWord: false
+        };
 
-      const res = await fetch('/api/words', {
-        method: 'POST',
-        headers: headers,
-        body: JSON.stringify(newWordPayload)
-      });
+        const res = await fetch(`/api/words/${editingWordId}`, {
+          method: 'PUT',
+          headers: headers,
+          body: JSON.stringify(updatePayload)
+        });
 
-      if (res.ok) {
-        const fullWord = article ? `${article} ${deWord}` : deWord;
-        notify(`✅ "${fullWord}" so‘zi muvaffaqiyatli bazaga saqlandi!`);
-
-        // Maydonlarni tozalash
-        document.getElementById('inp-word-de').value = '';
-        document.getElementById('inp-word-uz').value = '';
-        document.getElementById('inp-word-sample-de').value = '';
-        document.getElementById('inp-word-sample-uz').value = '';
-
-        loadAdminWords();
+        if (res.ok) {
+          notify(`✅ "${deWord}" so‘zi muvaffaqiyatli yangilandi!`);
+          cancelEditWord();
+          loadAdminWords(inpSearchWords?.value.trim() || '');
+        } else {
+          const errJson = await res.json().catch(() => ({}));
+          notify(`⚠️ Xatolik: ${errJson.message || 'So‘zni yangilab bo‘lmadi'}`);
+        }
       } else {
-        const errJson = await res.json().catch(() => ({}));
-        notify(`⚠️ Xatolik: ${errJson.message || 'So‘zni saqlab bo‘lmadi'}`);
+        // POST /api/words (Yangi qo'shish)
+        const createPayload = {
+          article: article || null,
+          germanWord: deWord,
+          uzbekTranslation: uzWord,
+          exampleSentenceDe: sampleDe || null,
+          exampleSentenceUz: sampleUz || null,
+          level: level,
+          category: category,
+          isDailyWord: false
+        };
+
+        const res = await fetch('/api/words', {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(createPayload)
+        });
+
+        if (res.ok) {
+          const fullWord = article ? `${article} ${deWord}` : deWord;
+          notify(`✅ "${fullWord}" so‘zi muvaffaqiyatli saqlandi!`);
+
+          document.getElementById('inp-word-de').value = '';
+          document.getElementById('inp-word-uz').value = '';
+          document.getElementById('inp-word-sample-de').value = '';
+          document.getElementById('inp-word-sample-uz').value = '';
+
+          loadAdminWords(inpSearchWords?.value.trim() || '');
+        } else {
+          const errJson = await res.json().catch(() => ({}));
+          notify(`⚠️ Xatolik: ${errJson.message || 'So‘zni saqlab bo‘lmadi'}`);
+        }
       }
     } catch (err) {
       notify('❌ Server bilan bog‘lanishda xatolik yuz berdi.');
