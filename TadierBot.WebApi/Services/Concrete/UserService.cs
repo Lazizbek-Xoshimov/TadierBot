@@ -4,6 +4,7 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using TadierBot.WebApi.Common;
+using TadierBot.WebApi.DTOs.User;
 using TadierBot.WebApi.Extensions;
 using TadierBot.WebApi.Helpers;
 using TadierBot.WebApi.Keyboards;
@@ -183,6 +184,93 @@ public class UserService : IUserService
         }
 
         await _botClient.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: cancellationToken);
+    }
+
+    public async Task<UserStatsResponse> GetStatsAsync(long telegramId)
+    {
+        var user = await _userRepository.GetByTelegramIdAsync(telegramId);
+        if (user == null)
+        {
+            return new UserStatsResponse { StreakDays = 0, Score = 0, Level = "A1" };
+        }
+
+        int streak = user.StreakDays;
+        if (user.LastStreakDate.HasValue)
+        {
+            var diffDays = (DateTime.UtcNow.Date - user.LastStreakDate.Value.Date).TotalDays;
+            if (diffDays > 1 && user.StreakDays > 0)
+            {
+                streak = 0; // Ketma-ketlik uzilgan
+                user.StreakDays = 0;
+
+                // Ketma-ketlik uzilganda bazada ham streak = 0 deb yangilab qo'yish
+                await _userRepository.UpdateStatsAsync(
+                    telegramId, 
+                    user.Score, 
+                    0, 
+                    user.Level, 
+                    user.LastStreakDate.Value);
+            }
+        }
+
+        return new UserStatsResponse
+        {
+            StreakDays = streak,
+            Score = user.Score,
+            Level = user.Level
+        };
+    }
+
+    public async Task<UserStatsResponse> AddScoreAndStreakAsync(long telegramId, int earnedScore)
+    {
+        var user = await _userRepository.GetByTelegramIdAsync(telegramId);
+        if (user == null)
+        {
+            return new UserStatsResponse { StreakDays = 1, Score = earnedScore, Level = "A1" };
+        }
+
+        int newScore = user.Score + earnedScore;
+        string newLevel = CalculateLevel(newScore);
+
+        var today = DateTime.UtcNow.Date;
+        int newStreak;
+
+        if (user.LastStreakDate == null)
+        {
+            newStreak = 1;
+        }
+        else if (user.LastStreakDate.Value.Date == today)
+        {
+            newStreak = user.StreakDays; // Bugun allaqachon streak oshirilgan
+        }
+        else if (user.LastStreakDate.Value.Date == today.AddDays(-1))
+        {
+            newStreak = user.StreakDays + 1; // Kecha kirgan, ketma-ketlik davom etadi
+        }
+        else
+        {
+            newStreak = 1; // Ketma-ketlik uzilgan, qaytadan 1-kun
+        }
+
+        await _userRepository.UpdateStatsAsync(telegramId, newScore, newStreak, newLevel, today);
+
+        return new UserStatsResponse
+        {
+            StreakDays = newStreak,
+            Score = newScore,
+            Level = newLevel
+        };
+    }
+
+    private static string CalculateLevel(int score)
+    {
+        return score switch
+        {
+            >= 1000 => "B2",
+            >= 500 => "B1",
+            >= 200 => "A2",
+            _ => "A1"
+        };
     }
 }
 

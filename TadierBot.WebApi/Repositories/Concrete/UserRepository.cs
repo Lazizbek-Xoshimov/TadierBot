@@ -130,5 +130,28 @@ public class UserRepository : IUserRepository
         var result = await connection.QueryAsync<long>(sql, new { ExcludeTelegramId = excludeTelegramId });
         return result.ToList();
     }
+
+    public async Task<bool> UpdateStatsAsync(long telegramId, int score, int streakDays, string level, DateTime lastStreakDate)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        const string sql = """
+            UPDATE Users 
+            SET Score = @Score, 
+                StreakDays = @StreakDays, 
+                Level = @Level, 
+                LastStreakDate = @LastStreakDate,
+                LastActiveAt = SYSUTCDATETIME()
+            WHERE TelegramId = @TelegramId;
+            """;
+        int affected = await connection.ExecuteAsync(sql, new 
+        { 
+            TelegramId = telegramId, 
+            Score = score, 
+            StreakDays = streakDays, 
+            Level = level, 
+            LastStreakDate = lastStreakDate 
+        });
+        return affected > 0;
+    }
 }
 
