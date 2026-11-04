@@ -76,7 +76,11 @@ public abstract class BaseController : ControllerBase
             string? userJson = parsed["user"];
             if (!string.IsNullOrEmpty(userJson))
             {
-                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true,
+                    PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
+                };
                 user = JsonSerializer.Deserialize<TelegramUserDto>(userJson, options);
             }
 

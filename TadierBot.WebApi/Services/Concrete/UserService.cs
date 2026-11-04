@@ -189,15 +189,36 @@ public class UserService : IUserService
     public async Task SyncUserActivityAsync(TelegramUserDto telegramUser)
     {
         string fullName = $"{telegramUser.FirstName} {telegramUser.LastName}".Trim();
-        if (string.IsNullOrWhiteSpace(fullName))
+        if (string.IsNullOrWhiteSpace(fullName) && !string.IsNullOrWhiteSpace(telegramUser.Username))
         {
-            fullName = telegramUser.Username ?? "Foydalanuvchi";
+            fullName = telegramUser.Username;
+        }
+
+        var existingUser = await _userRepository.GetByTelegramIdAsync(telegramUser.Id);
+        if (existingUser != null)
+        {
+            // Agar yangi ism aniqlangan bo'lsa yangilaymiz, aks holda bazadagi mavjud ismni saqlab qolamiz
+            if (!string.IsNullOrWhiteSpace(fullName))
+            {
+                existingUser.FullName = fullName;
+            }
+            if (!string.IsNullOrWhiteSpace(telegramUser.Username))
+            {
+                existingUser.Username = telegramUser.Username;
+            }
+            if (!string.IsNullOrWhiteSpace(telegramUser.LanguageCode))
+            {
+                existingUser.LanguageCode = telegramUser.LanguageCode;
+            }
+
+            await _userRepository.AddOrUpdateAsync(existingUser);
+            return;
         }
 
         var user = new Models.User
         {
             TelegramId = telegramUser.Id,
-            FullName = fullName,
+            FullName = !string.IsNullOrWhiteSpace(fullName) ? fullName : "Foydalanuvchi",
             Username = telegramUser.Username,
             LanguageCode = telegramUser.LanguageCode ?? "uz"
         };
