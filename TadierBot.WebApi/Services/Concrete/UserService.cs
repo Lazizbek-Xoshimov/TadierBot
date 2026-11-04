@@ -186,6 +186,25 @@ public class UserService : IUserService
         await _botClient.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: cancellationToken);
     }
 
+    public async Task SyncUserActivityAsync(TelegramUserDto telegramUser)
+    {
+        string fullName = $"{telegramUser.FirstName} {telegramUser.LastName}".Trim();
+        if (string.IsNullOrWhiteSpace(fullName))
+        {
+            fullName = telegramUser.Username ?? "Foydalanuvchi";
+        }
+
+        var user = new Models.User
+        {
+            TelegramId = telegramUser.Id,
+            FullName = fullName,
+            Username = telegramUser.Username,
+            LanguageCode = telegramUser.LanguageCode ?? "uz"
+        };
+
+        await _userRepository.AddOrUpdateAsync(user);
+    }
+
     public async Task<UserStatsResponse> GetStatsAsync(long telegramId)
     {
         var user = await _userRepository.GetByTelegramIdAsync(telegramId);

@@ -9,7 +9,8 @@ public interface IUserService
     Task ShowUserDetailsAsync(long chatId, int messageId, int userId, int returnPage, CancellationToken cancellationToken);
     Task HandleCallbackAsync(CallbackQuery callbackQuery, CancellationToken cancellationToken);
 
-    // Mini App foydalanuvchi statistikasi (Streak, Ball, Daraja)
+    // Mini App foydalanuvchi faolligi va statistikasi (Streak, Ball, Daraja)
+    Task SyncUserActivityAsync(TelegramUserDto telegramUser);
     Task<UserStatsResponse> GetStatsAsync(long telegramId);
     Task<UserStatsResponse> AddScoreAndStreakAsync(long telegramId, int earnedScore);
 }

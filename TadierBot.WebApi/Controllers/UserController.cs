@@ -43,10 +43,13 @@ public class UserController : BaseController
             return Unauthorized(new { Message = "Telegram avtorizatsiyasi tasdiqlanmadi (Noto'g'ri imzo)." });
         }
 
-        // 2. Bazadan Adminlik holatini tekshirish
+        // 2. Mini App ochilganda so'nggi faollikni va foydalanuvchi ma'lumotlarini bazada yangilash
+        await _userService.SyncUserActivityAsync(telegramUser);
+
+        // 3. Bazadan Adminlik holatini tekshirish
         bool isAdmin = await AdminRepository.IsAdminAsync(telegramUser.Id);
 
-        // 3. Foydalanuvchi statistikasini olish (Streak, Ball, Daraja)
+        // 4. Foydalanuvchi statistikasini olish (Streak, Ball, Daraja)
         var stats = await _userService.GetStatsAsync(telegramUser.Id);
 
         string fullName = $"{telegramUser.FirstName} {telegramUser.LastName}".Trim();
