@@ -641,6 +641,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     triggerHaptic('light');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (targetTabId === 'tab-events') loadPublicEvents();
   }
 
   navItems.forEach((btn) => {
@@ -679,6 +680,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sec.classList.toggle('active', sec.id === secId);
       });
       triggerHaptic('light');
+      if (secId === 'sec-events') loadAdminEvents();
     });
   });
 
@@ -721,4 +723,470 @@ document.addEventListener('DOMContentLoaded', () => {
     triggerHaptic('light');
     notify('💬 Bot ustoziga savolingiz bo‘lsa, to‘g‘ridan-to‘g‘ri bot chatiga yozishingiz mumkin.');
   });
+
+  // ==========================================
+  // 7. Tadbirlar va Jonli Darslar Mantiqi
+  // ==========================================
+  let editingEventId = null;
+  let cachedAdminEvents = [];
+
+  function formatEventDateTime(dateStr, timeStr) {
+    if (!dateStr) return timeStr || '';
+    const parts = dateStr.split('-');
+    if (parts.length < 3) return dateStr;
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10);
+    const day = parseInt(parts[2], 10);
+
+    const eventDate = new Date(year, month - 1, day);
+    const today = new Date();
+    const isToday = eventDate.getFullYear() === today.getFullYear() &&
+                    eventDate.getMonth() === today.getMonth() &&
+                    eventDate.getDate() === today.getDate();
+
+    const tomorrow = new Date();
+    tomorrow.setDate(today.getDate() + 1);
+    const isTomorrow = eventDate.getFullYear() === tomorrow.getFullYear() &&
+                       eventDate.getMonth() === tomorrow.getMonth() &&
+                       eventDate.getDate() === tomorrow.getDate();
+
+    const cleanTime = timeStr ? timeStr.substring(0, 5) : '20:00';
+
+    if (isToday) return `Bugun • ${cleanTime}`;
+    if (isTomorrow) return `Ertaga • ${cleanTime}`;
+
+    const monthsUz = ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentyabr', 'Oktyabr', 'Noyabr', 'Dekabr'];
+    return `${day}-${monthsUz[eventDate.getMonth()]} • ${cleanTime}`;
+  }
+
+  async function loadPublicEvents() {
+    const listEl = document.getElementById('events-list');
+    if (!listEl) return;
+
+    const headers = {};
+    if (tg?.initData) headers['X-Telegram-Init-Data'] = tg.initData;
+
+    try {
+      const res = await fetch('/api/events', { headers });
+      if (!res.ok) throw new Error('Yuklab bo‘lmadi');
+      const events = await res.json();
+
+      if (!events || events.length === 0) {
+        listEl.innerHTML = '<div class="empty-state-text">Hozircha rejalashtirilgan tadbirlar yo‘q.</div>';
+        return;
+      }
+
+      listEl.innerHTML = events.map(ev => {
+        const dateDisplay = formatEventDateTime(ev.eventDate, ev.eventTime);
+        let tagClass = 'tag-zoom';
+        let tagLabel = 'ZOOM DARSI';
+        if (ev.eventType === 'Webinar') {
+          tagClass = 'tag-webinar';
+          tagLabel = 'VEBINAR';
+        } else if (ev.eventType === 'Live') {
+          tagClass = 'tag-live';
+          tagLabel = 'JONLI EFIR';
+        }
+
+        let actionBtn = '';
+        if (ev.isLiveNow) {
+          actionBtn = `<button class="event-btn btn-live-now" data-action="join" data-link="${encodeURIComponent(ev.link)}">🚀 Darsga kirish (Havola)</button>`;
+        } else if (ev.isRegistered) {
+          actionBtn = '<button class="event-btn btn-registered" disabled>✅ Yozilgansiz</button>';
+        } else {
+          actionBtn = `<button class="event-btn btn-register" data-action="register" data-id="${ev.id}">✍️ Qatnashish (Yozilish)</button>`;
+        }
+
+        return `
+          <div class="event-card" data-event-id="${ev.id}">
+            <div class="event-top">
+              <span class="event-tag ${tagClass}">${tagLabel}</span>
+              <span class="event-time">${dateDisplay}</span>
+            </div>
+            <h4 class="event-title">${escapeHtml(ev.title)}</h4>
+            ${ev.description ? `<p class="event-desc">${escapeHtml(ev.description)}</p>` : ''}
+            ${actionBtn}
+          </div>
+        `;
+      }).join('');
+
+      listEl.querySelectorAll('[data-action="join"]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          triggerHaptic('medium');
+          const link = decodeURIComponent(btn.getAttribute('data-link'));
+          if (tg?.openLink) {
+            tg.openLink(link);
+          } else {
+            window.open(link, '_blank');
+          }
+        });
+      });
+
+      listEl.querySelectorAll('[data-action="register"]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const id = parseInt(btn.getAttribute('data-id'), 10);
+          registerForEvent(id);
+        });
+      });
+
+    } catch (err) {
+      console.error('loadPublicEvents error:', err);
+      listEl.innerHTML = '<div class="empty-state-text">Tadbirlarni yuklashda xatolik yuz berdi.</div>';
+    }
+  }
+
+  async function registerForEvent(eventId) {
+    if (!tg?.initData) {
+      notify('⚠️ Telegram orqali ro‘yxatdan o‘tish zarur.');
+      return;
+    }
+
+    triggerHaptic('medium');
+    try {
+      const res = await fetch('/api/events/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Telegram-Init-Data': tg.initData
+        },
+        body: JSON.stringify({
+          initData: tg.initData,
+          eventId: eventId
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        triggerHaptic('heavy');
+        notify(data.message || 'Siz tadbir uchun muvaffaqiyatli yozib qo‘yildingiz!');
+        loadPublicEvents();
+      } else {
+        notify(data.message || 'Tadbirga yozilishda xatolik yuz berdi.');
+      }
+    } catch (err) {
+      notify('❌ Server bilan bog‘lanishda xatolik yuz berdi.');
+    }
+  }
+
+  async function loadAdminEvents(search = '') {
+    const listEl = document.getElementById('admin-events-list');
+    const countEl = document.getElementById('events-count');
+    if (!listEl) return;
+
+    const headers = {};
+    if (tg?.initData) headers['X-Telegram-Init-Data'] = tg.initData;
+
+    try {
+      const url = search ? `/api/events/admin?search=${encodeURIComponent(search)}` : '/api/events/admin';
+      const res = await fetch(url, { headers });
+      if (!res.ok) return;
+
+      const events = await res.json();
+      cachedAdminEvents = events || [];
+
+      if (countEl) countEl.textContent = `${events.length} ta`;
+
+      if (!events || events.length === 0) {
+        listEl.innerHTML = `<div class="empty-state-text">${search ? 'Mos keladigan tadbir topilmadi.' : 'Hozircha e‘lon qilingan tadbirlar yo‘q.'}</div>`;
+      } else {
+        listEl.innerHTML = events.map(ev => {
+          let tagClass = 'tag-zoom';
+          let tagLabel = 'Zoom da';
+          if (ev.eventType === 'Webinar') {
+            tagClass = 'tag-webinar';
+            tagLabel = 'Vebinar';
+          } else if (ev.eventType === 'Live') {
+            tagClass = 'tag-live';
+            tagLabel = 'Jonli efir';
+          }
+
+          const dateDisplay = formatEventDateTime(ev.eventDate, ev.eventTime);
+          const isEditingClass = (editingEventId === ev.id) ? 'is-editing' : '';
+
+          return `
+            <div class="crud-item ${isEditingClass}" data-event-id="${ev.id}">
+              <div class="crud-item-info">
+                <div>
+                  <strong>${escapeHtml(ev.title)}</strong>
+                  <span class="event-tag ${tagClass}" style="margin-left:6px;font-size:9px;">${tagLabel}</span>
+                  <span class="badge-attendees">👥 ${ev.registeredCount} ta</span>
+                </div>
+                <small>${dateDisplay} • ${ev.link ? escapeHtml(ev.link) : 'Havola kiritilmagan'}</small>
+              </div>
+              <div class="crud-actions">
+                <button type="button" class="action-btn-sm btn-delete" data-delete-id="${ev.id}" title="O‘chirish">🗑</button>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        listEl.querySelectorAll('.crud-item').forEach(item => {
+          item.addEventListener('click', (e) => {
+            if (e.target.closest('.btn-delete')) return;
+            const id = parseInt(item.getAttribute('data-event-id'), 10);
+            const ev = cachedAdminEvents.find(x => x.id === id);
+            if (ev) startEditEvent(ev);
+          });
+        });
+
+        listEl.querySelectorAll('.btn-delete').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const id = parseInt(btn.getAttribute('data-delete-id'), 10);
+            deleteEvent(id);
+          });
+        });
+      }
+
+      loadTotalParticipantsCount();
+
+    } catch (err) {
+      console.error('loadAdminEvents error:', err);
+    }
+  }
+
+  async function loadTotalParticipantsCount() {
+    const totalCountEl = document.getElementById('event-total-participants-count');
+    if (!totalCountEl) return;
+
+    const headers = {};
+    if (tg?.initData) headers['X-Telegram-Init-Data'] = tg.initData;
+
+    try {
+      const res = await fetch('/api/events/participants', { headers });
+      if (res.ok) {
+        const data = await res.json();
+        totalCountEl.textContent = data.totalCount || 0;
+      }
+    } catch (e) {}
+  }
+
+  async function openParticipantsModal(eventId = null) {
+    const modal = document.getElementById('participants-modal');
+    const listWrap = document.getElementById('participants-list-wrap');
+    const filterSelect = document.getElementById('select-participant-event-filter');
+    const subtitleEl = document.getElementById('modal-participants-subtitle');
+    if (!modal || !listWrap) return;
+
+    modal.classList.remove('hidden');
+    listWrap.innerHTML = '<div class="empty-state-text">Qatnashuvchilar yuklanmoqda...</div>';
+
+    if (filterSelect) {
+      filterSelect.innerHTML = '<option value="">Barcha tadbirlar bo‘yicha</option>' +
+        cachedAdminEvents.map(ev => `<option value="${ev.id}" ${eventId == ev.id ? 'selected' : ''}>${escapeHtml(ev.title)}</option>`).join('');
+    }
+
+    const headers = {};
+    if (tg?.initData) headers['X-Telegram-Init-Data'] = tg.initData;
+
+    try {
+      const url = eventId ? `/api/events/participants?eventId=${eventId}` : '/api/events/participants';
+      const res = await fetch(url, { headers });
+      if (!res.ok) throw new Error('Yuklab bo‘lmadi');
+      const data = await res.json();
+
+      if (subtitleEl) {
+        subtitleEl.textContent = `Jami ro‘yxatdan o‘tganlar: ${data.totalCount || 0} ta`;
+      }
+
+      if (!data.participants || data.participants.length === 0) {
+        listWrap.innerHTML = '<div class="empty-state-text">Ushbu tadbirga hali hech kim yozilmagan.</div>';
+        return;
+      }
+
+      listWrap.innerHTML = data.participants.map(p => {
+        const name = p.fullName || `Foydalanuvchi #${p.telegramId}`;
+        const username = p.username ? `@${p.username}` : `ID: ${p.telegramId}`;
+        const date = new Date(p.registeredAt);
+        const timeStr = `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+
+        return `
+          <div class="participant-item">
+            <div class="participant-user-info">
+              <span class="participant-name">${escapeHtml(name)}</span>
+              <span class="participant-username">${escapeHtml(username)}</span>
+            </div>
+            <div class="participant-event-meta">
+              <span class="participant-event-title">${escapeHtml(p.eventTitle)}</span>
+              <span class="participant-time">${timeStr}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+    } catch (err) {
+      listWrap.innerHTML = '<div class="empty-state-text">Ma‘lumotlarni yuklashda xatolik yuz berdi.</div>';
+    }
+  }
+
+  function closeParticipantsModal() {
+    document.getElementById('participants-modal')?.classList.add('hidden');
+  }
+
+  function startEditEvent(ev) {
+    editingEventId = ev.id;
+    document.getElementById('inp-event-title').value = ev.title || '';
+    document.getElementById('inp-event-type').value = ev.eventType || 'Zoom';
+    document.getElementById('inp-event-date').value = ev.eventDate || '';
+    document.getElementById('inp-event-time').value = ev.eventTime || '20:00';
+    document.getElementById('inp-event-desc').value = ev.description || '';
+    document.getElementById('inp-event-link').value = ev.link || '';
+
+    const saveBtn = document.getElementById('btn-save-event');
+    if (saveBtn) saveBtn.textContent = '💾 O‘zgarishlarni saqlash';
+
+    const cancelBtn = document.getElementById('btn-cancel-edit-event');
+    if (cancelBtn) cancelBtn.classList.remove('hidden');
+
+    const badge = document.getElementById('event-form-badge');
+    if (badge) badge.textContent = 'Tahrirlash';
+
+    document.getElementById('inp-event-title')?.focus();
+    triggerHaptic('light');
+  }
+
+  function cancelEditEvent() {
+    editingEventId = null;
+    document.getElementById('inp-event-title').value = '';
+    document.getElementById('inp-event-type').value = 'Zoom';
+    document.getElementById('inp-event-date').value = '';
+    document.getElementById('inp-event-time').value = '20:00';
+    document.getElementById('inp-event-desc').value = '';
+    document.getElementById('inp-event-link').value = '';
+
+    const saveBtn = document.getElementById('btn-save-event');
+    if (saveBtn) saveBtn.textContent = '📢 E‘lon qilish';
+
+    const cancelBtn = document.getElementById('btn-cancel-edit-event');
+    if (cancelBtn) cancelBtn.classList.add('hidden');
+
+    const badge = document.getElementById('event-form-badge');
+    if (badge) badge.textContent = 'E‘lon';
+
+    document.querySelectorAll('#admin-events-list .crud-item').forEach(el => el.classList.remove('is-editing'));
+  }
+
+  async function saveEvent() {
+    const title = document.getElementById('inp-event-title')?.value.trim();
+    const type = document.getElementById('inp-event-type')?.value || 'Zoom';
+    const date = document.getElementById('inp-event-date')?.value;
+    const time = document.getElementById('inp-event-time')?.value || '20:00';
+    const desc = document.getElementById('inp-event-desc')?.value.trim();
+    const link = document.getElementById('inp-event-link')?.value.trim();
+
+    if (!title || !date || !time || !link) {
+      notify('⚠️ Iltimos, dars mavzusi, sana, vaqt va havolani to‘liq kiriting!');
+      return;
+    }
+
+    triggerHaptic('heavy');
+    const headers = { 'Content-Type': 'application/json' };
+    if (tg?.initData) headers['X-Telegram-Init-Data'] = tg.initData;
+
+    const payload = {
+      initData: tg?.initData || '',
+      title: title,
+      description: desc || null,
+      eventType: type,
+      eventDate: date,
+      eventTime: time,
+      link: link
+    };
+
+    try {
+      if (editingEventId) {
+        payload.isActive = true;
+        const res = await fetch(`/api/events/${editingEventId}`, {
+          method: 'PUT',
+          headers: headers,
+          body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+          notify(`✅ "${title}" tadbiri muvaffaqiyatli yangilandi!`);
+          cancelEditEvent();
+          loadAdminEvents(document.getElementById('inp-search-events')?.value.trim() || '');
+          loadPublicEvents();
+        } else {
+          const err = await res.json().catch(() => ({}));
+          notify(`⚠️ Xatolik: ${err.message || 'Tadbirni yangilab bo‘lmadi'}`);
+        }
+      } else {
+        const res = await fetch('/api/events', {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+          notify(`✅ "${title}" tadbiri muvaffaqiyatli e‘lon qilindi!`);
+          cancelEditEvent();
+          loadAdminEvents(document.getElementById('inp-search-events')?.value.trim() || '');
+          loadPublicEvents();
+        } else {
+          const err = await res.json().catch(() => ({}));
+          notify(`⚠️ Xatolik: ${err.message || 'Tadbirni e‘lon qilib bo‘lmadi'}`);
+        }
+      }
+    } catch (err) {
+      notify('❌ Server bilan bog‘lanishda xatolik yuz berdi.');
+    }
+  }
+
+  async function deleteEvent(id) {
+    if (!confirm('Haqiqatan ham ushbu tadbirni o‘chirmoqchimisiz?')) return;
+
+    triggerHaptic('heavy');
+    const headers = {};
+    if (tg?.initData) headers['X-Telegram-Init-Data'] = tg.initData;
+
+    try {
+      const res = await fetch(`/api/events/${id}`, {
+        method: 'DELETE',
+        headers: headers
+      });
+
+      if (res.ok) {
+        notify('🗑 Tadbir muvaffaqiyatli o‘chirildi!');
+        if (editingEventId === id) cancelEditEvent();
+        loadAdminEvents(document.getElementById('inp-search-events')?.value.trim() || '');
+        loadPublicEvents();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        notify(`⚠️ Xatolik: ${err.message || 'O‘chirib bo‘lmadi'}`);
+      }
+    } catch (err) {
+      notify('❌ Server bilan bog‘lanishda xatolik yuz berdi.');
+    }
+  }
+
+  // Tadbirlar tugmalari va qidiruv hodisalari
+  document.getElementById('btn-save-event')?.addEventListener('click', saveEvent);
+  document.getElementById('btn-cancel-edit-event')?.addEventListener('click', cancelEditEvent);
+
+  const inpSearchEvents = document.getElementById('inp-search-events');
+  document.getElementById('btn-search-events')?.addEventListener('click', () => {
+    loadAdminEvents(inpSearchEvents?.value.trim() || '');
+  });
+
+  inpSearchEvents?.addEventListener('input', () => {
+    loadAdminEvents(inpSearchEvents.value.trim());
+  });
+
+  document.getElementById('btn-show-participants')?.addEventListener('click', () => {
+    openParticipantsModal();
+  });
+
+  document.getElementById('btn-close-participants')?.addEventListener('click', closeParticipantsModal);
+  document.getElementById('participants-backdrop')?.addEventListener('click', closeParticipantsModal);
+
+  document.getElementById('select-participant-event-filter')?.addEventListener('change', (e) => {
+    openParticipantsModal(e.target.value ? parseInt(e.target.value, 10) : null);
+  });
+
+  // Dastlabki yuklash
+  loadPublicEvents();
+
 });
