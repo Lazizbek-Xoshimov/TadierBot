@@ -32,6 +32,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // HTML xavfsizlantirish (XSS va matn formatlash uchun)
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   if (tg) {
     tg.ready();
     tg.expand();
