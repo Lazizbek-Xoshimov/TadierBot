@@ -190,8 +190,13 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-close-trainer')?.addEventListener('click', closeTrainer);
   document.getElementById('trainer-backdrop')?.addEventListener('click', closeTrainer);
 
-  function openTrainer(level = 'A1') {
+  function openTrainer(level = 'A1', unit = null) {
     currentTrainerLevel = level;
+    currentTrainerUnit = unit;
+    currentCardIndex = 0;
+    isCardFlipped = false;
+    currentScore = 0;
+
     trainerModal?.classList.remove('hidden');
     document.getElementById('trainer-finished')?.classList.add('hidden');
     document.getElementById('flashcard-container')?.classList.remove('hidden');
@@ -202,7 +207,51 @@ document.addEventListener('DOMContentLoaded', () => {
       pill.classList.toggle('active', pill.getAttribute('data-level') === level);
     });
 
-    loadTrainerSession(level);
+    loadUnitsAndSession(level, unit);
+  }
+
+  async function loadUnitsAndSession(level, selectedUnit = null) {
+    const unitsContainer = document.getElementById('trainer-units-container');
+    if (unitsContainer) {
+      try {
+        const res = await fetch(`/api/words/units?level=${encodeURIComponent(level)}`);
+        if (res.ok) {
+          const data = await res.json();
+          const units = data.units || [];
+          
+          if (units.length > 0 || data.hasUnassignedWords) {
+            unitsContainer.style.display = 'flex';
+            let pillsHtml = `<button type="button" class="unit-pill ${selectedUnit === null ? 'active' : ''}" data-unit="unassigned">Unitsiz</button>`;
+            
+            units.forEach(u => {
+              pillsHtml += `<button type="button" class="unit-pill ${selectedUnit === u ? 'active' : ''}" data-unit="${u}">Unit ${u}</button>`;
+            });
+
+            unitsContainer.innerHTML = pillsHtml;
+
+            unitsContainer.querySelectorAll('.unit-pill').forEach(btn => {
+              btn.addEventListener('click', () => {
+                triggerHaptic('light');
+                const uVal = btn.getAttribute('data-unit');
+                currentTrainerUnit = (uVal === 'unassigned') ? null : parseInt(uVal, 10);
+                
+                unitsContainer.querySelectorAll('.unit-pill').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                loadTrainerSession(currentTrainerLevel, currentTrainerUnit);
+              });
+            });
+          } else {
+            unitsContainer.innerHTML = '';
+            unitsContainer.style.display = 'none';
+          }
+        }
+      } catch (err) {
+        console.warn('Unitlarni yuklashda xatolik:', err);
+      }
+    }
+
+    loadTrainerSession(level, selectedUnit);
   }
 
   function closeTrainer() {
@@ -214,7 +263,7 @@ document.addEventListener('DOMContentLoaded', () => {
     pill.addEventListener('click', () => {
       triggerHaptic('light');
       const lvl = pill.getAttribute('data-level');
-      openTrainer(lvl);
+      openTrainer(lvl, null);
     });
   });
 
@@ -406,7 +455,7 @@ document.addEventListener('DOMContentLoaded', () => {
           item.innerHTML = `
             <div class="crud-item-info">
               <strong>${fullWord}</strong> <span>— ${w.uzbekTranslation}</span>
-              <small>${w.exampleSentenceDe || 'Misol gap yo‘q'} • <i>[${w.level}]</i></small>
+              <small>${w.exampleSentenceDe || 'Misol gap yo‘q'} • <i>[${w.level}${w.unit ? ' • Unit ' + w.unit : ''}]</i></small>
             </div>
             <div class="crud-actions">
               <button class="action-btn-sm btn-delete" data-id="${w.id}" title="O‘chirish">🗑</button>
@@ -450,6 +499,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('inp-word-category')) {
       document.getElementById('inp-word-category').value = word.category || 'Kundalik';
     }
+    if (document.getElementById('inp-word-unit')) {
+      document.getElementById('inp-word-unit').value = (word.unit != null) ? word.unit : '';
+    }
     document.getElementById('inp-word-sample-de').value = word.exampleSentenceDe || '';
     document.getElementById('inp-word-sample-uz').value = word.exampleSentenceUz || '';
 
@@ -474,6 +526,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('inp-word-uz').value = '';
     document.getElementById('inp-word-sample-de').value = '';
     document.getElementById('inp-word-sample-uz').value = '';
+    if (document.getElementById('inp-word-unit')) document.getElementById('inp-word-unit').value = '';
 
     if (formWordsTitle) formWordsTitle.textContent = '➕ Yangi so‘z qo‘shish';
     if (btnSaveWord) btnSaveWord.innerHTML = '💾 Saqlash (Baza ga qo‘shish)';
@@ -536,6 +589,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const uzWord = document.getElementById('inp-word-uz').value.trim();
     const level = document.getElementById('inp-word-level')?.value || 'A1';
     const category = document.getElementById('inp-word-category')?.value.trim() || 'Kundalik';
+    const unitVal = document.getElementById('inp-word-unit')?.value.trim();
+    const unit = unitVal ? parseInt(unitVal, 10) : null;
     const sampleDe = document.getElementById('inp-word-sample-de').value.trim();
     const sampleUz = document.getElementById('inp-word-sample-uz').value.trim();
 
@@ -560,6 +615,7 @@ document.addEventListener('DOMContentLoaded', () => {
           exampleSentenceDe: sampleDe || null,
           exampleSentenceUz: sampleUz || null,
           level: level,
+          unit: unit,
           category: category,
           isDailyWord: false
         };
@@ -587,6 +643,7 @@ document.addEventListener('DOMContentLoaded', () => {
           exampleSentenceDe: sampleDe || null,
           exampleSentenceUz: sampleUz || null,
           level: level,
+          unit: unit,
           category: category,
           isDailyWord: false
         };
