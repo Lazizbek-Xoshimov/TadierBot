@@ -5,7 +5,8 @@ namespace TadierBot.WebApi.Services;
 public interface IWordService
 {
     // 1. So'z trenajyori (2 va 3-rasmlar)
-    Task<TrainerSessionResponse> GetTrainerSessionAsync(string level, int count = 10);
+    Task<TrainerSessionResponse> GetTrainerSessionAsync(string level, int? unit = null, int count = 10);
+    Task<LevelUnitsResponse> GetUnitsByLevelAsync(string level);
     Task<WordAnswerResponse> ProcessAnswerAsync(long telegramId, WordAnswerRequest request);
     Task<DailyWordResponse?> GetDailyWordAsync();
     Task<WordStatsResponse> GetWordStatsAsync(long telegramId);

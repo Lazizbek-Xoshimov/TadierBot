@@ -1,5 +1,6 @@
 using Dapper;
 using TadierBot.WebApi.Data;
+using TadierBot.WebApi.DTOs.Word;
 using TadierBot.WebApi.Models;
 
 namespace TadierBot.WebApi.Repositories;
@@ -23,12 +24,12 @@ public class WordRepository : IWordRepository
         const string sql = """
             INSERT INTO Words (
                 Article, GermanWord, UzbekTranslation, ExampleSentenceDe, 
-                ExampleSentenceUz, Level, Category, AudioUrl, IsDailyWord, DailyWordDate, CreatedAt
+                ExampleSentenceUz, Level, Unit, Category, AudioUrl, IsDailyWord, DailyWordDate, CreatedAt
             )
             OUTPUT INSERTED.Id
             VALUES (
                 @Article, @GermanWord, @UzbekTranslation, @ExampleSentenceDe, 
-                @ExampleSentenceUz, @Level, @Category, @AudioUrl, @IsDailyWord, @DailyWordDate, SYSUTCDATETIME()
+                @ExampleSentenceUz, @Level, @Unit, @Category, @AudioUrl, @IsDailyWord, @DailyWordDate, SYSUTCDATETIME()
             );
         """;
         return await connection.ExecuteScalarAsync<int>(sql, word);
@@ -45,6 +46,7 @@ public class WordRepository : IWordRepository
                 ExampleSentenceDe = @ExampleSentenceDe,
                 ExampleSentenceUz = @ExampleSentenceUz,
                 Level = @Level,
+                Unit = @Unit,
                 Category = @Category,
                 AudioUrl = @AudioUrl,
                 IsDailyWord = @IsDailyWord,
@@ -98,16 +100,42 @@ public class WordRepository : IWordRepository
     // 2. So'z trenajyori 
     // ==========================================
 
-    public async Task<IEnumerable<Word>> GetWordsByLevelAsync(string level, int count)
+    public async Task<IEnumerable<Word>> GetWordsByLevelAsync(string level, int? unit, int count)
     {
         using var connection = _connectionFactory.CreateConnection();
         const string sql = """
             SELECT TOP (@Count) * 
             FROM Words 
             WHERE Level = @Level 
+              AND ((@Unit IS NULL AND Unit IS NULL) OR (@Unit IS NOT NULL AND Unit = @Unit))
             ORDER BY NEWID();
         """;
-        return await connection.QueryAsync<Word>(sql, new { Level = level, Count = count });
+        return await connection.QueryAsync<Word>(sql, new { Level = level, Unit = unit, Count = count });
+    }
+
+    public async Task<LevelUnitsResponse> GetUnitsByLevelAsync(string level)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        const string sql = """
+            SELECT DISTINCT Unit 
+            FROM Words 
+            WHERE Level = @Level AND Unit IS NOT NULL 
+            ORDER BY Unit ASC;
+
+            SELECT CASE WHEN EXISTS (
+                SELECT 1 FROM Words WHERE Level = @Level AND Unit IS NULL
+            ) THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END;
+        """;
+        using var multi = await connection.QueryMultipleAsync(sql, new { Level = level });
+        var units = (await multi.ReadAsync<int>()).ToList();
+        bool hasUnassigned = await multi.ReadSingleOrDefaultAsync<bool>();
+
+        return new LevelUnitsResponse
+        {
+            Level = level,
+            Units = units,
+            HasUnassignedWords = hasUnassigned
+        };
     }
 
     public async Task<Word?> GetDailyWordAsync(int offset = 0)

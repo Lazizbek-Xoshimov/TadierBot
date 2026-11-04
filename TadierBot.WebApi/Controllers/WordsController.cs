@@ -49,11 +49,29 @@ public class WordsController : BaseController
     /// Tanlangan daraja bo'yicha trenajyor flesh-kartochkalar to'plamini olish
     /// URL: GET /api/words/trainer?level=A1&count=10
     /// </summary>
+    /// <summary>
+    /// Tanlangan daraja va unit bo'yicha trenajyor flesh-kartochkalar to'plamini olish
+    /// URL: GET /api/words/trainer?level=A1&unit=1&count=10
+    /// </summary>
     [HttpGet("trainer")]
-    public async Task<IActionResult> GetTrainerSession([FromQuery] string level = "A1", [FromQuery] int count = 10)
+    public async Task<IActionResult> GetTrainerSession(
+        [FromQuery] string level = "A1",
+        [FromQuery] int? unit = null,
+        [FromQuery] int count = 10)
     {
-        var session = await _wordService.GetTrainerSessionAsync(level, count);
+        var session = await _wordService.GetTrainerSessionAsync(level, unit, count);
         return Ok(session);
+    }
+
+    /// <summary>
+    /// Tanlangan darajadagi mavjud unitlar ro'yxatini olish
+    /// URL: GET /api/words/units?level=A1
+    /// </summary>
+    [HttpGet("units")]
+    public async Task<IActionResult> GetUnits([FromQuery] string level = "A1")
+    {
+        var response = await _wordService.GetUnitsByLevelAsync(level);
+        return Ok(response);
     }
 
     /// <summary>

@@ -25,17 +25,23 @@ public class WordService : IWordService
     // 1. So'z trenajyori
     // ==========================================
 
-    public async Task<TrainerSessionResponse> GetTrainerSessionAsync(string level, int count = 10)
+    public async Task<TrainerSessionResponse> GetTrainerSessionAsync(string level, int? unit = null, int count = 10)
     {
-        var words = await _wordRepository.GetWordsByLevelAsync(level, count);
+        var words = await _wordRepository.GetWordsByLevelAsync(level, unit, count);
         var wordDtos = words.Select(MapToDto).ToList();
 
         return new TrainerSessionResponse
         {
             Level = level,
+            Unit = unit,
             TotalCount = wordDtos.Count,
             Words = wordDtos
         };
+    }
+
+    public async Task<LevelUnitsResponse> GetUnitsByLevelAsync(string level)
+    {
+        return await _wordRepository.GetUnitsByLevelAsync(level);
     }
 
     public async Task<WordAnswerResponse> ProcessAnswerAsync(long telegramId, WordAnswerRequest request)
@@ -145,6 +151,7 @@ public class WordService : IWordService
             ExampleSentenceDe = request.ExampleSentenceDe?.Trim(),
             ExampleSentenceUz = request.ExampleSentenceUz?.Trim(),
             Level = string.IsNullOrWhiteSpace(request.Level) ? "A1" : request.Level.Trim().ToUpperInvariant(),
+            Unit = request.Unit,
             Category = request.Category?.Trim(),
             AudioUrl = request.AudioUrl?.Trim(),
             IsDailyWord = request.IsDailyWord,
@@ -167,6 +174,7 @@ public class WordService : IWordService
         existing.ExampleSentenceDe = request.ExampleSentenceDe?.Trim();
         existing.ExampleSentenceUz = request.ExampleSentenceUz?.Trim();
         existing.Level = string.IsNullOrWhiteSpace(request.Level) ? "A1" : request.Level.Trim().ToUpperInvariant();
+        existing.Unit = request.Unit;
         existing.Category = request.Category?.Trim();
         existing.AudioUrl = request.AudioUrl?.Trim();
         existing.IsDailyWord = request.IsDailyWord;
@@ -211,6 +219,8 @@ public class WordService : IWordService
             ExampleSentenceDe = word.ExampleSentenceDe,
             ExampleSentenceUz = word.ExampleSentenceUz,
             Level = word.Level,
+            Unit = word.Unit,
+            Category = word.Category,
             AudioUrl = word.AudioUrl,
             IsDailyWord = word.IsDailyWord
         };

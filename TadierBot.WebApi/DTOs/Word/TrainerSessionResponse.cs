@@ -6,6 +6,7 @@ namespace TadierBot.WebApi.DTOs.Word;
 public class TrainerSessionResponse
 {
     public string Level { get; set; } = "A1";
+    public int? Unit { get; set; }
     public int TotalCount { get; set; }
     public List<WordDto> Words { get; set; } = new();
 }

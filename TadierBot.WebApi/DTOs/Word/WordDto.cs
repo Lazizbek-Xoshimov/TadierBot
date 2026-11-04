@@ -12,6 +12,7 @@ public class WordDto
     public string? ExampleSentenceDe { get; set; }
     public string? ExampleSentenceUz { get; set; }
     public string Level { get; set; } = "A1";
+    public int? Unit { get; set; }
     public string? Category { get; set; }
     public string? AudioUrl { get; set; }
     public bool IsDailyWord { get; set; }
