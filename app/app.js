@@ -133,23 +133,28 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================
   // 3. Kun so'zi (Wort des Tages) yuklash
   // ==========================================
-  let currentDailyWordText = 'die Herausforderung';
+  let currentDailyWordText = '';
 
   async function loadDailyWord() {
     try {
       const res = await fetch('/api/words/daily');
+      const deEl = document.getElementById('daily-word-de');
+      const uzEl = document.getElementById('daily-word-uz');
+      const exEl = document.getElementById('daily-example-de');
+
       if (res.ok) {
         const word = await res.json();
         const fullDe = word.article ? `${word.article} ${word.germanWord}` : word.germanWord;
         currentDailyWordText = fullDe;
 
-        const deEl = document.getElementById('daily-word-de');
-        const uzEl = document.getElementById('daily-word-uz');
-        const exEl = document.getElementById('daily-example-de');
-
         if (deEl) deEl.textContent = fullDe;
         if (uzEl) uzEl.textContent = word.uzbekTranslation;
         if (exEl) exEl.textContent = word.exampleSentenceDe ? `"${word.exampleSentenceDe}"` : '';
+      } else {
+        currentDailyWordText = '';
+        if (deEl) deEl.textContent = '—';
+        if (uzEl) uzEl.textContent = 'Hozircha kun so‘zi mavjud emas';
+        if (exEl) exEl.textContent = '';
       }
     } catch (err) {
       console.warn('Kun so\'zini yuklashda xatolik:', err);

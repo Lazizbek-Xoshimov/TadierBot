@@ -110,16 +110,17 @@ public class WordRepository : IWordRepository
         return await connection.QueryAsync<Word>(sql, new { Level = level, Count = count });
     }
 
-    public async Task<Word?> GetDailyWordAsync()
+    public async Task<Word?> GetDailyWordAsync(int offset = 0)
     {
         using var connection = _connectionFactory.CreateConnection();
         const string sql = """
-            SELECT TOP 1 * 
+            SELECT * 
             FROM Words 
-            WHERE IsDailyWord = 1 
-            ORDER BY DailyWordDate DESC, Id DESC;
+            ORDER BY Id ASC 
+            OFFSET @Offset ROWS 
+            FETCH NEXT 1 ROWS ONLY;
         """;
-        return await connection.QuerySingleOrDefaultAsync<Word>(sql);
+        return await connection.QueryFirstOrDefaultAsync<Word>(sql, new { Offset = offset });
     }
 
     // ==========================================

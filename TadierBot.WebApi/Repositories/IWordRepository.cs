@@ -14,7 +14,7 @@ public interface IWordRepository
 
     // 2. So'z trenajyori (2 va 3-rasmlar: Daraja bo'yicha mashq qilish)
     Task<IEnumerable<Word>> GetWordsByLevelAsync(string level, int count);
-    Task<Word?> GetDailyWordAsync();
+    Task<Word?> GetDailyWordAsync(int offset = 0);
 
     // 3. Foydalanuvchi so'z progressi (Flesh-kartochkalar natijasi)
     Task<UserWordProgress?> GetUserWordProgressAsync(long telegramId, int wordId);

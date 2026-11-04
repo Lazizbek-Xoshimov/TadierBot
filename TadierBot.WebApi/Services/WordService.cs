@@ -94,7 +94,15 @@ public class WordService : IWordService
 
     public async Task<DailyWordResponse?> GetDailyWordAsync()
     {
-        var word = await _wordRepository.GetDailyWordAsync();
+        int totalCount = await _wordRepository.GetTotalCountAsync();
+        if (totalCount == 0) return null;
+
+        var todayTashkent = DateTime.UtcNow.AddHours(5).Date;
+        var epoch = new DateTime(2026, 1, 1);
+        int dayIndex = (int)(todayTashkent - epoch).TotalDays;
+        int offset = ((dayIndex % totalCount) + totalCount) % totalCount;
+
+        var word = await _wordRepository.GetDailyWordAsync(offset);
         if (word == null) return null;
 
         return new DailyWordResponse
@@ -203,7 +211,6 @@ public class WordService : IWordService
             ExampleSentenceDe = word.ExampleSentenceDe,
             ExampleSentenceUz = word.ExampleSentenceUz,
             Level = word.Level,
-            Category = word.Category,
             AudioUrl = word.AudioUrl,
             IsDailyWord = word.IsDailyWord
         };
