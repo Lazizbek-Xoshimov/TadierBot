@@ -1748,21 +1748,24 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    if (type === 2 && (!audioFileInput || !audioFileInput.files || audioFileInput.files.length === 0)) {
+      notify('⚠️ Iltimos, audio faylni tanlang!');
+      return;
+    }
+
+    const origBtnText = btnSavePassage.innerHTML;
+    btnSavePassage.disabled = true;
+    btnSavePassage.innerHTML = type === 2 ? '⏳ Audio yuklanmoqda...' : '⏳ Saqlanmoqda...';
+
     let audioUrl = null;
 
-    // Agar audio bo'lsa, avval faylni yuklaymiz
-    if (type === 2) {
-      if (!audioFileInput || !audioFileInput.files || audioFileInput.files.length === 0) {
-        notify('⚠️ Iltimos, audio faylni tanlang!');
-        return;
-      }
+    try {
+      // 1. Agar audio bo'lsa, avval faylni yuklaymiz (hech qanday modal alert chiqarmaymiz)
+      if (type === 2) {
+        const file = audioFileInput.files[0];
+        const formData = new FormData();
+        formData.append('file', file);
 
-      const file = audioFileInput.files[0];
-      const formData = new FormData();
-      formData.append('file', file);
-
-      notify('⏳ Audio yuklanmoqda...');
-      try {
         const upHeaders = {};
         if (tg?.initData) upHeaders['X-Telegram-Init-Data'] = tg.initData;
 
@@ -1775,19 +1778,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!upRes.ok) {
           const err = await upRes.json().catch(() => ({}));
           notify(`⚠️ Audio yuklashda xatolik: ${err.message || 'Yuklab bo‘lmadi'}`);
+          btnSavePassage.disabled = false;
+          btnSavePassage.innerHTML = origBtnText;
           return;
         }
 
         const upData = await upRes.json();
         audioUrl = upData.audioUrl;
-      } catch (err) {
-        notify('❌ Audio yuklashda server xatoligi.');
-        return;
       }
-    }
 
-    // Passage yaratish
-    try {
+      // 2. Material (Passage) ma'lumotlarini saqlash
       const headers = { 'Content-Type': 'application/json' };
       if (tg?.initData) headers['X-Telegram-Init-Data'] = tg.initData;
 
@@ -1804,7 +1804,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       if (res.ok) {
-        notify('✅ Yangi material (passage) muvaffaqiyatli saqlandi!');
+        notify('✅ Yangi material muvaffaqiyatli saqlandi!');
         document.getElementById('admin-passage-title').value = '';
         if (document.getElementById('admin-passage-content')) {
           document.getElementById('admin-passage-content').value = '';
@@ -1816,7 +1816,11 @@ document.addEventListener('DOMContentLoaded', () => {
         notify(`⚠️ Xatolik: ${err.message || 'Saqlab bo‘lmadi'}`);
       }
     } catch (err) {
+      console.error('Passage saqlashda xatolik:', err);
       notify('❌ Server bilan bog‘lanishda xatolik yuz berdi.');
+    } finally {
+      btnSavePassage.disabled = false;
+      btnSavePassage.innerHTML = origBtnText;
     }
   });
 
@@ -1847,6 +1851,10 @@ document.addEventListener('DOMContentLoaded', () => {
       notify('⚠️ Kamida A va B variantlari kiritilishi shart!');
       return;
     }
+
+    const origBtnText = btnSaveTest.innerHTML;
+    btnSaveTest.disabled = true;
+    btnSaveTest.innerHTML = '⏳ Saqlanmoqda...';
 
     try {
       const headers = { 'Content-Type': 'application/json' };
@@ -1882,6 +1890,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (err) {
       notify('❌ Server bilan bog‘lanishda xatolik yuz berdi.');
+    } finally {
+      btnSaveTest.disabled = false;
+      btnSaveTest.innerHTML = origBtnText;
     }
   });
 
