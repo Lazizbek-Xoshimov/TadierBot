@@ -1367,12 +1367,11 @@ document.addEventListener('DOMContentLoaded', () => {
     return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   }
 
-  // Audio URL ni to'liq manzilga aylantirish (Vercel va RunAsp integratsiyasi)
+  // Audio URL ni to'g'ri manzilga aylantirish (Vercel /audio/ proksi)
   function getAbsoluteAudioUrl(url) {
     if (!url) return '';
     if (url.startsWith('http://') || url.startsWith('https://')) return url;
-    const base = 'https://tadierbot.runasp.net';
-    return url.startsWith('/') ? `${base}${url}` : `${base}/${url}`;
+    return url.startsWith('/') ? url : `/${url}`;
   }
 
   // Audio boshqaruv funktsiyalari
