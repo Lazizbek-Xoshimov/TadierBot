@@ -1328,11 +1328,51 @@ document.addEventListener('DOMContentLoaded', () => {
   let isAudioPlaying = false;
 
   // Format seconds to mm:ss
+  
+  // Reading: To'liq matnni o'qish modali
+  const btnQuizReadFull = document.getElementById('btn-quiz-read-full');
+  const quizReaderModal = document.getElementById('quiz-reader-modal');
+  const quizReaderTitle = document.getElementById('quiz-reader-title');
+  const quizReaderLevel = document.getElementById('quiz-reader-level');
+  const quizReaderFullText = document.getElementById('quiz-reader-full-text');
+  const btnCloseQuizReader = document.getElementById('btn-close-quiz-reader');
+  const btnQuizReaderClose = document.getElementById('btn-quiz-reader-close');
+  const quizReaderBackdrop = document.getElementById('quiz-reader-backdrop');
+
+  let currentReadingPassage = null;
+
+  function openQuizReaderModal() {
+    if (!currentReadingPassage) return;
+    triggerHaptic('light');
+    if (quizReaderTitle) quizReaderTitle.textContent = currentReadingPassage.title || 'Matnni o‘qish';
+    if (quizReaderLevel) quizReaderLevel.textContent = `${currentReadingPassage.level || 'A1'} Daraja`;
+    if (quizReaderFullText) quizReaderFullText.textContent = currentReadingPassage.content || 'Matn mavjud emas';
+    quizReaderModal?.classList.remove('hidden');
+  }
+
+  function closeQuizReaderModal() {
+    triggerHaptic('light');
+    quizReaderModal?.classList.add('hidden');
+  }
+
+  btnQuizReadFull?.addEventListener('click', openQuizReaderModal);
+  btnCloseQuizReader?.addEventListener('click', closeQuizReaderModal);
+  btnQuizReaderClose?.addEventListener('click', closeQuizReaderModal);
+  quizReaderBackdrop?.addEventListener('click', closeQuizReaderModal);
+
   function formatQuizTime(seconds) {
     if (isNaN(seconds) || seconds < 0) return '00:00';
     const m = Math.floor(seconds / 60);
     const s = Math.floor(seconds % 60);
     return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+
+  // Audio URL ni to'liq manzilga aylantirish (Vercel va RunAsp integratsiyasi)
+  function getAbsoluteAudioUrl(url) {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    const base = 'https://tadierbot.runasp.net';
+    return url.startsWith('/') ? `${base}${url}` : `${base}/${url}`;
   }
 
   // Audio boshqaruv funktsiyalari
@@ -1455,6 +1495,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function closePlacementTestModal() {
     stopQuizAudio();
+    closeQuizReaderModal();
     quizModal?.classList.add('hidden');
   }
 
@@ -1490,7 +1531,7 @@ document.addEventListener('DOMContentLoaded', () => {
       quizAudioBox?.classList.remove('hidden');
       if (quizAudioTitle) quizAudioTitle.textContent = passage.title || 'Audio dialog';
       if (quizHtml5Audio) {
-        quizHtml5Audio.src = passage.audioUrl || '';
+        quizHtml5Audio.src = getAbsoluteAudioUrl(passage.audioUrl);
         quizHtml5Audio.load();
       }
       if (quizCurTime) quizCurTime.textContent = '00:00';
@@ -1498,6 +1539,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       quizAudioBox?.classList.add('hidden');
       quizPassageBox?.classList.remove('hidden');
+      currentReadingPassage = passage;
       if (quizPassageTitle) quizPassageTitle.textContent = passage?.title || 'Matn';
       if (quizPassageLevel) quizPassageLevel.textContent = passage?.level || 'A1';
       if (quizPassageText) quizPassageText.textContent = passage?.content || '';

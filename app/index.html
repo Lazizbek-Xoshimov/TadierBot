@@ -700,10 +700,13 @@
               <div class="quiz-passage-head-left">
                 <span class="quiz-passage-icon">📄</span>
                 <strong id="quiz-passage-title">Matn mavzusi</strong>
+                <span class="quiz-passage-badge" id="quiz-passage-level">A1</span>
               </div>
-              <span class="quiz-passage-badge" id="quiz-passage-level">A1</span>
+              <button type="button" class="btn-read-full" id="btn-quiz-read-full">
+                <span>📖 To'liq o'qish</span>
+              </button>
             </div>
-            <div class="quiz-passage-content" id="quiz-passage-text"></div>
+            <div class="quiz-passage-content quiz-passage-preview" id="quiz-passage-text"></div>
           </div>
 
           <!-- Listening Audio Box (Replicating user screenshot) -->
@@ -818,6 +821,34 @@
         <!-- Loading / Empty state -->
         <div id="quiz-loading-view" class="quiz-loading-view hidden">
           <div class="empty-state-text" id="quiz-loading-msg">Savollar tayyorlanmoqda...</div>
+        </div>
+      </div>
+    </div>
+
+    
+    <!-- Reading: To'liq matnni o'qish Modali -->
+    <div id="quiz-reader-modal" class="trainer-modal hidden" style="z-index: 1050;">
+      <div class="trainer-backdrop" id="quiz-reader-backdrop"></div>
+      <div class="trainer-sheet quiz-reader-sheet">
+        <div class="trainer-header">
+          <div class="trainer-title-wrap">
+            <span class="trainer-icon">📖</span>
+            <div>
+              <h3 id="quiz-reader-title">Matnni o'qish</h3>
+              <p class="trainer-sub" id="quiz-reader-level">A1 Daraja</p>
+            </div>
+          </div>
+          <button class="modal-close-btn" id="btn-close-quiz-reader" title="Yopish">✕</button>
+        </div>
+
+        <div class="quiz-reader-body">
+          <div class="quiz-reader-text" id="quiz-reader-full-text"></div>
+        </div>
+
+        <div class="quiz-reader-footer">
+          <button type="button" class="submit-btn btn-blue" id="btn-quiz-reader-close">
+            ✅ O'qib bo'ldim (Savollarga qaytish)
+          </button>
         </div>
       </div>
     </div>
