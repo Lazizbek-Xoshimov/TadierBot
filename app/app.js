@@ -736,10 +736,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // 2x2 kartalardan boshqa bo'limlar
+  // 2x2 kartalardan: Placement Test (Darajani aniqlash)
   document.getElementById('card-open-tests')?.addEventListener('click', () => {
     triggerHaptic('medium');
-    notify('🎓 Placement Test: Darajani aniqlash tizimi keyingi bosqichda ulanadi!');
+    openPlacementTestModal();
   });
 
   document.getElementById('card-open-books')?.addEventListener('click', () => {
@@ -767,6 +767,10 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       triggerHaptic('light');
       if (secId === 'sec-events') loadAdminEvents();
+      if (secId === 'sec-tests') {
+        loadAdminPassages();
+        loadAdminQuizQuestions();
+      }
     });
   });
 
@@ -1274,5 +1278,616 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Dastlabki yuklash
   loadPublicEvents();
+
+
+  // ==========================================
+  // 8. Darajani aniqlash testi (Placement Test) & Audio Pleer
+  // ==========================================
+  const quizModal = document.getElementById('quiz-modal');
+  const btnCloseQuiz = document.getElementById('btn-close-quiz');
+  const quizBackdrop = document.getElementById('quiz-backdrop');
+
+  const quizTestBody = document.getElementById('quiz-test-body');
+  const quizResultView = document.getElementById('quiz-result-view');
+  const quizLoadingView = document.getElementById('quiz-loading-view');
+  const quizLoadingMsg = document.getElementById('quiz-loading-msg');
+
+  const quizSectionBadge = document.getElementById('quiz-section-badge');
+  const quizQCounter = document.getElementById('quiz-q-counter');
+  const quizProgressFill = document.getElementById('quiz-progress-fill');
+
+  const quizPassageBox = document.getElementById('quiz-passage-box');
+  const quizPassageTitle = document.getElementById('quiz-passage-title');
+  const quizPassageLevel = document.getElementById('quiz-passage-level');
+  const quizPassageText = document.getElementById('quiz-passage-text');
+
+  const quizAudioBox = document.getElementById('quiz-audio-box');
+  const quizAudioTitle = document.getElementById('quiz-audio-title');
+  const quizHtml5Audio = document.getElementById('quiz-html5-audio');
+  const quizBtnPlayPause = document.getElementById('quiz-btn-play-pause');
+  const quizPlayIcon = document.getElementById('quiz-play-icon');
+  const quizPauseIcon = document.getElementById('quiz-pause-icon');
+  const quizCurTime = document.getElementById('quiz-cur-time');
+  const quizTotalTime = document.getElementById('quiz-total-time');
+  const quizScrubberTrack = document.getElementById('quiz-scrubber-track');
+  const quizScrubberFill = document.getElementById('quiz-scrubber-fill');
+  const quizScrubberKnob = document.getElementById('quiz-scrubber-knob');
+
+  const quizQLabel = document.getElementById('quiz-q-label');
+  const quizQText = document.getElementById('quiz-q-text');
+  const quizOptionsList = document.getElementById('quiz-options-list');
+
+  const btnQuizPrev = document.getElementById('btn-quiz-prev');
+  const btnQuizNext = document.getElementById('btn-quiz-next');
+  const btnQuizNextText = document.getElementById('btn-quiz-next-text');
+  const btnQuizFinishClose = document.getElementById('btn-quiz-finish-close');
+
+  let activeQuizTest = null; // { testId, totalQuestions, passages: [], questions: [] }
+  let currentQuizQIndex = 0;
+  let userQuizAnswers = {};  // { [questionId]: 'A' | 'B' | 'C' | 'D' }
+  let isAudioPlaying = false;
+
+  // Format seconds to mm:ss
+  function formatQuizTime(seconds) {
+    if (isNaN(seconds) || seconds < 0) return '00:00';
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+
+  // Audio boshqaruv funktsiyalari
+  function stopQuizAudio() {
+    if (quizHtml5Audio) {
+      quizHtml5Audio.pause();
+      quizHtml5Audio.currentTime = 0;
+    }
+    isAudioPlaying = false;
+    quizPlayIcon?.classList.remove('hidden');
+    quizPauseIcon?.classList.add('hidden');
+    if (quizScrubberFill) quizScrubberFill.style.width = '0%';
+    if (quizScrubberKnob) quizScrubberKnob.style.left = '0%';
+    if (quizCurTime) quizCurTime.textContent = '00:00';
+  }
+
+  function toggleQuizAudio() {
+    if (!quizHtml5Audio || !quizHtml5Audio.src) return;
+    if (quizHtml5Audio.paused) {
+      quizHtml5Audio.play().then(() => {
+        isAudioPlaying = true;
+        quizPlayIcon?.classList.add('hidden');
+        quizPauseIcon?.classList.remove('hidden');
+      }).catch(err => {
+        console.warn('Audio ijro etishda xatolik:', err);
+        notify('⚠️ Audio ijro etilmadi. Internetni tekshiring.');
+      });
+    } else {
+      quizHtml5Audio.pause();
+      isAudioPlaying = false;
+      quizPlayIcon?.classList.remove('hidden');
+      quizPauseIcon?.classList.add('hidden');
+    }
+  }
+
+  quizBtnPlayPause?.addEventListener('click', () => {
+    triggerHaptic('light');
+    toggleQuizAudio();
+  });
+
+  quizHtml5Audio?.addEventListener('timeupdate', () => {
+    if (!quizHtml5Audio.duration) return;
+    const cur = quizHtml5Audio.currentTime;
+    const dur = quizHtml5Audio.duration;
+    const pct = Math.min(100, Math.max(0, (cur / dur) * 100));
+
+    if (quizCurTime) quizCurTime.textContent = formatQuizTime(cur);
+    if (quizScrubberFill) quizScrubberFill.style.width = pct + '%';
+    if (quizScrubberKnob) quizScrubberKnob.style.left = pct + '%';
+  });
+
+  quizHtml5Audio?.addEventListener('loadedmetadata', () => {
+    if (quizTotalTime && quizHtml5Audio.duration) {
+      quizTotalTime.textContent = formatQuizTime(quizHtml5Audio.duration);
+    }
+  });
+
+  quizHtml5Audio?.addEventListener('ended', () => {
+    isAudioPlaying = false;
+    quizPlayIcon?.classList.remove('hidden');
+    quizPauseIcon?.classList.add('hidden');
+    if (quizScrubberFill) quizScrubberFill.style.width = '0%';
+    if (quizScrubberKnob) quizScrubberKnob.style.left = '0%';
+    if (quizCurTime) quizCurTime.textContent = '00:00';
+  });
+
+  quizScrubberTrack?.addEventListener('click', (e) => {
+    if (!quizHtml5Audio || !quizHtml5Audio.duration) return;
+    const rect = quizScrubberTrack.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const pct = Math.max(0, Math.min(1, clickX / rect.width));
+    quizHtml5Audio.currentTime = pct * quizHtml5Audio.duration;
+  });
+
+  // Modalni ochish va testni boshlash
+  async function openPlacementTestModal() {
+    stopQuizAudio();
+    quizModal?.classList.remove('hidden');
+    quizTestBody?.classList.add('hidden');
+    quizResultView?.classList.add('hidden');
+    quizLoadingView?.classList.remove('hidden');
+    if (quizLoadingMsg) quizLoadingMsg.textContent = 'Daraja testi yuklanmoqda (20 ta savol)...';
+
+    try {
+      const res = await fetch('/api/quiz/placement');
+      if (res.ok) {
+        const testData = await res.json();
+        if (!testData.questions || testData.questions.length === 0) {
+          if (quizLoadingMsg) quizLoadingMsg.textContent = '⚠️ Hozircha test savollari shakllantirilmagan.';
+          return;
+        }
+
+        activeQuizTest = testData;
+        currentQuizQIndex = 0;
+        userQuizAnswers = {};
+
+        quizLoadingView?.classList.add('hidden');
+        quizTestBody?.classList.remove('hidden');
+        renderQuizQuestion(0);
+      } else {
+        if (quizLoadingMsg) quizLoadingMsg.textContent = '❌ Test savollarini yuklab bo‘lmadi.';
+      }
+    } catch (err) {
+      console.error('Testni yuklashda server xatoligi:', err);
+      if (quizLoadingMsg) quizLoadingMsg.textContent = '❌ Server bilan bog‘lanishda xatolik.';
+    }
+  }
+
+  function closePlacementTestModal() {
+    stopQuizAudio();
+    quizModal?.classList.add('hidden');
+  }
+
+  btnCloseQuiz?.addEventListener('click', closePlacementTestModal);
+  quizBackdrop?.addEventListener('click', closePlacementTestModal);
+
+  // Savolni render qilish
+  function renderQuizQuestion(index) {
+    if (!activeQuizTest || !activeQuizTest.questions[index]) return;
+
+    stopQuizAudio();
+    const q = activeQuizTest.questions[index];
+    const totalQ = activeQuizTest.questions.length;
+    const passage = (activeQuizTest.passages || []).find(p => p.id === q.passageId);
+
+    // Hisoblagich va Progress
+    if (quizQCounter) quizQCounter.textContent = `Savol ${index + 1} / ${totalQ}`;
+    if (quizProgressFill) {
+      const pct = Math.round(((index + 1) / totalQ) * 100);
+      quizProgressFill.style.width = pct + '%';
+    }
+
+    // Reading (type == 1) yoki Listening (type == 2) ko'rinishi
+    const isListening = passage && passage.type === 2;
+    if (quizSectionBadge) {
+      quizSectionBadge.textContent = isListening 
+        ? "2-BO'LIM: TINGLASH (HÖREN)" 
+        : "1-BO'LIM: O'QISH (READING)";
+    }
+
+    if (isListening) {
+      quizPassageBox?.classList.add('hidden');
+      quizAudioBox?.classList.remove('hidden');
+      if (quizAudioTitle) quizAudioTitle.textContent = passage.title || 'Audio dialog';
+      if (quizHtml5Audio) {
+        quizHtml5Audio.src = passage.audioUrl || '';
+        quizHtml5Audio.load();
+      }
+      if (quizCurTime) quizCurTime.textContent = '00:00';
+      if (quizTotalTime) quizTotalTime.textContent = '00:00';
+    } else {
+      quizAudioBox?.classList.add('hidden');
+      quizPassageBox?.classList.remove('hidden');
+      if (quizPassageTitle) quizPassageTitle.textContent = passage?.title || 'Matn';
+      if (quizPassageLevel) quizPassageLevel.textContent = passage?.level || 'A1';
+      if (quizPassageText) quizPassageText.textContent = passage?.content || '';
+    }
+
+    // Savol matni
+    if (quizQLabel) quizQLabel.textContent = `${index + 1}-savol:`;
+    if (quizQText) quizQText.textContent = q.questionText;
+
+    // Variantlar (A, B, C, D)
+    if (quizOptionsList) {
+      const options = [
+        { letter: 'A', text: q.optionA },
+        { letter: 'B', text: q.optionB },
+        { letter: 'C', text: q.optionC },
+        { letter: 'D', text: q.optionD }
+      ].filter(o => o.text && o.text.trim().length > 0);
+
+      const selectedOpt = userQuizAnswers[q.id];
+      quizOptionsList.innerHTML = options.map(opt => `
+        <button type="button" class="quiz-option-btn ${selectedOpt === opt.letter ? 'selected' : ''}" data-letter="${opt.letter}">
+          <span class="quiz-opt-letter">${opt.letter}</span>
+          <span class="quiz-opt-text">${opt.text}</span>
+        </button>
+      `).join('');
+
+      quizOptionsList.querySelectorAll('.quiz-option-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          triggerHaptic('light');
+          const chosenLetter = btn.getAttribute('data-letter');
+          userQuizAnswers[q.id] = chosenLetter;
+
+          quizOptionsList.querySelectorAll('.quiz-option-btn').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+        });
+      });
+    }
+
+    // Tugmalar holati
+    if (btnQuizPrev) btnQuizPrev.disabled = (index === 0);
+    if (btnQuizNextText) {
+      btnQuizNextText.textContent = (index === totalQ - 1) ? 'Testni yakunlash 🏁' : 'Keyingi ➔';
+    }
+  }
+
+  // Oldingi savol
+  btnQuizPrev?.addEventListener('click', () => {
+    if (currentQuizQIndex > 0) {
+      triggerHaptic('light');
+      currentQuizQIndex--;
+      renderQuizQuestion(currentQuizQIndex);
+    }
+  });
+
+  // Keyingi savol yoki yakunlash
+  btnQuizNext?.addEventListener('click', () => {
+    if (!activeQuizTest) return;
+    const totalQ = activeQuizTest.questions.length;
+
+    triggerHaptic('medium');
+    if (currentQuizQIndex < totalQ - 1) {
+      currentQuizQIndex++;
+      renderQuizQuestion(currentQuizQIndex);
+    } else {
+      submitPlacementTest();
+    }
+  });
+
+  // Test javoblarini topshirish
+  async function submitPlacementTest() {
+    stopQuizAudio();
+    quizTestBody?.classList.add('hidden');
+    quizLoadingView?.classList.remove('hidden');
+    if (quizLoadingMsg) quizLoadingMsg.textContent = 'Javoblaringiz tekshirilmoqda va darajangiz hisoblanmoqda...';
+
+    const submitPayload = {
+      testId: activeQuizTest.testId,
+      answers: Object.entries(userQuizAnswers).map(([qid, opt]) => ({
+        questionId: parseInt(qid, 10),
+        selectedOption: opt
+      }))
+    };
+
+    try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (tg?.initData) headers['X-Telegram-Init-Data'] = tg.initData;
+
+      const res = await fetch('/api/quiz/submit', {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(submitPayload)
+      });
+
+      if (res.ok) {
+        const result = await res.json();
+        quizLoadingView?.classList.add('hidden');
+        quizResultView?.classList.remove('hidden');
+
+        // Natija ma'lumotlarini to'ldirish
+        const resLevel = document.getElementById('quiz-res-level');
+        const resDesc = document.getElementById('quiz-res-desc');
+        const resCorrect = document.getElementById('quiz-res-correct');
+        const resScore = document.getElementById('quiz-res-score');
+        const resBonus = document.getElementById('quiz-res-bonus');
+
+        if (resLevel) resLevel.textContent = result.assignedLevel;
+        if (resDesc) resDesc.textContent = result.assignedLevelDescription || 'Bilim darajasi';
+        if (resCorrect) resCorrect.textContent = `${result.correctAnswersCount} / ${result.totalQuestionsCount}`;
+        if (resScore) resScore.textContent = `+${result.scoreEarned} ball`;
+        if (resBonus) resBonus.textContent = `+${result.bonusPoints} ball`;
+
+        // Profil header elementlarini yangilash
+        const statScore = document.getElementById('stat-score');
+        const statLevel = document.getElementById('stat-level');
+        const statStreak = document.getElementById('stat-streak');
+
+        if (statScore) {
+          const prevScore = parseInt(statScore.textContent, 10) || 0;
+          const newScore = prevScore + result.scoreEarned;
+          statScore.textContent = newScore;
+          document.getElementById('quiz-impact-score').textContent = newScore;
+        }
+
+        if (statLevel) {
+          statLevel.textContent = result.assignedLevel;
+          document.getElementById('quiz-impact-level').textContent = result.assignedLevel;
+        }
+
+        if (statStreak) {
+          const currentStreakStr = statStreak.textContent || '1';
+          const streakNum = parseInt(currentStreakStr, 10) || 1;
+          const streakText = (streakNum > 0 ? streakNum : 1) + ' kun';
+          statStreak.textContent = streakText;
+          document.getElementById('quiz-impact-streak').textContent = streakText;
+        }
+
+        triggerHaptic('success');
+      } else {
+        const errJson = await res.json().catch(() => ({}));
+        notify(`⚠️ Xatolik: ${errJson.message || 'Test natijasini qabul qilib bo‘lmadi'}`);
+        quizLoadingView?.classList.add('hidden');
+        quizTestBody?.classList.remove('hidden');
+      }
+    } catch (err) {
+      console.error('Test javoblarini topshirishda xatolik:', err);
+      notify('❌ Server bilan bog‘lanishda xatolik yuz berdi.');
+      quizLoadingView?.classList.add('hidden');
+      quizTestBody?.classList.remove('hidden');
+    }
+  }
+
+  btnQuizFinishClose?.addEventListener('click', () => {
+    triggerHaptic('light');
+    closePlacementTestModal();
+  });
+
+  // ==========================================
+  // 9. Admin: Testlar va Materiallar Boshqaruvi
+  // ==========================================
+  const adminPassageType = document.getElementById('admin-passage-type');
+  const adminPassageContentGroup = document.getElementById('admin-passage-content-group');
+  const adminPassageAudioGroup = document.getElementById('admin-passage-audio-group');
+  const btnSavePassage = document.getElementById('btn-save-passage');
+  const btnSaveTest = document.getElementById('btn-save-test');
+
+  // Bo'lim turi o'zgarganda (Reading matn yoki Audio yuklash)
+  adminPassageType?.addEventListener('change', () => {
+    const isAudio = adminPassageType.value === '2';
+    adminPassageContentGroup?.classList.toggle('hidden', isAudio);
+    adminPassageAudioGroup?.classList.toggle('hidden', !isAudio);
+  });
+
+  // Admin materiallar (passages) ro'yxatini dropdown ga yuklash
+  async function loadAdminPassages() {
+    const selEl = document.getElementById('admin-sel-passage');
+    if (!selEl) return;
+
+    try {
+      const res = await fetch('/api/quiz/passages');
+      if (res.ok) {
+        const passages = await res.json();
+        selEl.innerHTML = '<option value="">Matn / Audioni tanlang...</option>' + 
+          passages.map(p => `
+            <option value="${p.id}">${p.type === 1 ? '📖' : '🎧'} ${p.title} (${p.level})</option>
+          `).join('');
+      }
+    } catch (err) {
+      console.warn('Admin passages yuklashda xatolik:', err);
+    }
+  }
+
+  // Admin savollar ro'yxatini yuklash
+  async function loadAdminQuizQuestions() {
+    const listEl = document.getElementById('admin-quiz-list');
+    const countEl = document.getElementById('admin-quiz-count');
+    if (!listEl) return;
+
+    try {
+      const res = await fetch('/api/quiz/admin/questions');
+      if (res.ok) {
+        const questions = await res.json();
+        if (countEl) countEl.textContent = `${questions.length} ta`;
+
+        if (questions.length === 0) {
+          listEl.innerHTML = '<div class="empty-state-text">Hozircha savollar qo‘shilmagan.</div>';
+          return;
+        }
+
+        listEl.innerHTML = questions.map((q, idx) => `
+          <div class="crud-item" id="admin-quiz-item-${q.id}">
+            <div class="crud-item-info">
+              <strong>${idx + 1}. ${q.questionText}</strong>
+              <span>${q.passageType === 1 ? '📖' : '🎧'} ${q.passageTitle} • ${q.passageLevel}</span>
+              <small>To'g'ri javob: ${q.correctOption} • Variantlar: A, B${q.optionC ? ', C' : ''}${q.optionD ? ', D' : ''}</small>
+            </div>
+            <div class="crud-actions">
+              <button class="action-btn-sm btn-delete" data-qid="${q.id}">🗑</button>
+            </div>
+          </div>
+        `).join('');
+
+        listEl.querySelectorAll('.btn-delete').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const qid = btn.getAttribute('data-qid');
+            if (!confirm('Ushbu savolni o‘chirishni tasdiqlaysizmi?')) return;
+            await deleteAdminQuizQuestion(qid);
+          });
+        });
+      }
+    } catch (err) {
+      console.warn('Admin savollarni yuklashda xatolik:', err);
+    }
+  }
+
+  // Admin yangi Matn / Audio qo'shish
+  btnSavePassage?.addEventListener('click', async () => {
+    const type = parseInt(adminPassageType?.value || '1', 10);
+    const level = document.getElementById('admin-passage-level')?.value || 'A1';
+    const title = document.getElementById('admin-passage-title')?.value.trim();
+    const content = document.getElementById('admin-passage-content')?.value.trim();
+    const audioFileInput = document.getElementById('admin-passage-audio-file');
+
+    if (!title) {
+      notify('⚠️ Sarlavha kiritilishi shart!');
+      return;
+    }
+
+    let audioUrl = null;
+
+    // Agar audio bo'lsa, avval faylni yuklaymiz
+    if (type === 2) {
+      if (!audioFileInput || !audioFileInput.files || audioFileInput.files.length === 0) {
+        notify('⚠️ Iltimos, audio faylni tanlang!');
+        return;
+      }
+
+      const file = audioFileInput.files[0];
+      const formData = new FormData();
+      formData.append('file', file);
+
+      notify('⏳ Audio yuklanmoqda...');
+      try {
+        const upHeaders = {};
+        if (tg?.initData) upHeaders['X-Telegram-Init-Data'] = tg.initData;
+
+        const upRes = await fetch('/api/quiz/upload-audio', {
+          method: 'POST',
+          headers: upHeaders,
+          body: formData
+        });
+
+        if (!upRes.ok) {
+          const err = await upRes.json().catch(() => ({}));
+          notify(`⚠️ Audio yuklashda xatolik: ${err.message || 'Yuklab bo‘lmadi'}`);
+          return;
+        }
+
+        const upData = await upRes.json();
+        audioUrl = upData.audioUrl;
+      } catch (err) {
+        notify('❌ Audio yuklashda server xatoligi.');
+        return;
+      }
+    }
+
+    // Passage yaratish
+    try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (tg?.initData) headers['X-Telegram-Init-Data'] = tg.initData;
+
+      const res = await fetch('/api/quiz/passages', {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({
+          type: type,
+          level: level,
+          title: title,
+          content: content || null,
+          audioUrl: audioUrl
+        })
+      });
+
+      if (res.ok) {
+        notify('✅ Yangi material (passage) muvaffaqiyatli saqlandi!');
+        document.getElementById('admin-passage-title').value = '';
+        if (document.getElementById('admin-passage-content')) {
+          document.getElementById('admin-passage-content').value = '';
+        }
+        if (audioFileInput) audioFileInput.value = '';
+        loadAdminPassages();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        notify(`⚠️ Xatolik: ${err.message || 'Saqlab bo‘lmadi'}`);
+      }
+    } catch (err) {
+      notify('❌ Server bilan bog‘lanishda xatolik yuz berdi.');
+    }
+  });
+
+  // Admin yangi savol qo'shish
+  btnSaveTest?.addEventListener('click', async () => {
+    const passageId = document.getElementById('admin-sel-passage')?.value;
+    const questionText = document.getElementById('inp-test-question')?.value.trim();
+    const optionA = document.getElementById('inp-test-opt0')?.value.trim();
+    const optionB = document.getElementById('inp-test-opt1')?.value.trim();
+    const optionC = document.getElementById('inp-test-opt2')?.value.trim() || null;
+    const optionD = document.getElementById('inp-test-opt3')?.value.trim() || null;
+    const correctOptionRadio = document.querySelector('input[name="admin_correct_opt"]:checked');
+    const correctOption = correctOptionRadio ? correctOptionRadio.value : 'A';
+
+    if (!passageId) {
+      notify('⚠️ Iltimos, tegishli Matn yoki Audioni tanlang!');
+      return;
+    }
+
+    if (!questionText) {
+      notify('⚠️ Savol matni kiritilishi shart!');
+      return;
+    }
+
+    if (!optionA || !optionB) {
+      notify('⚠️ Kamida A va B variantlari kiritilishi shart!');
+      return;
+    }
+
+    try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (tg?.initData) headers['X-Telegram-Init-Data'] = tg.initData;
+
+      const res = await fetch('/api/quiz/questions', {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({
+          passageId: parseInt(passageId, 10),
+          questionText: questionText,
+          optionA: optionA,
+          optionB: optionB,
+          optionC: optionC,
+          optionD: optionD,
+          correctOption: correctOption,
+          orderIndex: 0
+        })
+      });
+
+      if (res.ok) {
+        notify('✅ Savol muvaffaqiyatli saqlandi!');
+        document.getElementById('inp-test-question').value = '';
+        document.getElementById('inp-test-opt0').value = '';
+        document.getElementById('inp-test-opt1').value = '';
+        if (document.getElementById('inp-test-opt2')) document.getElementById('inp-test-opt2').value = '';
+        if (document.getElementById('inp-test-opt3')) document.getElementById('inp-test-opt3').value = '';
+
+        loadAdminQuizQuestions();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        notify(`⚠️ Xatolik: ${err.message || 'Savolni saqlab bo‘lmadi'}`);
+      }
+    } catch (err) {
+      notify('❌ Server bilan bog‘lanishda xatolik yuz berdi.');
+    }
+  });
+
+  // Admin savolni o'chirish
+  async function deleteAdminQuizQuestion(id) {
+    try {
+      const headers = {};
+      if (tg?.initData) headers['X-Telegram-Init-Data'] = tg.initData;
+
+      const res = await fetch(`/api/quiz/questions/${id}`, {
+        method: 'DELETE',
+        headers: headers
+      });
+
+      if (res.ok) {
+        notify('🗑 Savol muvaffaqiyatli o‘chirildi!');
+        loadAdminQuizQuestions();
+      } else {
+        notify('❌ Savolni o‘chirib bo‘lmadi.');
+      }
+    } catch (err) {
+      notify('❌ Server bilan bog‘lanishda xatolik yuz berdi.');
+    }
+  }
 
 });

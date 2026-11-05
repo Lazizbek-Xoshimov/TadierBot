@@ -87,8 +87,8 @@
           <div class="grid-card" id="card-open-tests">
             <div class="grid-icon">🎓</div>
             <div class="grid-info">
-              <h5>Placement Test</h5>
-              <p>Darajani aniqlash (A1-B1)</p>
+              <h5>Darajani aniqlash testi</h5>
+              <p>A1 – B2 bilimingizni sinang</p>
             </div>
             <span class="grid-arrow">➔</span>
           </div>
@@ -384,13 +384,63 @@
 
         <!-- 2. Testlar boshqaruvi (Quiz CRUD) -->
         <div id="sec-tests" class="admin-section">
+          <!-- A. Yangi Matn / Audio qo'shish -->
           <div class="crud-form-card">
             <div class="form-title">
+              <span>📄 Yangi Matn yoki Audio yuklash</span>
+              <span class="badge-mini">Passage</span>
+            </div>
+
+            <div class="form-row-cols">
+              <div class="form-group form-col-1">
+                <label for="admin-passage-type">Bo'lim turi</label>
+                <select id="admin-passage-type" class="form-control">
+                  <option value="1">📖 Reading (Matn)</option>
+                  <option value="2">🎧 Listening (Audio)</option>
+                </select>
+              </div>
+              <div class="form-group form-col-2">
+                <label for="admin-passage-level">Darajasi</label>
+                <select id="admin-passage-level" class="form-control">
+                  <option value="A1">A1</option>
+                  <option value="A2">A2</option>
+                  <option value="B1">B1</option>
+                  <option value="B2">B2</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="admin-passage-title">Sarlavha (Mavzu)</label>
+              <input type="text" id="admin-passage-title" class="form-control" placeholder="Mavzu, masalan: Im Bahnhof yoki Im Park">
+            </div>
+
+            <div class="form-group" id="admin-passage-content-group">
+              <label for="admin-passage-content">Matn (Reading uchun)</label>
+              <textarea id="admin-passage-content" class="form-control" rows="3" placeholder="Nemischa matn mazmunini kiriting..."></textarea>
+            </div>
+
+            <div class="form-group hidden" id="admin-passage-audio-group">
+              <label for="admin-passage-audio-file">Audio fayl (.mp3 yuklash)</label>
+              <input type="file" id="admin-passage-audio-file" class="form-control" accept="audio/*">
+              <small class="form-hint" style="color:var(--hint-color);font-size:11px;margin-top:4px;display:block;">Fayl avtomatik wwwroot/audio papkasiga saqlanadi.</small>
+            </div>
+
+            <button class="submit-btn btn-purple" id="btn-save-passage">
+              💾 Matn/Audioni saqlash
+            </button>
+          </div>
+
+          <!-- B. Savol qo'shish -->
+          <div class="crud-form-card" style="margin-top:16px;">
+            <div class="form-title">
               <span>➕ Yangi test savoli qo'shish</span>
-              <select id="inp-test-level" class="form-control-sm">
-                <option value="A1">A1 Daraja</option>
-                <option value="A2">A2 Daraja</option>
-                <option value="B1">B1 Daraja</option>
+            </div>
+
+            <div class="form-group">
+              <label for="admin-sel-passage">Tegishli Matn / Audioni tanlang:</label>
+              <select id="admin-sel-passage" class="form-control">
+                <option value="">Matn / Audioni tanlang...</option>
               </select>
             </div>
 
@@ -400,28 +450,39 @@
             </div>
 
             <div class="form-group">
-              <label>Variantlar (To'g'ri javobni belgilang):</label>
+              <label>Variantlar (To'g'ri javobni tanlang):</label>
               <div class="option-input-row">
-                <input type="radio" name="admin_correct_opt" value="0" checked>
-                <input type="text" id="inp-test-opt0" class="form-control" placeholder="A variant (To'g'ri)">
+                <input type="radio" name="admin_correct_opt" value="A" checked>
+                <input type="text" id="inp-test-opt0" class="form-control" placeholder="A variant (majburiy)">
               </div>
               <div class="option-input-row">
-                <input type="radio" name="admin_correct_opt" value="1">
-                <input type="text" id="inp-test-opt1" class="form-control" placeholder="B variant">
+                <input type="radio" name="admin_correct_opt" value="B">
+                <input type="text" id="inp-test-opt1" class="form-control" placeholder="B variant (majburiy)">
               </div>
               <div class="option-input-row">
-                <input type="radio" name="admin_correct_opt" value="2">
-                <input type="text" id="inp-test-opt2" class="form-control" placeholder="C variant">
+                <input type="radio" name="admin_correct_opt" value="C">
+                <input type="text" id="inp-test-opt2" class="form-control" placeholder="C variant (ixtiyoriy)">
               </div>
               <div class="option-input-row">
-                <input type="radio" name="admin_correct_opt" value="3">
-                <input type="text" id="inp-test-opt3" class="form-control" placeholder="D variant">
+                <input type="radio" name="admin_correct_opt" value="D">
+                <input type="text" id="inp-test-opt3" class="form-control" placeholder="D variant (ixtiyoriy)">
               </div>
             </div>
 
-            <button class="submit-btn btn-purple" id="btn-save-test">
+            <button class="submit-btn btn-blue" id="btn-save-test">
               💾 Savolni saqlash
             </button>
+          </div>
+
+          <!-- C. Mavjud savollar ro'yxati -->
+          <div class="crud-list-card" style="margin-top:16px;">
+            <div class="crud-list-header">
+              <span>📋 Mavjud test savollari</span>
+              <span class="badge-mini" id="admin-quiz-count">0 ta</span>
+            </div>
+            <div class="crud-list" id="admin-quiz-list">
+              <div class="empty-state-text">Savollar yuklanmoqda...</div>
+            </div>
           </div>
         </div>
 
@@ -600,6 +661,163 @@
           <button class="submit-btn btn-blue" id="btn-trainer-restart">
             🔄 Boshidan ko‘rish
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Darajani aniqlash testi (Placement Test) Modali -->
+    <div id="quiz-modal" class="trainer-modal hidden">
+      <div class="trainer-backdrop" id="quiz-backdrop"></div>
+      <div class="trainer-sheet quiz-sheet">
+        <!-- Header -->
+        <div class="trainer-header">
+          <div class="trainer-title-wrap">
+            <span class="trainer-icon">🎓</span>
+            <div>
+              <h3 id="quiz-modal-title">Darajani aniqlash testi</h3>
+              <p class="trainer-sub" id="quiz-modal-subtitle">20 ta savol • A1 – B2 daraja</p>
+            </div>
+          </div>
+          <button class="modal-close-btn" id="btn-close-quiz" title="Yopish">✕</button>
+        </div>
+
+        <!-- Content Area (Questions / Test In-Progress) -->
+        <div id="quiz-test-body" class="quiz-body-wrap">
+          <!-- Meta row (Section pill and question counter) -->
+          <div class="quiz-meta-row">
+            <span class="quiz-section-badge" id="quiz-section-badge">1-bo'lim: O'qish (Reading)</span>
+            <span class="quiz-counter" id="quiz-q-counter">Savol 1 / 20</span>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="trainer-progress-bar">
+            <div class="progress-fill" id="quiz-progress-fill" style="width: 5%;"></div>
+          </div>
+
+          <!-- Reading Passage Box (Sticky scrollable text) -->
+          <div id="quiz-passage-box" class="quiz-passage-box hidden">
+            <div class="quiz-passage-header">
+              <div class="quiz-passage-head-left">
+                <span class="quiz-passage-icon">📄</span>
+                <strong id="quiz-passage-title">Matn mavzusi</strong>
+              </div>
+              <span class="quiz-passage-badge" id="quiz-passage-level">A1</span>
+            </div>
+            <div class="quiz-passage-content" id="quiz-passage-text"></div>
+          </div>
+
+          <!-- Listening Audio Box (Replicating user screenshot) -->
+          <div id="quiz-audio-box" class="quiz-audio-box hidden">
+            <div class="quiz-audio-header">
+              <span>🎧 Audioni tinglang:</span>
+              <span class="quiz-audio-badge" id="quiz-audio-title">Audio dialog</span>
+            </div>
+            <div class="quiz-player-row">
+              <button type="button" class="quiz-play-btn" id="quiz-btn-play-pause">
+                <span class="quiz-play-icon" id="quiz-play-icon"></span>
+                <span class="quiz-pause-icon hidden" id="quiz-pause-icon">
+                  <i></i><i></i>
+                </span>
+              </button>
+              <div class="quiz-player-controls">
+                <div class="quiz-time-row">
+                  <span id="quiz-cur-time">00:00</span>
+                  <span id="quiz-total-time">00:00</span>
+                </div>
+                <div class="quiz-scrubber-track" id="quiz-scrubber-track">
+                  <div class="quiz-scrubber-fill" id="quiz-scrubber-fill" style="width: 0%;"></div>
+                  <div class="quiz-scrubber-knob" id="quiz-scrubber-knob" style="left: 0%;"></div>
+                </div>
+              </div>
+            </div>
+            <audio id="quiz-html5-audio" preload="metadata" style="display:none;"></audio>
+            <p class="quiz-audio-hint">💡 Audioni test davomida istalgancha to'xtatib yoki qayta eshitishingiz mumkin.</p>
+          </div>
+
+          <!-- Question Box -->
+          <div class="quiz-question-box">
+            <span class="quiz-q-num-label" id="quiz-q-label">1-savol:</span>
+            <h4 class="quiz-q-text" id="quiz-q-text">Savol matni yuklanmoqda...</h4>
+          </div>
+
+          <!-- Options Container -->
+          <div class="quiz-options-list" id="quiz-options-list">
+            <!-- Dynamic option buttons -->
+          </div>
+
+          <!-- Nav actions -->
+          <div class="trainer-nav-row quiz-nav-row">
+            <button type="button" class="btn-nav-prev" id="btn-quiz-prev" title="Oldingi savol">
+              <span>⬅️ Oldingi</span>
+            </button>
+            <button type="button" class="btn-nav-next" id="btn-quiz-next" title="Keyingi savol">
+              <span id="btn-quiz-next-text">Keyingi ➔</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Result Screen (Completed) -->
+        <div id="quiz-result-view" class="quiz-result-view hidden">
+          <div class="quiz-result-celebration">🎉</div>
+          <h3>Test muvaffaqiyatli yakunlandi!</h3>
+          <p class="quiz-result-sub">Sizning nemis tili bo'yicha bilim darajangiz belgilandi:</p>
+
+          <div class="quiz-result-badge-card">
+            <span class="quiz-res-sublabel">SIZNING DARAJANGIZ</span>
+            <h2 class="quiz-res-level" id="quiz-res-level">A2</h2>
+            <p class="quiz-res-desc" id="quiz-res-desc">Boshlang'ich daraja</p>
+
+            <div class="quiz-res-stats-grid">
+              <div class="res-stat-item">
+                <span class="stat-k">To'g'ri javoblar</span>
+                <strong class="stat-v" id="quiz-res-correct">0 / 20</strong>
+              </div>
+              <div class="res-stat-item">
+                <span class="stat-k">To'plangan ball</span>
+                <strong class="stat-v text-gold" id="quiz-res-score">+0 ball</strong>
+              </div>
+              <div class="res-stat-item">
+                <span class="stat-k">Bonus ball</span>
+                <strong class="stat-v text-purple" id="quiz-res-bonus">+0 ball</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="quiz-res-impact-card">
+            <span>⚡ Profilingiz yangilandi:</span>
+            <div class="quiz-impact-row">
+              <div class="impact-pill">
+                <span>🔥</span>
+                <div>
+                  <strong id="quiz-impact-streak">1 kun</strong>
+                  <small>Streak</small>
+                </div>
+              </div>
+              <div class="impact-pill">
+                <span>⭐</span>
+                <div>
+                  <strong id="quiz-impact-score">0</strong>
+                  <small>Ball</small>
+                </div>
+              </div>
+              <div class="impact-pill">
+                <span>🎯</span>
+                <div>
+                  <strong id="quiz-impact-level">A1</strong>
+                  <small>Daraja</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button class="submit-btn btn-blue" id="btn-quiz-finish-close">
+            ✅ Tushunarli (Asosiy sahifaga)
+          </button>
+        </div>
+
+        <!-- Loading / Empty state -->
+        <div id="quiz-loading-view" class="quiz-loading-view hidden">
+          <div class="empty-state-text" id="quiz-loading-msg">Savollar tayyorlanmoqda...</div>
         </div>
       </div>
     </div>

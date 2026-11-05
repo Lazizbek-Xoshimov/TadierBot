@@ -302,6 +302,45 @@ public class UserService : IUserService
         };
     }
 
+    public async Task<UserStatsResponse> SetPlacementTestResultAsync(long telegramId, string assignedLevel, int earnedScore)
+    {
+        var user = await _userRepository.GetByTelegramIdAsync(telegramId);
+        if (user == null)
+        {
+            return new UserStatsResponse { StreakDays = 1, Score = earnedScore, Level = assignedLevel };
+        }
+
+        int newScore = user.Score + earnedScore;
+        var today = DateTime.UtcNow.Date;
+        int newStreak;
+
+        if (user.LastStreakDate == null)
+        {
+            newStreak = 1;
+        }
+        else if (user.LastStreakDate.Value.Date == today)
+        {
+            newStreak = user.StreakDays;
+        }
+        else if (user.LastStreakDate.Value.Date == today.AddDays(-1))
+        {
+            newStreak = user.StreakDays + 1;
+        }
+        else
+        {
+            newStreak = 1;
+        }
+
+        await _userRepository.UpdateStatsAsync(telegramId, newScore, newStreak, assignedLevel, today);
+
+        return new UserStatsResponse
+        {
+            StreakDays = newStreak,
+            Score = newScore,
+            Level = assignedLevel
+        };
+    }
+
     private static string CalculateLevel(int score)
     {
         return score switch

@@ -58,6 +58,8 @@ app.UseHttpsRedirection();
 
 app.UseCors(telegramMiniAppPolicy);
 
+app.UseStaticFiles();
+
 app.UseAuthorization();
 
 app.MapControllers();
