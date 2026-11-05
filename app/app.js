@@ -17,7 +17,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function triggerHaptic(style = 'light') {
     if (tg?.HapticFeedback) {
-      tg.HapticFeedback.impactOccurred(style);
+      try {
+        if (style === 'success' || style === 'error' || style === 'warning') {
+          tg.HapticFeedback.notificationOccurred(style);
+        } else {
+          tg.HapticFeedback.impactOccurred(style);
+        }
+      } catch (e) {
+        // Fallback silently if platform doesn't support specific haptic
+      }
     }
   }
 
@@ -1648,34 +1656,56 @@ document.addEventListener('DOMContentLoaded', () => {
         const resBonus = document.getElementById('quiz-res-bonus');
 
         if (resLevel) resLevel.textContent = result.assignedLevel;
-        if (resDesc) resDesc.textContent = result.assignedLevelDescription || 'Bilim darajasi';
-        if (resCorrect) resCorrect.textContent = `${result.correctAnswersCount} / ${result.totalQuestionsCount}`;
+        if (resDesc) resDesc.textContent = result.assignedLevelDescription || 
+          (result.assignedLevel === 'B2' ? 'Yuqori daraja' : 
+           result.assignedLevel === 'B1' ? 'Mustaqil o‘rta daraja' : 
+           result.assignedLevel === 'A2' ? 'Boshlang‘ich-mustaqil daraja' : 'Boshlang‘ich daraja');
+
+        const totalQ = result.totalQuestions || result.totalQuestionsCount || (activeQuizTest?.questions?.length) || 20;
+        if (resCorrect) resCorrect.textContent = `${result.correctAnswersCount} / ${totalQ}`;
         if (resScore) resScore.textContent = `+${result.scoreEarned} ball`;
-        if (resBonus) resBonus.textContent = `+${result.bonusPoints} ball`;
+
+        const bonus = result.bonusPoints !== undefined ? result.bonusPoints : 
+          (result.assignedLevel === 'B2' ? 20 : result.assignedLevel === 'B1' ? 10 : 0);
+        if (resBonus) resBonus.textContent = `+${bonus} ball`;
 
         // Profil header elementlarini yangilash
         const statScore = document.getElementById('stat-score');
         const statLevel = document.getElementById('stat-level');
         const statStreak = document.getElementById('stat-streak');
 
-        if (statScore) {
-          const prevScore = parseInt(statScore.textContent, 10) || 0;
-          const newScore = prevScore + result.scoreEarned;
-          statScore.textContent = newScore;
-          document.getElementById('quiz-impact-score').textContent = newScore;
-        }
-
-        if (statLevel) {
-          statLevel.textContent = result.assignedLevel;
-          document.getElementById('quiz-impact-level').textContent = result.assignedLevel;
-        }
-
-        if (statStreak) {
-          const currentStreakStr = statStreak.textContent || '1';
-          const streakNum = parseInt(currentStreakStr, 10) || 1;
-          const streakText = (streakNum > 0 ? streakNum : 1) + ' kun';
-          statStreak.textContent = streakText;
-          document.getElementById('quiz-impact-streak').textContent = streakText;
+        if (result.userStats) {
+          if (statScore) {
+            statScore.textContent = result.userStats.score;
+            document.getElementById('quiz-impact-score').textContent = result.userStats.score;
+          }
+          if (statLevel) {
+            statLevel.textContent = result.userStats.level;
+            document.getElementById('quiz-impact-level').textContent = result.userStats.level;
+          }
+          if (statStreak) {
+            const streakText = `${result.userStats.streakDays || 1} kun`;
+            statStreak.textContent = streakText;
+            document.getElementById('quiz-impact-streak').textContent = streakText;
+          }
+        } else {
+          if (statScore) {
+            const prevScore = parseInt(statScore.textContent, 10) || 0;
+            const newScore = prevScore + result.scoreEarned;
+            statScore.textContent = newScore;
+            document.getElementById('quiz-impact-score').textContent = newScore;
+          }
+          if (statLevel) {
+            statLevel.textContent = result.assignedLevel;
+            document.getElementById('quiz-impact-level').textContent = result.assignedLevel;
+          }
+          if (statStreak) {
+            const currentStreakStr = statStreak.textContent || '1';
+            const streakNum = parseInt(currentStreakStr, 10) || 1;
+            const streakText = (streakNum > 0 ? streakNum : 1) + ' kun';
+            statStreak.textContent = streakText;
+            document.getElementById('quiz-impact-streak').textContent = streakText;
+          }
         }
 
         triggerHaptic('success');
