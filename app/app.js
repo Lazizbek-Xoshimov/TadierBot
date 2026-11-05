@@ -1420,12 +1420,24 @@ document.addEventListener('DOMContentLoaded', () => {
       const res = await fetch('/api/quiz/placement');
       if (res.ok) {
         const testData = await res.json();
-        if (!testData.questions || testData.questions.length === 0) {
+        const passages = [...(testData.readingPassages || []), ...(testData.listeningPassages || [])];
+        const questions = [];
+        passages.forEach(p => {
+          (p.questions || []).forEach(q => {
+            questions.push({ ...q, passageId: p.id });
+          });
+        });
+
+        if (questions.length === 0) {
           if (quizLoadingMsg) quizLoadingMsg.textContent = '⚠️ Hozircha test savollari shakllantirilmagan.';
           return;
         }
 
-        activeQuizTest = testData;
+        activeQuizTest = {
+          testId: testData.testId || Date.now().toString(),
+          passages: passages,
+          questions: questions
+        };
         currentQuizQIndex = 0;
         userQuizAnswers = {};
 
@@ -1466,7 +1478,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Reading (type == 1) yoki Listening (type == 2) ko'rinishi
-    const isListening = passage && passage.type === 2;
+    const isListening = passage && (passage.type === 2 || passage.type === 'Listening' || passage.type === '2');
     if (quizSectionBadge) {
       quizSectionBadge.textContent = isListening 
         ? "2-BO'LIM: TINGLASH (HÖREN)" 
@@ -1563,10 +1575,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const submitPayload = {
       testId: activeQuizTest.testId,
-      answers: Object.entries(userQuizAnswers).map(([qid, opt]) => ({
-        questionId: parseInt(qid, 10),
-        selectedOption: opt
-      }))
+      answers: Object.entries(userQuizAnswers).map(([qid, optLetter]) => {
+        const optMap = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 };
+        return {
+          questionId: parseInt(qid, 10),
+          selectedOption: optMap[optLetter] !== undefined ? optMap[optLetter] : 0
+        };
+      })
     };
 
     try {
@@ -1780,7 +1795,7 @@ document.addEventListener('DOMContentLoaded', () => {
         method: 'POST',
         headers: headers,
         body: JSON.stringify({
-          type: type,
+          type: type === 2 ? 'Listening' : 'Reading',
           level: level,
           title: title,
           content: content || null,
@@ -1814,7 +1829,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const optionC = document.getElementById('inp-test-opt2')?.value.trim() || null;
     const optionD = document.getElementById('inp-test-opt3')?.value.trim() || null;
     const correctOptionRadio = document.querySelector('input[name="admin_correct_opt"]:checked');
-    const correctOption = correctOptionRadio ? correctOptionRadio.value : 'A';
+    const optMap = { 'A': 0, 'B': 1, 'C': 2, 'D': 3, '0': 0, '1': 1, '2': 2, '3': 3 };
+    const rawVal = correctOptionRadio ? correctOptionRadio.value : 'A';
+    const correctOption = optMap[rawVal] !== undefined ? optMap[rawVal] : 0;
 
     if (!passageId) {
       notify('⚠️ Iltimos, tegishli Matn yoki Audioni tanlang!');
