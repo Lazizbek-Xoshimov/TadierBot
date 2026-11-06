@@ -16,7 +16,8 @@ public interface IQuizRepository
     Task<QuizQuestion?> GetQuestionByIdAsync(int id);
     Task<IEnumerable<QuizQuestion>> GetQuestionsByPassageIdAsync(int passageId);
     Task<IEnumerable<QuizQuestion>> GetQuestionsByPassageIdsAsync(IEnumerable<int> passageIds);
-    Task<IEnumerable<QuizAdminQuestionDto>> GetAllAdminQuestionsAsync(string? level = null, string? type = null);
+    Task<IEnumerable<QuizAdminQuestionDto>> GetAllAdminQuestionsAsync(string? search = null, string? level = null, string? type = null);
+    Task<bool> UpdateQuestionAsync(QuizQuestion question);
     Task<bool> DeleteQuestionAsync(int id);
 
     // 3. Testni tekshirish (Faqat to'g'ri javoblarni olish)

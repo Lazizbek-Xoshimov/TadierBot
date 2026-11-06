@@ -229,9 +229,27 @@ public class QuizService : IQuizService
         return question;
     }
 
-    public async Task<IEnumerable<QuizAdminQuestionDto>> GetAllAdminQuestionsAsync(string? level = null, string? type = null)
+    public async Task<IEnumerable<QuizAdminQuestionDto>> GetAllAdminQuestionsAsync(string? search = null, string? level = null, string? type = null)
     {
-        return await _quizRepository.GetAllAdminQuestionsAsync(level, type);
+        return await _quizRepository.GetAllAdminQuestionsAsync(search?.Trim(), level, type);
+    }
+
+    public async Task<bool> UpdateQuestionAsync(int id, QuizQuestionCreateRequest request)
+    {
+        var existing = await _quizRepository.GetQuestionByIdAsync(id);
+        if (existing == null)
+            return false;
+
+        existing.PassageId = request.PassageId;
+        existing.QuestionText = request.QuestionText.Trim();
+        existing.OptionA = request.OptionA.Trim();
+        existing.OptionB = request.OptionB.Trim();
+        existing.OptionC = string.IsNullOrWhiteSpace(request.OptionC) ? null : request.OptionC.Trim();
+        existing.OptionD = string.IsNullOrWhiteSpace(request.OptionD) ? null : request.OptionD.Trim();
+        existing.CorrectOption = request.CorrectOption;
+        existing.OrderIndex = request.OrderIndex;
+
+        return await _quizRepository.UpdateQuestionAsync(existing);
     }
 
     public async Task<bool> DeleteQuestionAsync(int id)

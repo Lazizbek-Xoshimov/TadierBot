@@ -176,16 +176,51 @@ public class QuizController : BaseController
     }
 
     /// <summary>
-    /// Admin panel uchun barcha savollar ro'yxatini olish
-    /// URL: GET /api/quiz/admin/questions?level=A1&type=Reading
+    /// Admin panel uchun barcha savollar ro'yxatini olish (Qidiruv bilan)
+    /// URL: GET /api/quiz/admin/questions?search=berlin&level=A1&type=Reading
     /// </summary>
     [HttpGet("admin/questions")]
     public async Task<IActionResult> GetAllAdminQuestions(
+        [FromQuery] string? search = null,
         [FromQuery] string? level = null,
         [FromQuery] string? type = null)
     {
-        var questions = await _quizService.GetAllAdminQuestionsAsync(level, type);
+        var questions = await _quizService.GetAllAdminQuestionsAsync(search, level, type);
         return Ok(questions);
+    }
+
+    /// <summary>
+    /// Test savolini tahrirlash/yangilash (Faqat admin uchun)
+    /// URL: PUT /api/quiz/questions/{id}
+    /// </summary>
+    [HttpPut("questions/{id:int}")]
+    public async Task<IActionResult> UpdateQuestion(
+        int id,
+        [FromHeader(Name = "X-Telegram-Init-Data")] string? initData,
+        [FromBody] QuizQuestionCreateRequest request)
+    {
+        if (!await AuthorizeAdminAsync(initData))
+        {
+            return StatusCode(403, new { Message = "Admin huquqi talab qilinadi." });
+        }
+
+        if (string.IsNullOrWhiteSpace(request.QuestionText))
+        {
+            return BadRequest(new { Message = "Savol matni kiritilishi shart." });
+        }
+
+        if (string.IsNullOrWhiteSpace(request.OptionA) || string.IsNullOrWhiteSpace(request.OptionB))
+        {
+            return BadRequest(new { Message = "Kamida ikkita variant (A va B) kiritilishi shart." });
+        }
+
+        bool updated = await _quizService.UpdateQuestionAsync(id, request);
+        if (!updated)
+        {
+            return NotFound(new { Message = "Savol topilmadi." });
+        }
+
+        return Ok(new { Message = "Savol muvaffaqiyatli yangilandi." });
     }
 
     /// <summary>

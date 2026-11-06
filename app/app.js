@@ -1729,13 +1729,18 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ==========================================
-  // 9. Admin: Testlar va Materiallar Boshqaruvi
+  // 9. Admin: Testlar va Materiallar Boshqaruvi (Qidiruv & Tahrirlash)
   // ==========================================
+  let editingQuizQuestionId = null;
   const adminPassageType = document.getElementById('admin-passage-type');
   const adminPassageContentGroup = document.getElementById('admin-passage-content-group');
   const adminPassageAudioGroup = document.getElementById('admin-passage-audio-group');
   const btnSavePassage = document.getElementById('btn-save-passage');
   const btnSaveTest = document.getElementById('btn-save-test');
+  const formQuizTitle = document.getElementById('form-quiz-title');
+  const btnCancelEditQuiz = document.getElementById('btn-cancel-edit-quiz');
+  const inpSearchQuiz = document.getElementById('inp-search-quiz');
+  const btnSearchQuiz = document.getElementById('btn-search-quiz');
 
   // Bo'lim turi o'zgarganda (Reading matn yoki Audio yuklash)
   adminPassageType?.addEventListener('change', () => {
@@ -1755,7 +1760,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const passages = await res.json();
         selEl.innerHTML = '<option value="">Matn / Audioni tanlang...</option>' + 
           passages.map(p => `
-            <option value="${p.id}">${p.type === 1 ? '📖' : '🎧'} ${p.title} (${p.level})</option>
+            <option value="${p.id}">${p.type === 1 || p.type === 'Reading' ? '📖' : '🎧'} ${escapeHtml(p.title)} (${p.level})</option>
           `).join('');
       }
     } catch (err) {
@@ -1763,48 +1768,178 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Admin savollar ro'yxatini yuklash
-  async function loadAdminQuizQuestions() {
+  // Admin savollar ro'yxatini yuklash (Qidiruv bilan)
+  async function loadAdminQuizQuestions(searchQuery = '') {
     const listEl = document.getElementById('admin-quiz-list');
     const countEl = document.getElementById('admin-quiz-count');
     if (!listEl) return;
 
     try {
-      const res = await fetch('/api/quiz/admin/questions');
+      const url = searchQuery 
+        ? `/api/quiz/admin/questions?search=${encodeURIComponent(searchQuery)}`
+        : '/api/quiz/admin/questions';
+
+      const res = await fetch(url);
       if (res.ok) {
         const questions = await res.json();
         if (countEl) countEl.textContent = `${questions.length} ta`;
 
         if (questions.length === 0) {
-          listEl.innerHTML = '<div class="empty-state-text">Hozircha savollar qo‘shilmagan.</div>';
+          listEl.innerHTML = '<div class="empty-state-text">Hozircha savollar topilmadi.</div>';
           return;
         }
 
-        listEl.innerHTML = questions.map((q, idx) => `
-          <div class="crud-item" id="admin-quiz-item-${q.id}">
+        const optLetters = ['A', 'B', 'C', 'D'];
+
+        listEl.innerHTML = '';
+        questions.forEach((q, idx) => {
+          const item = document.createElement('div');
+          item.className = 'crud-item';
+          item.id = `admin-quiz-item-${q.id}`;
+          if (editingQuizQuestionId === q.id) {
+            item.classList.add('is-editing');
+          }
+
+          const correctLetter = optLetters[q.correctOption] !== undefined ? optLetters[q.correctOption] : q.correctOption;
+          const displayLevel = q.level || q.passageLevel || 'A1';
+          const isReading = q.passageType === 1 || q.passageType === 'Reading';
+
+          item.innerHTML = `
             <div class="crud-item-info">
-              <strong>${idx + 1}. ${q.questionText}</strong>
-              <span>${q.passageType === 1 ? '📖' : '🎧'} ${q.passageTitle} • ${q.passageLevel}</span>
-              <small>To'g'ri javob: ${q.correctOption} • Variantlar: A, B${q.optionC ? ', C' : ''}${q.optionD ? ', D' : ''}</small>
+              <strong>${idx + 1}. ${escapeHtml(q.questionText)}</strong>
+              <span>${isReading ? '📖' : '🎧'} ${escapeHtml(q.passageTitle)} • ${escapeHtml(displayLevel)}</span>
+              <small>To'g'ri javob: ${correctLetter} • Variantlar: A, B${q.optionC ? ', C' : ''}${q.optionD ? ', D' : ''}</small>
             </div>
             <div class="crud-actions">
-              <button class="action-btn-sm btn-delete" data-qid="${q.id}">🗑</button>
+              <button class="action-btn-sm btn-delete" data-qid="${q.id}" title="O‘chirish">🗑</button>
             </div>
-          </div>
-        `).join('');
+          `;
 
-        listEl.querySelectorAll('.btn-delete').forEach(btn => {
-          btn.addEventListener('click', async (e) => {
-            const qid = btn.getAttribute('data-qid');
-            if (!confirm('Ushbu savolni o‘chirishni tasdiqlaysizmi?')) return;
-            await deleteAdminQuizQuestion(qid);
+          // Savol ustiga bosganda tahrirlash (Edit) rejimiga o'tish
+          item.addEventListener('click', (e) => {
+            if (e.target.closest('.btn-delete')) return;
+            startEditQuizQuestion(q, item);
           });
+
+          // O'chirish
+          item.querySelector('.btn-delete')?.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            if (!confirm('Ushbu savolni o‘chirishni tasdiqlaysizmi?')) return;
+            triggerHaptic('medium');
+            await deleteAdminQuizQuestion(q.id);
+          });
+
+          listEl.appendChild(item);
         });
       }
     } catch (err) {
       console.warn('Admin savollarni yuklashda xatolik:', err);
     }
   }
+
+  // Tahrirlash rejimini boshlash
+  function startEditQuizQuestion(q, itemElement) {
+    triggerHaptic('medium');
+    editingQuizQuestionId = q.id;
+
+    // Formaga mavjud qiymatlarni to'ldirish
+    const selPassage = document.getElementById('admin-sel-passage');
+    if (selPassage && q.passageId) {
+      selPassage.value = q.passageId;
+    }
+    const inpQText = document.getElementById('inp-test-question');
+    if (inpQText) inpQText.value = q.questionText || '';
+
+    const inpOpt0 = document.getElementById('inp-test-opt0');
+    if (inpOpt0) inpOpt0.value = q.optionA || '';
+
+    const inpOpt1 = document.getElementById('inp-test-opt1');
+    if (inpOpt1) inpOpt1.value = q.optionB || '';
+
+    const inpOpt2 = document.getElementById('inp-test-opt2');
+    if (inpOpt2) inpOpt2.value = q.optionC || '';
+
+    const inpOpt3 = document.getElementById('inp-test-opt3');
+    if (inpOpt3) inpOpt3.value = q.optionD || '';
+
+    // To'g'ri javob radio tugmasini belgilash
+    const optLetters = ['A', 'B', 'C', 'D'];
+    let correctLetter = 'A';
+    if (typeof q.correctOption === 'number') {
+      correctLetter = optLetters[q.correctOption] || 'A';
+    } else if (typeof q.correctOption === 'string') {
+      if (optLetters.includes(q.correctOption.toUpperCase())) {
+        correctLetter = q.correctOption.toUpperCase();
+      } else {
+        const parsedIdx = parseInt(q.correctOption, 10);
+        correctLetter = optLetters[parsedIdx] || 'A';
+      }
+    }
+    const targetRadio = document.querySelector(`input[name="admin_correct_opt"][value="${correctLetter}"]`);
+    if (targetRadio) targetRadio.checked = true;
+
+    // Forma sarlavhasi va tugmasini yangilash
+    if (formQuizTitle) formQuizTitle.textContent = `✏️ Savolni tahrirlash (#${q.id})`;
+    if (btnSaveTest) btnSaveTest.innerHTML = '💾 O‘zgarishlarni saqlash';
+    btnCancelEditQuiz?.classList.remove('hidden');
+
+    // Ro'yxatdagi kartochkani belgilash
+    document.querySelectorAll('#admin-quiz-list .crud-item').forEach(el => el.classList.remove('is-editing'));
+    itemElement?.classList.add('is-editing');
+
+    // Formaga siljitish
+    document.getElementById('admin-quiz-form-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // Tahrirlashni bekor qilish
+  function cancelEditQuizQuestion() {
+    editingQuizQuestionId = null;
+
+    const inpQText = document.getElementById('inp-test-question');
+    if (inpQText) inpQText.value = '';
+
+    const inpOpt0 = document.getElementById('inp-test-opt0');
+    if (inpOpt0) inpOpt0.value = '';
+
+    const inpOpt1 = document.getElementById('inp-test-opt1');
+    if (inpOpt1) inpOpt1.value = '';
+
+    const inpOpt2 = document.getElementById('inp-test-opt2');
+    if (inpOpt2) inpOpt2.value = '';
+
+    const inpOpt3 = document.getElementById('inp-test-opt3');
+    if (inpOpt3) inpOpt3.value = '';
+
+    const defaultRadio = document.querySelector('input[name="admin_correct_opt"][value="A"]');
+    if (defaultRadio) defaultRadio.checked = true;
+
+    if (formQuizTitle) formQuizTitle.textContent = '➕ Yangi test savoli qo‘shish';
+    if (btnSaveTest) btnSaveTest.innerHTML = '💾 Savolni saqlash';
+    btnCancelEditQuiz?.classList.add('hidden');
+
+    document.querySelectorAll('#admin-quiz-list .crud-item').forEach(el => el.classList.remove('is-editing'));
+  }
+
+  btnCancelEditQuiz?.addEventListener('click', () => {
+    triggerHaptic('light');
+    cancelEditQuizQuestion();
+  });
+
+  // Qidiruv tugmasi va Enter orqali testlarni qidirish
+  btnSearchQuiz?.addEventListener('click', () => {
+    triggerHaptic('light');
+    const query = inpSearchQuiz?.value.trim() || '';
+    loadAdminQuizQuestions(query);
+  });
+
+  inpSearchQuiz?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      triggerHaptic('light');
+      const query = inpSearchQuiz?.value.trim() || '';
+      loadAdminQuizQuestions(query);
+    }
+  });
 
   // Admin yangi Matn / Audio qo'shish
   btnSavePassage?.addEventListener('click', async () => {
@@ -1895,7 +2030,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Admin yangi savol qo'shish
+  // Admin savolni saqlash (Yangi qo'shish yoki Mavjudini yangilash)
   btnSaveTest?.addEventListener('click', async () => {
     const passageId = document.getElementById('admin-sel-passage')?.value;
     const questionText = document.getElementById('inp-test-question')?.value.trim();
@@ -1923,41 +2058,63 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    triggerHaptic('heavy');
     const origBtnText = btnSaveTest.innerHTML;
     btnSaveTest.disabled = true;
     btnSaveTest.innerHTML = '⏳ Saqlanmoqda...';
+
+    const payload = {
+      passageId: parseInt(passageId, 10),
+      questionText: questionText,
+      optionA: optionA,
+      optionB: optionB,
+      optionC: optionC,
+      optionD: optionD,
+      correctOption: correctOption,
+      orderIndex: 0
+    };
 
     try {
       const headers = { 'Content-Type': 'application/json' };
       if (tg?.initData) headers['X-Telegram-Init-Data'] = tg.initData;
 
-      const res = await fetch('/api/quiz/questions', {
-        method: 'POST',
-        headers: headers,
-        body: JSON.stringify({
-          passageId: parseInt(passageId, 10),
-          questionText: questionText,
-          optionA: optionA,
-          optionB: optionB,
-          optionC: optionC,
-          optionD: optionD,
-          correctOption: correctOption,
-          orderIndex: 0
-        })
-      });
+      if (editingQuizQuestionId) {
+        // PUT /api/quiz/questions/{id} (Tahrirlash)
+        const res = await fetch(`/api/quiz/questions/${editingQuizQuestionId}`, {
+          method: 'PUT',
+          headers: headers,
+          body: JSON.stringify(payload)
+        });
 
-      if (res.ok) {
-        notify('✅ Savol muvaffaqiyatli saqlandi!');
-        document.getElementById('inp-test-question').value = '';
-        document.getElementById('inp-test-opt0').value = '';
-        document.getElementById('inp-test-opt1').value = '';
-        if (document.getElementById('inp-test-opt2')) document.getElementById('inp-test-opt2').value = '';
-        if (document.getElementById('inp-test-opt3')) document.getElementById('inp-test-opt3').value = '';
-
-        loadAdminQuizQuestions();
+        if (res.ok) {
+          notify('✅ Savol muvaffaqiyatli yangilandi!');
+          cancelEditQuizQuestion();
+          loadAdminQuizQuestions(inpSearchQuiz?.value.trim() || '');
+        } else {
+          const err = await res.json().catch(() => ({}));
+          notify(`⚠️ Xatolik: ${err.message || 'Savolni yangilab bo‘lmadi'}`);
+        }
       } else {
-        const err = await res.json().catch(() => ({}));
-        notify(`⚠️ Xatolik: ${err.message || 'Savolni saqlab bo‘lmadi'}`);
+        // POST /api/quiz/questions (Yangi qo'shish)
+        const res = await fetch('/api/quiz/questions', {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+          notify('✅ Savol muvaffaqiyatli saqlandi!');
+          document.getElementById('inp-test-question').value = '';
+          document.getElementById('inp-test-opt0').value = '';
+          document.getElementById('inp-test-opt1').value = '';
+          if (document.getElementById('inp-test-opt2')) document.getElementById('inp-test-opt2').value = '';
+          if (document.getElementById('inp-test-opt3')) document.getElementById('inp-test-opt3').value = '';
+
+          loadAdminQuizQuestions(inpSearchQuiz?.value.trim() || '');
+        } else {
+          const err = await res.json().catch(() => ({}));
+          notify(`⚠️ Xatolik: ${err.message || 'Savolni saqlab bo‘lmadi'}`);
+        }
       }
     } catch (err) {
       notify('❌ Server bilan bog‘lanishda xatolik yuz berdi.');
@@ -1980,7 +2137,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (res.ok) {
         notify('🗑 Savol muvaffaqiyatli o‘chirildi!');
-        loadAdminQuizQuestions();
+        if (editingQuizQuestionId === id) {
+          cancelEditQuizQuestion();
+        }
+        loadAdminQuizQuestions(inpSearchQuiz?.value.trim() || '');
       } else {
         notify('❌ Savolni o‘chirib bo‘lmadi.');
       }

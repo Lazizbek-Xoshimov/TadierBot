@@ -432,9 +432,10 @@
           </div>
 
           <!-- B. Savol qo'shish -->
-          <div class="crud-form-card" style="margin-top:16px;">
+          <div class="crud-form-card" style="margin-top:16px;" id="admin-quiz-form-card">
             <div class="form-title">
-              <span>➕ Yangi test savoli qo'shish</span>
+              <span id="form-quiz-title">➕ Yangi test savoli qo'shish</span>
+              <button type="button" class="btn-cancel-edit hidden" id="btn-cancel-edit-quiz">✕ Bekor qilish</button>
             </div>
 
             <div class="form-group">
@@ -476,6 +477,10 @@
 
           <!-- C. Mavjud savollar ro'yxati -->
           <div class="crud-list-card" style="margin-top:16px;">
+            <div class="search-bar-row">
+              <input type="text" id="inp-search-quiz" class="form-control" placeholder="🔍 Qidirish (savol matni yoki mavzu bo'yicha)...">
+              <button type="button" class="btn-search-submit" id="btn-search-quiz">Qidiruv</button>
+            </div>
             <div class="crud-list-header">
               <span>📋 Mavjud test savollari</span>
               <span class="badge-mini" id="admin-quiz-count">0 ta</span>

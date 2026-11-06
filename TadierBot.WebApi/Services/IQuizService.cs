@@ -16,7 +16,8 @@ public interface IQuizService
 
     // 3. Admin: Savollar (QuizQuestions)
     Task<QuizQuestion> CreateQuestionAsync(QuizQuestionCreateRequest request);
-    Task<IEnumerable<QuizAdminQuestionDto>> GetAllAdminQuestionsAsync(string? level = null, string? type = null);
+    Task<IEnumerable<QuizAdminQuestionDto>> GetAllAdminQuestionsAsync(string? search = null, string? level = null, string? type = null);
+    Task<bool> UpdateQuestionAsync(int id, QuizQuestionCreateRequest request);
     Task<bool> DeleteQuestionAsync(int id);
 
     // 4. Audio fayllarni serverga saqlash

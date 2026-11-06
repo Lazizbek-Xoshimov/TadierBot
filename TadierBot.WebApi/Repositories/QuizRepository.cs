@@ -117,7 +117,7 @@ public class QuizRepository : IQuizRepository
         return await connection.QueryAsync<QuizQuestion>(sql, new { PassageIds = idsList });
     }
 
-    public async Task<IEnumerable<QuizAdminQuestionDto>> GetAllAdminQuestionsAsync(string? level = null, string? type = null)
+    public async Task<IEnumerable<QuizAdminQuestionDto>> GetAllAdminQuestionsAsync(string? search = null, string? level = null, string? type = null)
     {
         using var connection = _connectionFactory.CreateConnection();
         const string sql = """
@@ -139,9 +139,33 @@ public class QuizRepository : IQuizRepository
             INNER JOIN QuizPassages p ON q.PassageId = p.Id
             WHERE (@Level IS NULL OR p.Level = @Level)
               AND (@Type IS NULL OR p.Type = @Type)
+              AND (
+                  @Search IS NULL OR 
+                  q.QuestionText LIKE '%' + @Search + '%' OR 
+                  p.Title LIKE '%' + @Search + '%' OR 
+              )
             ORDER BY q.Id DESC;
         """;
-        return await connection.QueryAsync<QuizAdminQuestionDto>(sql, new { Level = level, Type = type });
+        return await connection.QueryAsync<QuizAdminQuestionDto>(sql, new { Search = search, Level = level, Type = type });
+    }
+
+    public async Task<bool> UpdateQuestionAsync(QuizQuestion question)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        const string sql = """
+            UPDATE QuizQuestions
+            SET PassageId = @PassageId,
+                QuestionText = @QuestionText,
+                OptionA = @OptionA,
+                OptionB = @OptionB,
+                OptionC = @OptionC,
+                OptionD = @OptionD,
+                CorrectOption = @CorrectOption,
+                OrderIndex = @OrderIndex
+            WHERE Id = @Id;
+        """;
+        int rows = await connection.ExecuteAsync(sql, question);
+        return rows > 0;
     }
 
     public async Task<bool> DeleteQuestionAsync(int id)
