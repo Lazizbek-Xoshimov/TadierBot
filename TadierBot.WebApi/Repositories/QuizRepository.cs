@@ -142,7 +142,7 @@ public class QuizRepository : IQuizRepository
               AND (
                   @Search IS NULL OR 
                   q.QuestionText LIKE '%' + @Search + '%' OR 
-                  p.Title LIKE '%' + @Search + '%' OR 
+                  p.Title LIKE '%' + @Search + '%'
               )
             ORDER BY q.Id DESC;
         """;
