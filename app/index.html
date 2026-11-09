@@ -416,8 +416,20 @@
             </div>
 
             <div class="form-group" id="admin-passage-text-group">
-              <label for="admin-passage-text-file">Matn fayli (.txt, .pdf, .doc yuklash)</label>
-              <input type="file" id="admin-passage-text-file" class="form-control" accept=".txt,.pdf,.doc,.docx,.rtf,.odt">
+              <label>Matn fayli (.txt, .pdf, .doc yuklash)</label>
+              <div class="custom-upload-box" id="box-upload-text">
+                <div style="display:flex; align-items:center; gap:10px; overflow:hidden;">
+                  <span id="text-file-icon" style="font-size:22px;">📄</span>
+                  <div style="overflow:hidden; text-align:left;">
+                    <div id="text-file-name" style="font-size:12px; font-weight:600; color:var(--text-color); white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">Fayl tanlanmagan</div>
+                    <div id="text-file-hint" style="font-size:11px; color:var(--hint-color);">.txt, .pdf, .doc formatlar</div>
+                  </div>
+                </div>
+                <button type="button" class="btn-select-file" id="btn-trigger-text-file">
+                  📁 Tanlash
+                </button>
+              </div>
+              <input type="file" id="admin-passage-text-file" style="display:none;" accept=".txt,.pdf,.doc,.docx,.rtf,.odt">
               <small class="form-hint" style="color:var(--hint-color);font-size:11px;margin-top:4px;display:block;">Fayl tanlanganda nomi avtomatik olinadi va wwwroot/texts papkasiga saqlanadi.</small>
             </div>
 
@@ -427,8 +439,20 @@
             </div>
 
             <div class="form-group hidden" id="admin-passage-audio-group">
-              <label for="admin-passage-audio-file">Audio fayl (.mp3 yuklash)</label>
-              <input type="file" id="admin-passage-audio-file" class="form-control" accept="audio/*">
+              <label>Audio fayl (.mp3 yuklash)</label>
+              <div class="custom-upload-box" id="box-upload-audio">
+                <div style="display:flex; align-items:center; gap:10px; overflow:hidden;">
+                  <span id="audio-file-icon" style="font-size:22px;">🎧</span>
+                  <div style="overflow:hidden; text-align:left;">
+                    <div id="audio-file-name" style="font-size:12px; font-weight:600; color:var(--text-color); white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">Audio tanlanmagan</div>
+                    <div id="audio-file-hint" style="font-size:11px; color:var(--hint-color);">.mp3, .wav, .m4a formatlar</div>
+                  </div>
+                </div>
+                <button type="button" class="btn-select-file" id="btn-trigger-audio-file">
+                  📁 Tanlash
+                </button>
+              </div>
+              <input type="file" id="admin-passage-audio-file" style="display:none;" accept="audio/*">
               <small class="form-hint" style="color:var(--hint-color);font-size:11px;margin-top:4px;display:block;">Fayl avtomatik wwwroot/audio papkasiga saqlanadi.</small>
             </div>
 

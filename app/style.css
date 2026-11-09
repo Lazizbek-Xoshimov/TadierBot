@@ -782,6 +782,44 @@ body {
   border-color: var(--button-color);
 }
 
+.custom-upload-box {
+  border: 1px dashed var(--card-border, #2a3447);
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: var(--radius-md, 10px);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.custom-upload-box:hover {
+  border-color: var(--button-color, #6366f1);
+  background: rgba(99, 102, 241, 0.05);
+}
+
+.btn-select-file {
+  background: var(--button-color, #6366f1);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.btn-select-file:active {
+  transform: scale(0.96);
+}
+
 .form-control-sm {
   background: rgba(0, 0, 0, 0.25);
   border: 1px solid var(--card-border);
