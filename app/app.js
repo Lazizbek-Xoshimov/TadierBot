@@ -1674,8 +1674,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const isListening = passage && (passage.type === 2 || passage.type === 'Listening' || passage.type === '2');
     if (quizSectionBadge) {
       quizSectionBadge.textContent = isListening 
-        ? "2-BO'LIM: TINGLASH (HÖREN)" 
-        : "1-BO'LIM: O'QISH (READING)";
+        ? "2-BO'LIM: HÖREN (TINGLASH)" 
+        : "1-BO'LIM: LESEN (O'QISH)";
     }
 
     if (isListening) {
