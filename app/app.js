@@ -1035,7 +1035,6 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', (e) => {
           e.stopPropagation();
           const id = parseInt(btn.getAttribute('data-id'), 10);
-          if (!confirm('Darsga qatnashishni bekor qilmoqchimisiz?')) return;
           unregisterFromEvent(id);
         });
       });
