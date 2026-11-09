@@ -20,7 +20,8 @@ public interface IQuizService
     Task<bool> UpdateQuestionAsync(int id, QuizQuestionCreateRequest request);
     Task<bool> DeleteQuestionAsync(int id);
 
-    // 4. Audio fayllarni serverga saqlash
+    // 4. Audio va Matn fayllarni serverga saqlash
     Task<string> SaveAudioFileAsync(IFormFile file);
+    Task<QuizFileUploadResponse> SaveTextFileAsync(IFormFile file);
 }
 

@@ -9,8 +9,8 @@ public class QuizPassage
     public string Type { get; set; } = "Reading"; // 'Reading' yoki 'Listening'
     public string Title { get; set; } = string.Empty;
     public string? Content { get; set; }
-    public string? AudioUrl { get; set; }
+    public string? FileUrl { get; set; }
+    public string? AudioUrl { get => FileUrl; set => FileUrl = value; }
     public string Level { get; set; } = "A1"; // 'A1', 'A2', 'B1', 'B2'
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
-

@@ -84,7 +84,7 @@ public class QuizService : IQuizService
                     Type = passage.Type,
                     Title = passage.Title,
                     Content = passage.Content,
-                    AudioUrl = passage.AudioUrl,
+                    FileUrl = passage.FileUrl,
                     Level = passage.Level,
                     Questions = takeQuestions.Select(q => new QuizQuestionDto
                     {
@@ -187,7 +187,7 @@ public class QuizService : IQuizService
             Type = request.Type,
             Title = request.Title.Trim(),
             Content = request.Content?.Trim(),
-            AudioUrl = request.AudioUrl?.Trim(),
+            FileUrl = request.FileUrl?.Trim(),
             Level = request.Level.Trim().ToUpper(),
             CreatedAt = DateTime.UtcNow
         };
@@ -288,6 +288,49 @@ public class QuizService : IQuizService
         }
 
         return $"/audio/{uniqueFileName}";
+    }
+
+    public async Task<QuizFileUploadResponse> SaveTextFileAsync(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+            throw new ArgumentException("Matn fayli tanlanmagan.");
+
+        var allowedExtensions = new[] { ".txt", ".pdf", ".doc", ".docx", ".rtf", ".odt" };
+        var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (!allowedExtensions.Contains(extension))
+            throw new ArgumentException("Faqat matn va hujjat fayllari (.txt, .pdf, .doc, .docx, .rtf, .odt) ruxsat etiladi.");
+
+        var webRoot = _webHostEnvironment.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+        var uploadsFolder = Path.Combine(webRoot, "texts");
+
+        if (!Directory.Exists(uploadsFolder))
+        {
+            Directory.CreateDirectory(uploadsFolder);
+        }
+
+        var uniqueFileName = $"{Guid.NewGuid():N}{extension}";
+        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+        string content = string.Empty;
+        if (extension == ".txt" || extension == ".rtf")
+        {
+            using (var reader = new StreamReader(file.OpenReadStream(), System.Text.Encoding.UTF8))
+            {
+                content = await reader.ReadToEndAsync();
+            }
+        }
+
+        using (var stream = new FileStream(filePath, FileMode.Create))
+        {
+            await file.CopyToAsync(stream);
+        }
+
+        return new QuizFileUploadResponse
+        {
+            FileUrl = $"/texts/{uniqueFileName}",
+            FileName = file.FileName,
+            Content = content
+        };
     }
 }
 

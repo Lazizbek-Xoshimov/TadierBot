@@ -279,5 +279,41 @@ public class QuizController : BaseController
             return StatusCode(500, new { Message = "Faylni saqlashda server xatoligi yuz berdi." });
         }
     }
+
+    /// <summary>
+    /// Lesen uchun matn (.txt) fayl yuklash (Faqat admin uchun)
+    /// URL: POST /api/quiz/upload-text
+    /// </summary>
+    [HttpPost("upload-text")]
+    public async Task<IActionResult> UploadText(
+        [FromHeader(Name = "X-Telegram-Init-Data")] string? initData,
+        IFormFile file)
+    {
+        if (!await AuthorizeAdminAsync(initData))
+        {
+            return StatusCode(403, new { Message = "Admin huquqi talab qilinadi." });
+        }
+
+        try
+        {
+            var result = await _quizService.SaveTextFileAsync(file);
+            return Ok(new 
+            { 
+                FileUrl = result.FileUrl, 
+                FileName = result.FileName, 
+                Content = result.Content, 
+                Message = "Matn fayli muvaffaqiyatli yuklandi." 
+            });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { Message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Matn faylini saqlashda xatolik yuz berdi.");
+            return StatusCode(500, new { Message = "Faylni saqlashda server xatoligi yuz berdi." });
+        }
+    }
 }
 
