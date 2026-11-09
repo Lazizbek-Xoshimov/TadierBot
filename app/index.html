@@ -417,19 +417,20 @@
 
             <div class="form-group" id="admin-passage-text-group">
               <label>Matn fayli (.txt, .pdf, .doc yuklash)</label>
-              <div class="custom-upload-box" id="box-upload-text">
+              <div class="custom-upload-box" id="box-upload-text" style="position: relative; overflow: hidden;">
                 <div style="display:flex; align-items:center; gap:10px; overflow:hidden;">
                   <span id="text-file-icon" style="font-size:22px;">📄</span>
                   <div style="overflow:hidden; text-align:left;">
                     <div id="text-file-name" style="font-size:12px; font-weight:600; color:var(--text-color); white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">Fayl tanlanmagan</div>
-                    <div id="text-file-hint" style="font-size:11px; color:var(--hint-color);">.txt, .pdf, .doc formatlar</div>
+                    <div id="text-file-hint" style="font-size:11px; color:var(--hint-color);">Bosing va faylni tanlang</div>
                   </div>
                 </div>
-                <button type="button" class="btn-select-file" id="btn-trigger-text-file">
+                <div class="btn-select-file" style="pointer-events: none;">
                   📁 Tanlash
-                </button>
+                </div>
+                <!-- Shaffof qatlam: foydalanuvchi qayerga bossa ham haqiqiy input ishlaydi -->
+                <input type="file" id="admin-passage-text-file" style="position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 10;">
               </div>
-              <input type="file" id="admin-passage-text-file" style="display:none;" accept=".txt,.pdf,.doc,.docx,.rtf,.odt">
               <small class="form-hint" style="color:var(--hint-color);font-size:11px;margin-top:4px;display:block;">Fayl tanlanganda nomi avtomatik olinadi va wwwroot/texts papkasiga saqlanadi.</small>
             </div>
 
@@ -440,19 +441,20 @@
 
             <div class="form-group hidden" id="admin-passage-audio-group">
               <label>Audio fayl (.mp3 yuklash)</label>
-              <div class="custom-upload-box" id="box-upload-audio">
+              <div class="custom-upload-box" id="box-upload-audio" style="position: relative; overflow: hidden;">
                 <div style="display:flex; align-items:center; gap:10px; overflow:hidden;">
                   <span id="audio-file-icon" style="font-size:22px;">🎧</span>
                   <div style="overflow:hidden; text-align:left;">
                     <div id="audio-file-name" style="font-size:12px; font-weight:600; color:var(--text-color); white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">Audio tanlanmagan</div>
-                    <div id="audio-file-hint" style="font-size:11px; color:var(--hint-color);">.mp3, .wav, .m4a formatlar</div>
+                    <div id="audio-file-hint" style="font-size:11px; color:var(--hint-color);">Bosing va audioni tanlang</div>
                   </div>
                 </div>
-                <button type="button" class="btn-select-file" id="btn-trigger-audio-file">
+                <div class="btn-select-file" style="pointer-events: none;">
                   📁 Tanlash
-                </button>
+                </div>
+                <!-- Shaffof qatlam: foydalanuvchi qayerga bossa ham haqiqiy input ishlaydi -->
+                <input type="file" id="admin-passage-audio-file" style="position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 10;">
               </div>
-              <input type="file" id="admin-passage-audio-file" style="display:none;" accept="audio/*">
               <small class="form-hint" style="color:var(--hint-color);font-size:11px;margin-top:4px;display:block;">Fayl avtomatik wwwroot/audio papkasiga saqlanadi.</small>
             </div>
 

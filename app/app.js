@@ -2010,19 +2010,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const inpSearchQuiz = document.getElementById('inp-search-quiz');
   const btnSearchQuiz = document.getElementById('btn-search-quiz');
 
-  // Matn fayli tanlash triggeri
-  const boxUploadText = document.getElementById('box-upload-text');
-  const btnTriggerTextFile = document.getElementById('btn-trigger-text-file');
+  // Matn fayli elementlari
   const textFileName = document.getElementById('text-file-name');
   const textFileHint = document.getElementById('text-file-hint');
   const textFileIcon = document.getElementById('text-file-icon');
-
-  function triggerTextFileInput() {
-    triggerHaptic('light');
-    adminPassageTextFile?.click();
-  }
-  btnTriggerTextFile?.addEventListener('click', (e) => { e.stopPropagation(); triggerTextFileInput(); });
-  boxUploadText?.addEventListener('click', triggerTextFileInput);
 
   adminPassageTextFile?.addEventListener('change', () => {
     if (adminPassageTextFile.files && adminPassageTextFile.files[0]) {
@@ -2042,20 +2033,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Audio fayli tanlash triggeri
-  const boxUploadAudio = document.getElementById('box-upload-audio');
-  const btnTriggerAudioFile = document.getElementById('btn-trigger-audio-file');
+  // Audio fayli elementlari
   const audioFileName = document.getElementById('audio-file-name');
   const audioFileHint = document.getElementById('audio-file-hint');
   const audioFileIcon = document.getElementById('audio-file-icon');
   const adminPassageAudioFile = document.getElementById('admin-passage-audio-file');
-
-  function triggerAudioFileInput() {
-    triggerHaptic('light');
-    adminPassageAudioFile?.click();
-  }
-  btnTriggerAudioFile?.addEventListener('click', (e) => { e.stopPropagation(); triggerAudioFileInput(); });
-  boxUploadAudio?.addEventListener('click', triggerAudioFileInput);
 
   adminPassageAudioFile?.addEventListener('change', () => {
     if (adminPassageAudioFile.files && adminPassageAudioFile.files[0]) {
