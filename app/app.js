@@ -2003,6 +2003,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const adminPassageTextFile = document.getElementById('admin-passage-text-file');
   const adminPassageContentGroup = document.getElementById('admin-passage-content-group');
   const adminPassageAudioGroup = document.getElementById('admin-passage-audio-group');
+  const adminPassageAudioFile = document.getElementById('admin-passage-audio-file');
   const btnSavePassage = document.getElementById('btn-save-passage');
   const btnSaveTest = document.getElementById('btn-save-test');
   const formQuizTitle = document.getElementById('form-quiz-title');
@@ -2010,52 +2011,31 @@ document.addEventListener('DOMContentLoaded', () => {
   const inpSearchQuiz = document.getElementById('inp-search-quiz');
   const btnSearchQuiz = document.getElementById('btn-search-quiz');
 
-  // Matn fayli elementlari
-  const textFileName = document.getElementById('text-file-name');
-  const textFileHint = document.getElementById('text-file-hint');
-  const textFileIcon = document.getElementById('text-file-icon');
-
+  // Matn fayli tanlanganda avtomatik sarlavhani to'ldirish
   adminPassageTextFile?.addEventListener('change', () => {
     if (adminPassageTextFile.files && adminPassageTextFile.files[0]) {
-      const file = adminPassageTextFile.files[0];
       const titleInput = document.getElementById('admin-passage-title');
       if (titleInput && (!titleInput.value || titleInput.value.trim() === '')) {
-        titleInput.value = file.name;
-      }
-      if (textFileName) textFileName.textContent = file.name;
-      if (textFileHint) textFileHint.textContent = `${(file.size / 1024).toFixed(1)} KB • Tanlandi`;
-      if (textFileIcon) {
-        const ext = file.name.split('.').pop().toLowerCase();
-        if (ext === 'pdf') textFileIcon.textContent = '📕';
-        else if (ext === 'doc' || ext === 'docx') textFileIcon.textContent = '📘';
-        else textFileIcon.textContent = '📄';
+        titleInput.value = adminPassageTextFile.files[0].name;
       }
     }
   });
 
-  // Audio fayli elementlari
-  const audioFileName = document.getElementById('audio-file-name');
-  const audioFileHint = document.getElementById('audio-file-hint');
-  const audioFileIcon = document.getElementById('audio-file-icon');
-  const adminPassageAudioFile = document.getElementById('admin-passage-audio-file');
-
+  // Audio fayl tanlanganda avtomatik sarlavhani to'ldirish
   adminPassageAudioFile?.addEventListener('change', () => {
     if (adminPassageAudioFile.files && adminPassageAudioFile.files[0]) {
-      const file = adminPassageAudioFile.files[0];
       const titleInput = document.getElementById('admin-passage-title');
       if (titleInput && (!titleInput.value || titleInput.value.trim() === '')) {
-        titleInput.value = file.name;
+        titleInput.value = adminPassageAudioFile.files[0].name;
       }
-      if (audioFileName) audioFileName.textContent = file.name;
-      if (audioFileHint) audioFileHint.textContent = `${(file.size / (1024 * 1024)).toFixed(2)} MB • Tanlandi`;
-      if (audioFileIcon) audioFileIcon.textContent = '🎵';
     }
   });
 
-  // Bo'lim turi o'zgarganda (Lesen matn fayli yoki Audio yuklash)
+  // Bo'lim turi o'zgarganda (Lesen yoki Audio)
   adminPassageType?.addEventListener('change', () => {
     const isAudio = adminPassageType.value === '2';
     adminPassageTextGroup?.classList.toggle('hidden', isAudio);
+    adminPassageContentGroup?.classList.toggle('hidden', isAudio);
     adminPassageAudioGroup?.classList.toggle('hidden', !isAudio);
   });
 
@@ -2368,12 +2348,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (textFileInput) textFileInput.value = '';
         if (audioFileInput) audioFileInput.value = '';
-        if (textFileName) textFileName.textContent = 'Fayl tanlanmagan';
-        if (textFileHint) textFileHint.textContent = '.txt, .pdf, .doc formatlar';
-        if (textFileIcon) textFileIcon.textContent = '📄';
-        if (audioFileName) audioFileName.textContent = 'Audio tanlanmagan';
-        if (audioFileHint) audioFileHint.textContent = '.mp3, .wav, .m4a formatlar';
-        if (audioFileIcon) audioFileIcon.textContent = '🎧';
         loadAdminPassages();
       } else {
         const err = await res.json().catch(() => ({}));
