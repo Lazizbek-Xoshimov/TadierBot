@@ -17,6 +17,7 @@ public interface IEventRepository
 
     // 3. Darsga yozilish
     Task<bool> RegisterUserAsync(int eventId, long telegramId);
+    Task<bool> UnregisterUserAsync(int eventId, long telegramId);
     Task<bool> IsUserRegisteredAsync(int eventId, long telegramId);
 
     // 4. Qatnashuvchilar monitoringi

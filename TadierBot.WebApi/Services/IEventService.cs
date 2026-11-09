@@ -7,6 +7,7 @@ public interface IEventService
     // 1. O'quvchilar ko'rinishi
     Task<IReadOnlyList<EventDto>> GetUpcomingEventsAsync(long? telegramId = null);
     Task<(bool Success, string Message)> RegisterForEventAsync(int eventId, long telegramId);
+    Task<(bool Success, string Message)> UnregisterFromEventAsync(int eventId, long telegramId);
 
     // 2. Admin boshqaruvi
     Task<IReadOnlyList<EventDto>> GetAllForAdminAsync(string? search = null);

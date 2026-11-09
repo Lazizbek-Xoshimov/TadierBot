@@ -130,6 +130,17 @@ public class EventRepository : IEventRepository
         return await connection.ExecuteScalarAsync<bool>(sql, new { EventId = eventId, TelegramId = telegramId });
     }
 
+    public async Task<bool> UnregisterUserAsync(int eventId, long telegramId)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        const string sql = """
+            DELETE FROM EventRegistrations 
+            WHERE EventId = @EventId AND TelegramId = @TelegramId;
+        """;
+        int rows = await connection.ExecuteAsync(sql, new { EventId = eventId, TelegramId = telegramId });
+        return rows > 0;
+    }
+
     public async Task<bool> IsUserRegisteredAsync(int eventId, long telegramId)
     {
         using var connection = _connectionFactory.CreateConnection();

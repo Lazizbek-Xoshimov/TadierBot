@@ -51,6 +51,24 @@ public class EventService : IEventService
         return (true, "Siz allaqachon ushbu tadbirga yozilgansiz!");
     }
 
+    public async Task<(bool Success, string Message)> UnregisterFromEventAsync(int eventId, long telegramId)
+    {
+        bool isRegistered = await _eventRepository.IsUserRegisteredAsync(eventId, telegramId);
+        if (!isRegistered)
+        {
+            return (false, "Siz ushbu tadbirga yozilmagansiz.");
+        }
+
+        bool deleted = await _eventRepository.UnregisterUserAsync(eventId, telegramId);
+        if (deleted)
+        {
+            _logger.LogInformation("Foydalanuvchi {TelegramId} tadbir {EventId} dan ro'yxatdan o'tishni bekor qildi.", telegramId, eventId);
+            return (true, "Tadbirga qatnashish muvaffaqiyatli bekor qilindi.");
+        }
+
+        return (false, "Bekor qilishda xatolik yuz berdi.");
+    }
+
     // ==========================================
     // 2. Admin boshqaruvi
     // ==========================================

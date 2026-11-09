@@ -1455,8 +1455,16 @@ input[type="time"] {
 .event-btn.btn-registered {
   background: rgba(255, 255, 255, 0.08);
   color: #10b981;
-  border: 1px solid rgba(16, 185, 129, 0.25);
-  cursor: default;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.event-btn.btn-registered:active {
+  transform: scale(0.97);
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.35);
 }
 
 /* Admin: Qatnashuvchilar soni overview tugmasi (qidiruv tepasida) */

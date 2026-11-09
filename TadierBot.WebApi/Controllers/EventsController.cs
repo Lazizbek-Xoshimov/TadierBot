@@ -73,6 +73,30 @@ public class EventsController : BaseController
         });
     }
 
+    /// <summary>
+    /// O'quvchining tadbirga / darsga yozilishini bekor qilishi
+    /// URL: POST /api/events/unregister
+    /// </summary>
+    [HttpPost("unregister")]
+    public async Task<IActionResult> UnregisterFromEvent(
+        [FromHeader(Name = "X-Telegram-Init-Data")] string? initDataHeader,
+        [FromBody] EventRegisterRequest request)
+    {
+        string? rawInitData = !string.IsNullOrWhiteSpace(request.InitData) ? request.InitData : initDataHeader;
+
+        if (!ValidateTelegramInitData(rawInitData, out var user) || user == null)
+        {
+            return Unauthorized(new { Message = "Telegram avtorizatsiyasi tasdiqlanmadi." });
+        }
+
+        var (success, message) = await _eventService.UnregisterFromEventAsync(request.EventId, user.Id);
+        return Ok(new
+        {
+            Success = success,
+            Message = message
+        });
+    }
+
     // ==========================================
     // 2. Admin Boshqaruv Paneli uchun
     // ==========================================

@@ -992,7 +992,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (ev.isLiveNow) {
           actionBtn = `<button class="event-btn btn-live-now" data-action="join" data-link="${encodeURIComponent(ev.link)}">🚀 Darsga kirish (Havola)</button>`;
         } else if (ev.isRegistered) {
-          actionBtn = '<button class="event-btn btn-registered" disabled>✅ Yozilgansiz</button>';
+          actionBtn = `<button class="event-btn btn-registered" data-action="unregister" data-id="${ev.id}">✅ Yozilgansiz (Bekor qilish)</button>`;
         } else {
           actionBtn = `<button class="event-btn btn-register" data-action="register" data-id="${ev.id}">✍️ Qatnashish (Yozilish)</button>`;
         }
@@ -1031,6 +1031,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       });
 
+      listEl.querySelectorAll('[data-action="unregister"]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const id = parseInt(btn.getAttribute('data-id'), 10);
+          if (!confirm('Darsga qatnashishni bekor qilmoqchimisiz?')) return;
+          unregisterFromEvent(id);
+        });
+      });
+
     } catch (err) {
       console.error('loadPublicEvents error:', err);
       listEl.innerHTML = '<div class="empty-state-text">Tadbirlarni yuklashda xatolik yuz berdi.</div>';
@@ -1062,8 +1071,43 @@ document.addEventListener('DOMContentLoaded', () => {
         triggerHaptic('heavy');
         notify(data.message || 'Siz tadbir uchun muvaffaqiyatli yozib qo‘yildingiz!');
         loadPublicEvents();
+        loadTotalParticipantsCount();
       } else {
         notify(data.message || 'Tadbirga yozilishda xatolik yuz berdi.');
+      }
+    } catch (err) {
+      notify('❌ Server bilan bog‘lanishda xatolik yuz berdi.');
+    }
+  }
+
+  async function unregisterFromEvent(eventId) {
+    if (!tg?.initData) {
+      notify('⚠️ Telegram orqali avtorizatsiya zarur.');
+      return;
+    }
+
+    triggerHaptic('medium');
+    try {
+      const res = await fetch('/api/events/unregister', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Telegram-Init-Data': tg.initData
+        },
+        body: JSON.stringify({
+          initData: tg.initData,
+          eventId: eventId
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        triggerHaptic('light');
+        notify(data.message || 'Tadbirga qatnashish bekor qilindi.');
+        loadPublicEvents();
+        loadTotalParticipantsCount();
+      } else {
+        notify(data.message || 'Bekor qilishda xatolik yuz berdi.');
       }
     } catch (err) {
       notify('❌ Server bilan bog‘lanishda xatolik yuz berdi.');
