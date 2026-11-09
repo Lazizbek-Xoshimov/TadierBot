@@ -852,10 +852,115 @@ document.addEventListener('DOMContentLoaded', () => {
     openPlacementTestModal();
   });
 
-  document.getElementById('card-open-books')?.addEventListener('click', () => {
+  // ==========================================
+  // Lesen (O'qish) kutubxonasi modali
+  // ==========================================
+  const lesenLibraryModal = document.getElementById('lesen-library-modal');
+  const btnCloseLesenModal = document.getElementById('btn-close-lesen-modal');
+  const lesenLibraryBackdrop = document.getElementById('lesen-library-backdrop');
+  const lesenListContainer = document.getElementById('lesen-list-container');
+  const inpSearchLesen = document.getElementById('inp-search-lesen');
+  const btnLesenFilters = document.querySelectorAll('.btn-lesen-filter');
+
+  let allLesenPassages = [];
+  let currentLesenLevel = 'ALL';
+
+  function openLesenModal() {
     triggerHaptic('medium');
-    notify('📚 Kutubxona: 44 ta darslik va qo‘llanmalar katalogi!');
+    lesenLibraryModal?.classList.remove('hidden');
+    loadLesenList();
+  }
+
+  function closeLesenModal() {
+    triggerHaptic('light');
+    lesenLibraryModal?.classList.add('hidden');
+  }
+
+  document.getElementById('card-open-lesen')?.addEventListener('click', openLesenModal);
+  document.getElementById('card-open-books')?.addEventListener('click', openLesenModal);
+  btnCloseLesenModal?.addEventListener('click', closeLesenModal);
+  lesenLibraryBackdrop?.addEventListener('click', closeLesenModal);
+
+  btnLesenFilters.forEach(btn => {
+    btn.addEventListener('click', () => {
+      triggerHaptic('light');
+      btnLesenFilters.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentLesenLevel = btn.getAttribute('data-level') || 'ALL';
+      renderLesenList();
+    });
   });
+
+  inpSearchLesen?.addEventListener('input', () => {
+    renderLesenList();
+  });
+
+  async function loadLesenList() {
+    if (!lesenListContainer) return;
+    lesenListContainer.innerHTML = '<div style="text-align: center; color: var(--hint-color); padding: 25px;">⏳ Matnlar yuklanmoqda...</div>';
+
+    try {
+      const res = await fetch('/api/quiz/passages?type=Reading');
+      if (res.ok) {
+        allLesenPassages = await res.json();
+        renderLesenList();
+      } else {
+        lesenListContainer.innerHTML = '<div style="text-align: center; color: var(--hint-color); padding: 25px;">Matnlarni yuklab bo‘lmadi.</div>';
+      }
+    } catch (err) {
+      console.error('Lesen yuklashda xatolik:', err);
+      lesenListContainer.innerHTML = '<div style="text-align: center; color: var(--hint-color); padding: 25px;">Server bilan bog‘lanishda xatolik yuz berdi.</div>';
+    }
+  }
+
+  function renderLesenList() {
+    if (!lesenListContainer) return;
+    const query = (inpSearchLesen?.value || '').trim().toLowerCase();
+
+    const filtered = allLesenPassages.filter(item => {
+      const matchLevel = currentLesenLevel === 'ALL' || (item.level && item.level.toUpperCase() === currentLesenLevel.toUpperCase());
+      const matchQuery = !query || (item.title && item.title.toLowerCase().includes(query)) || (item.content && item.content.toLowerCase().includes(query));
+      return matchLevel && matchQuery;
+    });
+
+    if (filtered.length === 0) {
+      lesenListContainer.innerHTML = '<div style="text-align: center; color: var(--hint-color); padding: 30px 10px;">🔍 Matnlar topilmadi</div>';
+      return;
+    }
+
+    lesenListContainer.innerHTML = filtered.map(item => {
+      const fileUrl = item.fileUrl || item.audioUrl;
+      const snippet = item.content ? escapeHtml(item.content.substring(0, 110)) + (item.content.length > 110 ? '...' : '') : '';
+      return `
+        <div class="mini-resource-item" style="display:flex; flex-direction:column; gap:8px; padding:12px 14px; background:var(--card-bg, #1a2234); border-radius:10px; border:1px solid var(--border-color, #2a3447);">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+            <div style="display:flex; gap:10px; align-items:center;">
+              <span style="font-size:22px;">📄</span>
+              <div>
+                <div style="font-weight:600; font-size:14px; color:var(--text-color, #fff); line-height:1.3;">${escapeHtml(item.title)}</div>
+                <span class="badge-mini" style="font-size:10px; margin-top:3px; display:inline-block;">${escapeHtml(item.level)} Daraja</span>
+              </div>
+            </div>
+          </div>
+          ${snippet ? `<div style="font-size:12px; color:var(--hint-color, #8892b0); line-height:1.4;">${snippet}</div>` : ''}
+          <div style="display:flex; gap:8px; margin-top:4px;">
+            ${item.content ? `<button type="button" class="res-btn btn-read-item" data-id="${item.id}" style="flex:1; padding:7px 10px; font-size:12px; background:var(--card-bg, #1e2638); border:1px solid var(--border-color, #3a4760); color:var(--text-color, #fff); border-radius:6px; cursor:pointer;">👁️ O'qish</button>` : ''}
+            ${fileUrl ? `<a href="${fileUrl}" download="${escapeHtml(item.title)}" class="res-btn" style="flex:1; text-align:center; padding:7px 10px; font-size:12px; background:var(--accent-color, #3b82f6); color:#fff; text-decoration:none; border-radius:6px; display:flex; align-items:center; justify-content:center;">📥 Yuklab olish</a>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    lesenListContainer.querySelectorAll('.btn-read-item').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = parseInt(btn.getAttribute('data-id'), 10);
+        const passage = allLesenPassages.find(p => p.id === id);
+        if (passage) {
+          openQuizReaderModal(passage);
+        }
+      });
+    });
+  }
 
   document.getElementById('card-open-audio')?.addEventListener('click', () => {
     triggerHaptic('medium');
@@ -1491,15 +1596,29 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnCloseQuizReader = document.getElementById('btn-close-quiz-reader');
   const btnQuizReaderClose = document.getElementById('btn-quiz-reader-close');
   const quizReaderBackdrop = document.getElementById('quiz-reader-backdrop');
+  const btnQuizReaderDownload = document.getElementById('btn-quiz-reader-download');
 
   let currentReadingPassage = null;
 
-  function openQuizReaderModal() {
+  function openQuizReaderModal(passage = null) {
+    if (passage) currentReadingPassage = passage;
     if (!currentReadingPassage) return;
     triggerHaptic('light');
     if (quizReaderTitle) quizReaderTitle.textContent = currentReadingPassage.title || 'Matnni o‘qish';
     if (quizReaderLevel) quizReaderLevel.textContent = `${currentReadingPassage.level || 'A1'} Daraja`;
     if (quizReaderFullText) quizReaderFullText.textContent = currentReadingPassage.content || 'Matn mavjud emas';
+    
+    if (btnQuizReaderDownload) {
+      const fileUrl = currentReadingPassage.fileUrl || currentReadingPassage.audioUrl;
+      if (fileUrl) {
+        btnQuizReaderDownload.href = fileUrl;
+        btnQuizReaderDownload.setAttribute('download', currentReadingPassage.title || 'matn.txt');
+        btnQuizReaderDownload.classList.remove('hidden');
+      } else {
+        btnQuizReaderDownload.classList.add('hidden');
+      }
+    }
+
     quizReaderModal?.classList.remove('hidden');
   }
 
@@ -1880,6 +1999,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================
   let editingQuizQuestionId = null;
   const adminPassageType = document.getElementById('admin-passage-type');
+  const adminPassageTextGroup = document.getElementById('admin-passage-text-group');
+  const adminPassageTextFile = document.getElementById('admin-passage-text-file');
   const adminPassageContentGroup = document.getElementById('admin-passage-content-group');
   const adminPassageAudioGroup = document.getElementById('admin-passage-audio-group');
   const btnSavePassage = document.getElementById('btn-save-passage');
@@ -1889,10 +2010,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const inpSearchQuiz = document.getElementById('inp-search-quiz');
   const btnSearchQuiz = document.getElementById('btn-search-quiz');
 
-  // Bo'lim turi o'zgarganda (Reading matn yoki Audio yuklash)
+  // Fayl tanlanganda avtomatik fayl nomini sarlavhaga qo'yish
+  adminPassageTextFile?.addEventListener('change', () => {
+    if (adminPassageTextFile.files && adminPassageTextFile.files[0]) {
+      const titleInput = document.getElementById('admin-passage-title');
+      if (titleInput && (!titleInput.value || titleInput.value.trim() === '')) {
+        titleInput.value = adminPassageTextFile.files[0].name;
+      }
+    }
+  });
+
+  // Bo'lim turi o'zgarganda (Lesen matn fayli yoki Audio yuklash)
   adminPassageType?.addEventListener('change', () => {
     const isAudio = adminPassageType.value === '2';
-    adminPassageContentGroup?.classList.toggle('hidden', isAudio);
+    adminPassageTextGroup?.classList.toggle('hidden', isAudio);
     adminPassageAudioGroup?.classList.toggle('hidden', !isAudio);
   });
 
@@ -2092,12 +2223,13 @@ document.addEventListener('DOMContentLoaded', () => {
   btnSavePassage?.addEventListener('click', async () => {
     const type = parseInt(adminPassageType?.value || '1', 10);
     const level = document.getElementById('admin-passage-level')?.value || 'A1';
-    const title = document.getElementById('admin-passage-title')?.value.trim();
-    const content = document.getElementById('admin-passage-content')?.value.trim();
+    let title = document.getElementById('admin-passage-title')?.value.trim();
+    let content = document.getElementById('admin-passage-content')?.value.trim();
+    const textFileInput = document.getElementById('admin-passage-text-file');
     const audioFileInput = document.getElementById('admin-passage-audio-file');
 
-    if (!title) {
-      notify('⚠️ Sarlavha kiritilishi shart!');
+    if (type === 1 && (!textFileInput || !textFileInput.files || textFileInput.files.length === 0) && !title) {
+      notify('⚠️ Iltimos, matn faylini tanlang yoki sarlavha kiriting!');
       return;
     }
 
@@ -2108,13 +2240,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const origBtnText = btnSavePassage.innerHTML;
     btnSavePassage.disabled = true;
-    btnSavePassage.innerHTML = type === 2 ? '⏳ Audio yuklanmoqda...' : '⏳ Saqlanmoqda...';
+    btnSavePassage.innerHTML = '⏳ Yuklanmoqda...';
 
-    let audioUrl = null;
+    let fileUrl = null;
 
     try {
-      // 1. Agar audio bo'lsa, avval faylni yuklaymiz (hech qanday modal alert chiqarmaymiz)
+      // 1. Agar Lesen (type == 1) va fayl tanlangan bo'lsa
+      if (type === 1 && textFileInput && textFileInput.files && textFileInput.files.length > 0) {
+        btnSavePassage.innerHTML = '⏳ Matn fayli yuklanmoqda...';
+        const file = textFileInput.files[0];
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const upHeaders = {};
+        if (tg?.initData) upHeaders['X-Telegram-Init-Data'] = tg.initData;
+
+        const upRes = await fetch('/api/quiz/upload-text', {
+          method: 'POST',
+          headers: upHeaders,
+          body: formData
+        });
+
+        if (!upRes.ok) {
+          const err = await upRes.json().catch(() => ({}));
+          notify(`⚠️ Matn faylini yuklashda xatolik: ${err.message || 'Yuklab bo‘lmadi'}`);
+          btnSavePassage.disabled = false;
+          btnSavePassage.innerHTML = origBtnText;
+          return;
+        }
+
+        const upData = await upRes.json();
+        fileUrl = upData.fileUrl;
+        if (!title && upData.fileName) title = upData.fileName;
+        if (upData.content) content = upData.content;
+      }
+
+      // 2. Agar Listening (type == 2) va audio bo'lsa
       if (type === 2) {
+        btnSavePassage.innerHTML = '⏳ Audio yuklanmoqda...';
         const file = audioFileInput.files[0];
         const formData = new FormData();
         formData.append('file', file);
@@ -2137,10 +2300,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const upData = await upRes.json();
-        audioUrl = upData.audioUrl;
+        fileUrl = upData.fileUrl || upData.audioUrl;
       }
 
-      // 2. Material (Passage) ma'lumotlarini saqlash
+      if (!title) {
+        notify('⚠️ Fayl nomi / sarlavha kiritilishi shart!');
+        btnSavePassage.disabled = false;
+        btnSavePassage.innerHTML = origBtnText;
+        return;
+      }
+
+      // 3. Material (Passage) ma'lumotlarini saqlash
+      btnSavePassage.innerHTML = '⏳ Saqlanmoqda...';
       const headers = { 'Content-Type': 'application/json' };
       if (tg?.initData) headers['X-Telegram-Init-Data'] = tg.initData;
 
@@ -2152,7 +2323,8 @@ document.addEventListener('DOMContentLoaded', () => {
           level: level,
           title: title,
           content: content || null,
-          audioUrl: audioUrl
+          fileUrl: fileUrl,
+          audioUrl: fileUrl
         })
       });
 
@@ -2162,6 +2334,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (document.getElementById('admin-passage-content')) {
           document.getElementById('admin-passage-content').value = '';
         }
+        if (textFileInput) textFileInput.value = '';
         if (audioFileInput) audioFileInput.value = '';
         loadAdminPassages();
       } else {

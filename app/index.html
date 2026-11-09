@@ -102,11 +102,11 @@
             <span class="grid-arrow">➔</span>
           </div>
 
-          <div class="grid-card" id="card-open-books">
-            <div class="grid-icon">📚</div>
+          <div class="grid-card" id="card-open-lesen">
+            <div class="grid-icon">📖</div>
             <div class="grid-info">
-              <h5>Kitoblar (44 ta)</h5>
-              <p>Barcha qo'llanmalar</p>
+              <h5>Lesen (O'qish)</h5>
+              <p>Darajalar bo'yicha matnlar</p>
             </div>
             <span class="grid-arrow">➔</span>
           </div>
@@ -411,13 +411,19 @@
             </div>
 
             <div class="form-group">
-              <label for="admin-passage-title">Sarlavha (Mavzu)</label>
-              <input type="text" id="admin-passage-title" class="form-control" placeholder="Mavzu, masalan: Im Bahnhof yoki Im Park">
+              <label for="admin-passage-title">Fayl nomi / Sarlavha</label>
+              <input type="text" id="admin-passage-title" class="form-control" placeholder="Fayl nomi yoki mavzu">
             </div>
 
-            <div class="form-group" id="admin-passage-content-group">
-              <label for="admin-passage-content">Matn (Lesen uchun)</label>
-              <textarea id="admin-passage-content" class="form-control" rows="3" placeholder="Nemischa matn mazmunini kiriting..."></textarea>
+            <div class="form-group" id="admin-passage-text-group">
+              <label for="admin-passage-text-file">Matn fayli (.txt, .pdf, .doc yuklash)</label>
+              <input type="file" id="admin-passage-text-file" class="form-control" accept=".txt,.pdf,.doc,.docx,.rtf,.odt">
+              <small class="form-hint" style="color:var(--hint-color);font-size:11px;margin-top:4px;display:block;">Fayl tanlanganda nomi avtomatik olinadi va wwwroot/texts papkasiga saqlanadi.</small>
+            </div>
+
+            <div class="form-group hidden" id="admin-passage-content-group">
+              <label for="admin-passage-content">Matn mazmuni (ixtiyoriy)</label>
+              <textarea id="admin-passage-content" class="form-control" rows="3" placeholder="Fayldan avtomatik o'qiladi yoki qo'lda kiriting..."></textarea>
             </div>
 
             <div class="form-group hidden" id="admin-passage-audio-group">
@@ -831,6 +837,40 @@
     </div>
 
     
+    <!-- Lesen: Nemischa matnlar kutubxonasi Modali -->
+    <div id="lesen-library-modal" class="trainer-modal hidden" style="z-index: 2200;">
+      <div class="trainer-backdrop" id="lesen-library-backdrop"></div>
+      <div class="trainer-sheet" style="max-height: 85vh; display: flex; flex-direction: column;">
+        <div class="trainer-header">
+          <div class="trainer-title-wrap">
+            <span class="trainer-icon">📖</span>
+            <div>
+              <h3>Lesen (O'qish)</h3>
+              <p class="trainer-sub">Darajalar bo'yicha nemischa matnlar</p>
+            </div>
+          </div>
+          <button class="modal-close-btn" id="btn-close-lesen-modal" title="Yopish">✕</button>
+        </div>
+
+        <!-- Filter va Qidiruv qatori -->
+        <div style="padding: 10px 16px; border-bottom: 1px solid var(--border-color, #2a3447); background: var(--card-bg, #1e2638);">
+          <div class="admin-tabs" style="margin-bottom: 8px;">
+            <button class="admin-tab-btn active btn-lesen-filter" data-level="ALL">Barchasi</button>
+            <button class="admin-tab-btn btn-lesen-filter" data-level="A1">A1</button>
+            <button class="admin-tab-btn btn-lesen-filter" data-level="A2">A2</button>
+            <button class="admin-tab-btn btn-lesen-filter" data-level="B1">B1</button>
+            <button class="admin-tab-btn btn-lesen-filter" data-level="B2">B2</button>
+          </div>
+          <input type="text" id="inp-search-lesen" class="form-control" placeholder="🔍 Fayl nomi bo'yicha qidiruv...">
+        </div>
+
+        <!-- Matnlar ro'yxati -->
+        <div id="lesen-list-container" style="flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px;">
+          <div style="text-align: center; color: var(--hint-color); padding: 20px;">Yuklanmoqda...</div>
+        </div>
+      </div>
+    </div>
+
     <!-- Reading: To'liq matnni o'qish Modali -->
     <div id="quiz-reader-modal" class="trainer-modal hidden" style="z-index: 2500;">
       <div class="trainer-backdrop" id="quiz-reader-backdrop"></div>
@@ -850,9 +890,12 @@
           <div class="quiz-reader-text" id="quiz-reader-full-text" style="white-space: pre-wrap;"></div>
         </div>
 
-        <div class="quiz-reader-footer">
-          <button type="button" class="submit-btn btn-blue" id="btn-quiz-reader-close">
-            ✅ O'qib bo'ldim (Savollarga qaytish)
+        <div class="quiz-reader-footer" style="display: flex; gap: 8px;">
+          <a id="btn-quiz-reader-download" href="#" download="" class="submit-btn btn-purple hidden" style="flex: 1; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center;">
+            📥 Yuklab olish
+          </a>
+          <button type="button" class="submit-btn btn-blue" id="btn-quiz-reader-close" style="flex: 1;">
+            ✅ Yopish
           </button>
         </div>
       </div>
