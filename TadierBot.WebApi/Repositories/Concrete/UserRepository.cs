@@ -153,5 +153,51 @@ public class UserRepository : IUserRepository
         });
         return affected > 0;
     }
+
+    public async Task<(int TestsCount, int Rank)> GetUserTestStatsAndRankAsync(long telegramId, int userScore)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        const string sql = """
+            SELECT 
+                (SELECT COUNT(*) FROM UserQuizAttempts WHERE TelegramId = @TelegramId) AS TestsCount,
+                (SELECT COUNT(*) + 1 FROM Users WHERE Score > @UserScore AND IsBanned = 0) AS Rank;
+        """;
+        var result = await connection.QuerySingleOrDefaultAsync<(int TestsCount, int Rank)>(sql, new 
+        { 
+            TelegramId = telegramId, 
+            UserScore = userScore 
+        });
+        return (result.TestsCount, result.Rank > 0 ? result.Rank : 1);
+    }
+
+    public async Task<IEnumerable<DTOs.User.LeaderboardUserDto>> GetTopLeaderboardUsersAsync(int count = 20)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        const string sql = """
+            SELECT TOP (@Count)
+                u.TelegramId,
+                u.FullName,
+                u.Username,
+                u.Score,
+                u.Level,
+                COUNT(a.Id) AS TestsCount
+            FROM Users u
+            LEFT JOIN UserQuizAttempts a ON u.TelegramId = a.TelegramId
+            WHERE u.IsBanned = 0
+            GROUP BY u.TelegramId, u.FullName, u.Username, u.Score, u.Level
+            ORDER BY u.Score DESC, TestsCount DESC;
+        """;
+        var users = (await connection.QueryAsync<DTOs.User.LeaderboardUserDto>(sql, new { Count = count })).ToList();
+        int rank = 1;
+        foreach (var u in users)
+        {
+            u.Rank = rank++;
+            if (string.IsNullOrWhiteSpace(u.FullName))
+            {
+                u.FullName = !string.IsNullOrWhiteSpace(u.Username) ? $"@{u.Username}" : $"Foydalanuvchi #{u.TelegramId}";
+            }
+        }
+        return users;
+    }
 }
 

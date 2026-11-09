@@ -14,5 +14,6 @@ public interface IUserService
     Task<UserStatsResponse> GetStatsAsync(long telegramId);
     Task<UserStatsResponse> AddScoreAndStreakAsync(long telegramId, int earnedScore);
     Task<UserStatsResponse> SetPlacementTestResultAsync(long telegramId, string assignedLevel, int earnedScore);
+    Task<LeaderboardResponse> GetLeaderboardAsync(long? currentTelegramId = null);
 }
 

@@ -107,6 +107,30 @@ document.addEventListener('DOMContentLoaded', () => {
             if (streakEl) streakEl.textContent = `${data.stats.streakDays} kun`;
             if (scoreEl) scoreEl.textContent = data.stats.score;
             if (levelEl) levelEl.textContent = data.stats.level || 'A1';
+
+            // Kabinet ko'rsatkichlari (1-rasm)
+            const profStatTests = document.getElementById('prof-stat-tests');
+            const profStatRank = document.getElementById('prof-stat-rank');
+            const profStatScore = document.getElementById('prof-stat-score');
+            const profStatLevel = document.getElementById('prof-stat-level');
+            const profName = document.getElementById('prof-name');
+            const profAvatar = document.getElementById('prof-avatar');
+            const profBadge = document.getElementById('prof-badge');
+
+            if (profStatTests) profStatTests.textContent = data.stats.completedTestsCount || 0;
+            if (profStatRank) profStatRank.textContent = data.stats.rankPosition ? `#${data.stats.rankPosition}` : '#1';
+            if (profStatScore) profStatScore.textContent = data.stats.score;
+            if (profStatLevel) profStatLevel.textContent = data.stats.level || 'A1';
+            if (profName && data.fullName) profName.textContent = data.fullName;
+            if (profAvatar && data.fullName) profAvatar.textContent = data.fullName.charAt(0).toUpperCase();
+
+            if (profBadge) {
+              const sc = data.stats.score || 0;
+              let badgeTitle = "Faol o'quvchi (Bronze)";
+              if (sc >= 800) badgeTitle = "Oltin bilimdon (Gold)";
+              else if (sc >= 400) badgeTitle = "Iqtidorli talaba (Silver)";
+              profBadge.textContent = `🏅 ${badgeTitle}`;
+            }
           }
 
           // Admin bo'lsa 5-tugma "Boshqaruv" ochiladi va so'zlar ro'yxati yuklanadi
@@ -736,6 +760,8 @@ document.addEventListener('DOMContentLoaded', () => {
     triggerHaptic('light');
     window.scrollTo({ top: 0, behavior: 'smooth' });
     if (targetTabId === 'tab-events') loadPublicEvents();
+    if (targetTabId === 'tab-leaderboard') loadLeaderboard();
+    if (targetTabId === 'tab-cabinet') loadUserProfile();
   }
 
   navItems.forEach((btn) => {
@@ -743,6 +769,82 @@ document.addEventListener('DOMContentLoaded', () => {
       switchTab(btn.getAttribute('data-tab'));
     });
   });
+
+  // ==========================================
+  // Reyting (Leaderboard) yuklash
+  // ==========================================
+  async function loadLeaderboard() {
+    const listEl = document.getElementById('ranking-list');
+    if (!listEl) return;
+
+    const headers = {};
+    if (tg?.initData) headers['X-Telegram-Init-Data'] = tg.initData;
+
+    try {
+      const res = await fetch('/api/user/leaderboard', { headers });
+      if (!res.ok) throw new Error('Yuklab bo‘lmadi');
+      const data = await res.json();
+
+      const topUsers = data.topUsers || [];
+      const currentUser = data.currentUser;
+
+      if (topUsers.length === 0 && !currentUser) {
+        listEl.innerHTML = '<div class="empty-state-text">Hozircha reyting shakllanmagan.</div>';
+        return;
+      }
+
+      let html = '';
+      topUsers.forEach((u) => {
+        let rankClass = '';
+        let badgeHtml = `#${u.rank}`;
+        if (u.rank === 1) {
+          rankClass = 'rank-top-1';
+          badgeHtml = '🥇 1';
+        } else if (u.rank === 2) {
+          rankClass = 'rank-top-2';
+          badgeHtml = '🥈 2';
+        } else if (u.rank === 3) {
+          rankClass = 'rank-top-3';
+          badgeHtml = '🥉 3';
+        }
+
+        if (u.isCurrentUser) {
+          rankClass += ' rank-current-user';
+        }
+
+        const displayName = u.isCurrentUser ? `Siz (${escapeHtml(u.fullName)})` : escapeHtml(u.fullName);
+
+        html += `
+          <div class="rank-item ${rankClass}">
+            <div class="rank-badge">${badgeHtml}</div>
+            <div class="rank-info">
+              <span class="rank-name">${displayName}</span>
+              <span class="rank-meta">${u.testsCount} ta test • ${u.score} ball</span>
+            </div>
+            <span class="rank-score">${u.score} ⭐</span>
+          </div>
+        `;
+      });
+
+      // Agar joriy foydalanuvchi topUsers ichida bo'lmasa, uni pastda alohida ko'rsatish
+      if (currentUser && !topUsers.some(u => u.telegramId === currentUser.telegramId)) {
+        html += `
+          <div class="rank-item rank-current-user" style="margin-top: 10px;">
+            <div class="rank-badge">#${currentUser.rank}</div>
+            <div class="rank-info">
+              <span class="rank-name">Siz (${escapeHtml(currentUser.fullName)})</span>
+              <span class="rank-meta">${currentUser.testsCount} ta test • ${currentUser.score} ball</span>
+            </div>
+            <span class="rank-score">${currentUser.score} ⭐</span>
+          </div>
+        `;
+      }
+
+      listEl.innerHTML = html;
+    } catch (err) {
+      console.warn('Leaderboard yuklashda xatolik:', err);
+    }
+  }
 
   // 2x2 kartalardan: Placement Test (Darajani aniqlash)
   document.getElementById('card-open-tests')?.addEventListener('click', () => {
@@ -1709,6 +1811,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         triggerHaptic('success');
+        loadUserProfile();
+        loadLeaderboard();
       } else {
         const errJson = await res.json().catch(() => ({}));
         notify(`⚠️ Xatolik: ${errJson.message || 'Test natijasini qabul qilib bo‘lmadi'}`);

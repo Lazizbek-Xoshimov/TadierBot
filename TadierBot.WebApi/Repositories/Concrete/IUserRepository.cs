@@ -15,5 +15,7 @@ public interface IUserRepository
     Task<bool> ToggleBanAsync(int userId);
     Task<IReadOnlyList<long>> GetActiveUserTelegramIdsAsync(long excludeTelegramId);
     Task<bool> UpdateStatsAsync(long telegramId, int score, int streakDays, string level, DateTime lastStreakDate);
+    Task<(int TestsCount, int Rank)> GetUserTestStatsAndRankAsync(long telegramId, int userScore);
+    Task<IEnumerable<DTOs.User.LeaderboardUserDto>> GetTopLeaderboardUsersAsync(int count = 20);
 }
 

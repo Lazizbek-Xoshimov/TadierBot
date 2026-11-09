@@ -54,10 +54,10 @@ public class QuizService : IQuizService
         var passageIds = passages.Select(p => p.Id);
         var allQuestions = (await _quizRepository.GetQuestionsByPassageIdsAsync(passageIds)).ToList();
 
-        // Savollarni tegishli passage'lar bo'yicha guruhlash
+        // Savollarni tegishli passage'lar bo'yicha guruhlash va har safar tasodifiy (random) aralashtirish
         var questionsByPassage = allQuestions
             .GroupBy(q => q.PassageId)
-            .ToDictionary(g => g.Key, g => g.OrderBy(q => q.OrderIndex).ToList());
+            .ToDictionary(g => g.Key, g => g.OrderBy(_ => Guid.NewGuid()).ToList());
 
         // Faqat ichida savoli bor passage'larni olish va randomlashtirish
         var validPassages = passages

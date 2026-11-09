@@ -253,11 +253,15 @@ public class UserService : IUserService
             }
         }
 
+        var (testsCount, rank) = await _userRepository.GetUserTestStatsAndRankAsync(telegramId, user.Score);
+
         return new UserStatsResponse
         {
             StreakDays = streak,
             Score = user.Score,
-            Level = user.Level
+            Level = user.Level,
+            CompletedTestsCount = testsCount,
+            RankPosition = rank
         };
     }
 
@@ -349,6 +353,53 @@ public class UserService : IUserService
             >= 500 => "B1",
             >= 200 => "A2",
             _ => "A1"
+        };
+    }
+
+    public async Task<LeaderboardResponse> GetLeaderboardAsync(long? currentTelegramId = null)
+    {
+        var topUsers = (await _userRepository.GetTopLeaderboardUsersAsync(20)).ToList();
+        LeaderboardUserDto? currentUserDto = null;
+
+        if (currentTelegramId.HasValue)
+        {
+            var matchInTop = topUsers.FirstOrDefault(u => u.TelegramId == currentTelegramId.Value);
+            if (matchInTop != null)
+            {
+                matchInTop.IsCurrentUser = true;
+                currentUserDto = matchInTop;
+            }
+            else
+            {
+                var user = await _userRepository.GetByTelegramIdAsync(currentTelegramId.Value);
+                if (user != null)
+                {
+                    var (testsCount, rank) = await _userRepository.GetUserTestStatsAndRankAsync(currentTelegramId.Value, user.Score);
+                    string name = user.FullName ?? string.Empty;
+                    if (string.IsNullOrWhiteSpace(name))
+                    {
+                        name = !string.IsNullOrWhiteSpace(user.Username) ? $"@{user.Username}" : $"Foydalanuvchi #{user.TelegramId}";
+                    }
+
+                    currentUserDto = new LeaderboardUserDto
+                    {
+                        Rank = rank,
+                        TelegramId = user.TelegramId,
+                        FullName = name,
+                        Username = user.Username,
+                        Score = user.Score,
+                        TestsCount = testsCount,
+                        Level = user.Level,
+                        IsCurrentUser = true
+                    };
+                }
+            }
+        }
+
+        return new LeaderboardResponse
+        {
+            TopUsers = topUsers,
+            CurrentUser = currentUserDto
         };
     }
 }

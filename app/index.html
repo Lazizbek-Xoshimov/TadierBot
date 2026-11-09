@@ -222,25 +222,25 @@
             <div class="profile-avatar" id="prof-avatar">👤</div>
             <div class="profile-meta">
               <h3 id="prof-name">Foydalanuvchi</h3>
-              <span class="profile-tag">🏅 Faol o'quvchi (Bronze)</span>
+              <span class="profile-tag" id="prof-badge">🏅 Faol o'quvchi (Bronze)</span>
             </div>
           </div>
 
           <div class="profile-stats-grid">
             <div class="p-stat-box">
-              <span class="p-val">4</span>
+              <span class="p-val" id="prof-stat-tests">0</span>
               <span class="p-lbl">Testlar</span>
             </div>
             <div class="p-stat-box">
-              <span class="p-val">35</span>
-              <span class="p-lbl">Yodlangan so'z</span>
+              <span class="p-val" id="prof-stat-rank">#—</span>
+              <span class="p-lbl">O'rni</span>
             </div>
             <div class="p-stat-box">
-              <span class="p-val">180</span>
+              <span class="p-val" id="prof-stat-score">0</span>
               <span class="p-lbl">Ball</span>
             </div>
             <div class="p-stat-box">
-              <span class="p-val">A2</span>
+              <span class="p-val" id="prof-stat-level">A1</span>
               <span class="p-lbl">Daraja</span>
             </div>
           </div>
@@ -832,7 +832,7 @@
 
     
     <!-- Reading: To'liq matnni o'qish Modali -->
-    <div id="quiz-reader-modal" class="trainer-modal hidden" style="z-index: 1050;">
+    <div id="quiz-reader-modal" class="trainer-modal hidden" style="z-index: 2500;">
       <div class="trainer-backdrop" id="quiz-reader-backdrop"></div>
       <div class="trainer-sheet quiz-reader-sheet">
         <div class="trainer-header">
@@ -847,7 +847,7 @@
         </div>
 
         <div class="quiz-reader-body">
-          <div class="quiz-reader-text" id="quiz-reader-full-text"></div>
+          <div class="quiz-reader-text" id="quiz-reader-full-text" style="white-space: pre-wrap;"></div>
         </div>
 
         <div class="quiz-reader-footer">

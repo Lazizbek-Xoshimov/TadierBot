@@ -89,4 +89,21 @@ public class UserController : BaseController
         var stats = await _userService.GetStatsAsync(telegramUser.Id);
         return Ok(stats);
     }
+
+    /// <summary>
+    /// O'quvchilar reytingi (Leaderboard) ro'yxatini olish.
+    /// URL: GET /api/user/leaderboard
+    /// </summary>
+    [HttpGet("leaderboard")]
+    public async Task<IActionResult> GetLeaderboard([FromHeader(Name = "X-Telegram-Init-Data")] string? initData)
+    {
+        long? telegramId = null;
+        if (!string.IsNullOrWhiteSpace(initData) && ValidateTelegramInitData(initData, out var telegramUser) && telegramUser != null)
+        {
+            telegramId = telegramUser.Id;
+        }
+
+        var leaderboard = await _userService.GetLeaderboardAsync(telegramId);
+        return Ok(leaderboard);
+    }
 }
