@@ -918,6 +918,46 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Materialni Telegram bot orqali shaxsiy chatga yuborish
+  async function sendPassageToBot(passageId, btnElement = null) {
+    if (!passageId) return;
+    triggerHaptic('medium');
+
+    const origHtml = btnElement ? btnElement.innerHTML : '';
+    if (btnElement) {
+      btnElement.disabled = true;
+      btnElement.innerHTML = '⏳ Yuborilmoqda...';
+    }
+
+    try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (tg?.initData) headers['X-Telegram-Init-Data'] = tg.initData;
+
+      const res = await fetch(`/api/quiz/passages/${passageId}/send-to-bot`, {
+        method: 'POST',
+        headers: headers
+      });
+
+      if (res.ok) {
+        triggerHaptic('heavy');
+        notify('✅ Fayl Telegram botingizga yuborildi!');
+      } else {
+        const err = await res.json().catch(() => ({}));
+        triggerHaptic('error');
+        notify(`⚠️ ${err.message || 'Faylni yuborib bo‘lmadi'}`);
+      }
+    } catch (err) {
+      console.error('Faylni botga yuborishda xatolik:', err);
+      triggerHaptic('error');
+      notify('❌ Server bilan bog‘lanishda xatolik yuz berdi.');
+    } finally {
+      if (btnElement) {
+        btnElement.disabled = false;
+        btnElement.innerHTML = origHtml;
+      }
+    }
+  }
+
   function renderLesenList() {
     if (!lesenListContainer) return;
     const query = (inpSearchLesen?.value || '').trim().toLowerCase();
@@ -934,7 +974,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     lesenListContainer.innerHTML = filtered.map(item => {
-      const fileUrl = item.url || item.fileUrl || item.audioUrl;
       const snippet = item.content ? escapeHtml(item.content.substring(0, 110)) + (item.content.length > 110 ? '...' : '') : '';
       return `
         <div class="mini-resource-item" style="display:flex; flex-direction:column; gap:8px; padding:12px 14px; background:var(--card-bg, #1a2234); border-radius:10px; border:1px solid var(--border-color, #2a3447);">
@@ -949,8 +988,8 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
           ${snippet ? `<div style="font-size:12px; color:var(--hint-color, #8892b0); line-height:1.4;">${snippet}</div>` : ''}
           <div style="display:flex; gap:8px; margin-top:4px;">
-            ${item.content ? `<button type="button" class="res-btn btn-read-item" data-id="${item.id}" style="flex:1; padding:7px 10px; font-size:12px; background:var(--card-bg, #1e2638); border:1px solid var(--border-color, #3a4760); color:var(--text-color, #fff); border-radius:6px; cursor:pointer;">👁️ O'qish</button>` : ''}
-            ${fileUrl ? `<a href="${fileUrl}" download="${escapeHtml(item.title)}" class="res-btn" style="flex:1; text-align:center; padding:7px 10px; font-size:12px; background:var(--accent-color, #3b82f6); color:#fff; text-decoration:none; border-radius:6px; display:flex; align-items:center; justify-content:center;">📥 Yuklab olish</a>` : ''}
+            <button type="button" class="res-btn btn-read-item" data-id="${item.id}" style="flex:1; padding:7px 10px; font-size:12px; background:var(--card-bg, #1e2638); border:1px solid var(--border-color, #3a4760); color:var(--text-color, #fff); border-radius:6px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:4px;">👁️ O'qish</button>
+            <button type="button" class="res-btn btn-send-bot-item" data-id="${item.id}" style="flex:1; text-align:center; padding:7px 10px; font-size:12px; background:var(--accent-color, #3b82f6); color:#fff; border:none; border-radius:6px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:4px;">📥 Yuklab olish</button>
           </div>
         </div>
       `;
@@ -963,6 +1002,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (passage) {
           openQuizReaderModal(passage);
         }
+      });
+    });
+
+    lesenListContainer.querySelectorAll('.btn-send-bot-item').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = parseInt(btn.getAttribute('data-id'), 10);
+        sendPassageToBot(id, btn);
       });
     });
   }
@@ -1647,13 +1693,13 @@ document.addEventListener('DOMContentLoaded', () => {
     quizReaderFallback?.classList.add('hidden');
     if (quizReaderIframe) quizReaderIframe.src = 'about:blank';
 
-    // 1. Yuklab olish tugmasi
+    // 1. Yuklab olish tugmasi (Telegram bot orqali shaxsiy chatga yuborish)
     if (btnQuizReaderDownload) {
-      if (fullUrl) {
-        btnQuizReaderDownload.href = fullUrl;
-        const ext = rawFileUrl.split('?')[0].split('.').pop() || 'file';
-        btnQuizReaderDownload.setAttribute('download', `${title.replace(/[^a-zA-Z0-9_\-]/g, '_')}.${ext}`);
+      if (currentReadingPassage.id) {
         btnQuizReaderDownload.classList.remove('hidden');
+        btnQuizReaderDownload.onclick = () => {
+          sendPassageToBot(currentReadingPassage.id, btnQuizReaderDownload);
+        };
       } else {
         btnQuizReaderDownload.classList.add('hidden');
       }

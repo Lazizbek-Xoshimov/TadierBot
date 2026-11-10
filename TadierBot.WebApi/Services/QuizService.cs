@@ -2,6 +2,9 @@ using TadierBot.WebApi.DTOs.Quiz;
 using TadierBot.WebApi.Models;
 using TadierBot.WebApi.Repositories;
 using TadierBot.WebApi.Services.Concrete;
+using Telegram.Bot;
+using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 
 namespace TadierBot.WebApi.Services;
 
@@ -9,17 +12,20 @@ public class QuizService : IQuizService
 {
     private readonly IQuizRepository _quizRepository;
     private readonly IUserService _userService;
+    private readonly ITelegramBotClient _botClient;
     private readonly IWebHostEnvironment _webHostEnvironment;
     private readonly ILogger<QuizService> _logger;
 
     public QuizService(
         IQuizRepository quizRepository,
         IUserService userService,
+        ITelegramBotClient botClient,
         IWebHostEnvironment webHostEnvironment,
         ILogger<QuizService> logger)
     {
         _quizRepository = quizRepository;
         _userService = userService;
+        _botClient = botClient;
         _webHostEnvironment = webHostEnvironment;
         _logger = logger;
     }
@@ -331,6 +337,81 @@ public class QuizService : IQuizService
             FileName = file.FileName,
             Content = content
         };
+    }
+
+    public async Task<bool> SendPassageFileToBotAsync(long telegramId, int passageId)
+    {
+        var passage = await _quizRepository.GetPassageByIdAsync(passageId);
+        if (passage == null)
+        {
+            throw new KeyNotFoundException($"ID={passageId} bo'lgan material topilmadi.");
+        }
+
+        var fileUrl = passage.FileUrl ?? passage.Url ?? passage.AudioUrl;
+        var isAudio = string.Equals(passage.Type, "Listening", StringComparison.OrdinalIgnoreCase);
+
+        // 1. Agar serverda saqlangan fayl mavjud bo'lsa
+        if (!string.IsNullOrWhiteSpace(fileUrl))
+        {
+            var webRoot = _webHostEnvironment.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            var relativePath = fileUrl.TrimStart('/', '\\').Replace('/', Path.DirectorySeparatorChar);
+            var physicalPath = Path.Combine(webRoot, relativePath);
+
+            if (File.Exists(physicalPath))
+            {
+                var ext = Path.GetExtension(physicalPath);
+                var rawTitle = !string.IsNullOrWhiteSpace(passage.Title) ? passage.Title.Trim() : "Hujjat";
+                var safeFileName = $"{rawTitle}{ext}";
+
+                await using var stream = File.OpenRead(physicalPath);
+                var inputFile = InputFile.FromStream(stream, safeFileName);
+
+                if (isAudio || ext.Equals(".mp3", StringComparison.OrdinalIgnoreCase) || ext.Equals(".m4a", StringComparison.OrdinalIgnoreCase) || ext.Equals(".wav", StringComparison.OrdinalIgnoreCase))
+                {
+                    var audioCaption = $"🎧 <b>{passage.Title}</b> ({passage.Level} Daraja)\n\n<i>Nemis tili audio dialogi</i>";
+                    await _botClient.SendAudio(
+                        chatId: telegramId,
+                        audio: inputFile,
+                        caption: audioCaption,
+                        parseMode: ParseMode.Html);
+                }
+                else
+                {
+                    var docCaption = $"📖 <b>{passage.Title}</b> ({passage.Level} Daraja)\n\n<i>Nemis tili o'qish materiali (Lesen)</i>";
+                    await _botClient.SendDocument(
+                        chatId: telegramId,
+                        document: inputFile,
+                        caption: docCaption,
+                        parseMode: ParseMode.Html);
+                }
+
+                return true;
+            }
+            else
+            {
+                _logger.LogWarning("Fizik fayl topilmadi: {PhysicalPath}", physicalPath);
+            }
+        }
+
+        // 2. Agar fayl emas, to'g'ridan-to'g'ri matn (Content) bo'lsa
+        if (!string.IsNullOrWhiteSpace(passage.Content))
+        {
+            var safeTitle = !string.IsNullOrWhiteSpace(passage.Title) ? passage.Title.Trim() : "Matn";
+            var bytes = System.Text.Encoding.UTF8.GetBytes(passage.Content);
+            using var memStream = new MemoryStream(bytes);
+            var inputFile = InputFile.FromStream(memStream, $"{safeTitle}.txt");
+            var docCaption = $"📖 <b>{passage.Title}</b> ({passage.Level} Daraja)\n\n<i>Nemis tili o'qish matni (Lesen)</i>";
+
+            await _botClient.SendDocument(
+                chatId: telegramId,
+                document: inputFile,
+                caption: docCaption,
+                parseMode: ParseMode.Html);
+
+            return true;
+        }
+
+        return false;
     }
 }
 

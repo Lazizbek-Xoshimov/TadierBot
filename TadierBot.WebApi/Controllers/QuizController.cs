@@ -143,6 +143,43 @@ public class QuizController : BaseController
         return Ok(new { Message = "Material va unga tegishli savollar muvaffaqiyatli o'chirildi." });
     }
 
+    /// <summary>
+    /// Material faylini (yoki matnini) foydalanuvchining shaxsiy Telegram bot chatiga yuborish
+    /// URL: POST /api/quiz/passages/{id}/send-to-bot
+    /// </summary>
+    [HttpPost("passages/{id:int}/send-to-bot")]
+    public async Task<IActionResult> SendPassageToBot(
+        int id,
+        [FromHeader(Name = "X-Telegram-Init-Data")] string? initDataHeader,
+        [FromQuery] string? initData)
+    {
+        string? rawInitData = !string.IsNullOrWhiteSpace(initDataHeader) ? initDataHeader : initData;
+        if (string.IsNullOrWhiteSpace(rawInitData) || !ValidateTelegramInitData(rawInitData, out var user) || user == null)
+        {
+            return Unauthorized(new { Message = "Telegram avtorizatsiyasi tasdiqlanmadi." });
+        }
+
+        try
+        {
+            bool sent = await _quizService.SendPassageFileToBotAsync(user.Id, id);
+            if (!sent)
+            {
+                return BadRequest(new { Message = "Faylni yuborib bo‘lmadi. Fayl serverda topilmadi." });
+            }
+
+            return Ok(new { Success = true, Message = "Fayl Telegram botingizga muvaffaqiyatli yuborildi!" });
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new { Message = "Bunday material topilmadi." });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Faylni botga yuborishda xatolik: passageId={PassageId}, userId={UserId}", id, user.Id);
+            return StatusCode(500, new { Message = "Faylni botga yuborishda server xatoligi yuz berdi." });
+        }
+    }
+
     // ==========================================
     // 3. Admin: Savollar (QuizQuestions)
     // ==========================================

@@ -23,5 +23,8 @@ public interface IQuizService
     // 4. Audio va Matn fayllarni serverga saqlash
     Task<string> SaveAudioFileAsync(IFormFile file);
     Task<QuizFileUploadResponse> SaveTextFileAsync(IFormFile file);
+
+    // 5. Material faylini Telegram bot orqali foydalanuvchi chatiga yuborish
+    Task<bool> SendPassageFileToBotAsync(long telegramId, int passageId);
 }
 
