@@ -183,7 +183,7 @@ public class UserRepository : IUserRepository
                 COUNT(a.Id) AS TestsCount
             FROM Users u
             LEFT JOIN UserQuizAttempts a ON u.TelegramId = a.TelegramId
-            WHERE u.IsBanned = 0
+            WHERE u.IsBanned = 0 AND u.Score > 0
             GROUP BY u.TelegramId, u.FullName, u.Username, u.Score, u.Level
             ORDER BY u.Score DESC, TestsCount DESC;
         """;

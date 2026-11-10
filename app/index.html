@@ -415,21 +415,38 @@
               <input type="text" id="admin-passage-title" class="form-control" placeholder="Mavzu, masalan: Im Bahnhof yoki Im Park">
             </div>
 
-            <div class="form-group" id="admin-passage-text-group">
-              <label for="admin-passage-text-file">Matn fayli (.txt, .pdf yuklash)</label>
-              <input type="file" id="admin-passage-text-file" class="form-control">
-              <small class="form-hint" style="color:var(--hint-color);font-size:11px;margin-top:4px;display:block;">Fayl tanlanganda nomi avtomatik olinadi va wwwroot/texts papkasiga saqlanadi.</small>
-            </div>
+            <div class="form-group" id="admin-passage-dropzone-group">
+              <label id="admin-dropzone-label">Matn faylini yuklash (.txt, .pdf, .doc)</label>
+              
+              <div class="file-dropzone" id="admin-file-dropzone">
+                <input type="file" id="admin-passage-file-input" class="hidden-file-input" accept=".txt,.pdf,.doc,.docx,.rtf,.odt">
+                
+                <div class="dropzone-idle" id="dropzone-idle">
+                  <div class="dropzone-icon" id="dropzone-icon">📄</div>
+                  <div class="dropzone-text-wrap">
+                    <strong id="dropzone-primary-text">Faylni sudrab bu yerga tashlang</strong>
+                    <span id="dropzone-secondary-text">yoki qurilmadan tanlang</span>
+                  </div>
+                  <button type="button" class="btn-dropzone-browse" id="btn-dropzone-browse">
+                    📂 Faylni tanlash
+                  </button>
+                </div>
 
-            <div class="form-group" id="admin-passage-content-group">
-              <label for="admin-passage-content">Matn (Lesen uchun)</label>
-              <textarea id="admin-passage-content" class="form-control" rows="3" placeholder="Nemischa matn mazmunini kiriting..."></textarea>
-            </div>
-
-            <div class="form-group hidden" id="admin-passage-audio-group">
-              <label for="admin-passage-audio-file">Audio fayl (.mp3 yuklash)</label>
-              <input type="file" id="admin-passage-audio-file" class="form-control" accept="audio/*">
-              <small class="form-hint" style="color:var(--hint-color);font-size:11px;margin-top:4px;display:block;">Fayl avtomatik wwwroot/audio papkasiga saqlanadi.</small>
+                <div class="dropzone-selected hidden" id="dropzone-selected">
+                  <div class="dropzone-file-info">
+                    <span class="file-icon" id="dropzone-file-icon">📄</span>
+                    <div class="file-details">
+                      <div class="file-name" id="dropzone-file-name">fayl.txt</div>
+                      <div class="file-size" id="dropzone-file-size">12.5 KB</div>
+                    </div>
+                  </div>
+                  <button type="button" class="btn-dropzone-remove" id="btn-dropzone-remove" title="Faylni o'chirish">✕</button>
+                </div>
+              </div>
+              
+              <small class="form-hint" id="admin-dropzone-hint" style="color:var(--hint-color);font-size:11px;margin-top:5px;display:block;">
+                Desktopda faylni sudrab tashlashingiz, telefonda esa "Faylni tanlash" tugmasini bosishingiz mumkin.
+              </small>
             </div>
 
             <button class="submit-btn btn-purple" id="btn-save-passage">
@@ -855,11 +872,11 @@
         <!-- Filter va Qidiruv qatori -->
         <div style="padding: 10px 16px; border-bottom: 1px solid var(--border-color, #2a3447); background: var(--card-bg, #1e2638);">
           <div class="admin-tabs" style="margin-bottom: 8px;">
-            <button class="admin-tab-btn active btn-lesen-filter" data-level="ALL">Barchasi</button>
-            <button class="admin-tab-btn btn-lesen-filter" data-level="A1">A1</button>
-            <button class="admin-tab-btn btn-lesen-filter" data-level="A2">A2</button>
-            <button class="admin-tab-btn btn-lesen-filter" data-level="B1">B1</button>
-            <button class="admin-tab-btn btn-lesen-filter" data-level="B2">B2</button>
+            <button class="lesen-tab-btn active btn-lesen-filter" data-level="ALL">Barchasi</button>
+            <button class="lesen-tab-btn btn-lesen-filter" data-level="A1">A1</button>
+            <button class="lesen-tab-btn btn-lesen-filter" data-level="A2">A2</button>
+            <button class="lesen-tab-btn btn-lesen-filter" data-level="B1">B1</button>
+            <button class="lesen-tab-btn btn-lesen-filter" data-level="B2">B2</button>
           </div>
           <input type="text" id="inp-search-lesen" class="form-control" placeholder="🔍 Fayl nomi bo'yicha qidiruv...">
         </div>

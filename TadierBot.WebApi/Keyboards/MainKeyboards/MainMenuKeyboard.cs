@@ -28,7 +28,7 @@ public static class MainMenuKeyboard
         return new ReplyKeyboardMarkup(rows)
         {
             ResizeKeyboard = true,
-            IsPersistent = true
+            IsPersistent = false
         };
     }
 }

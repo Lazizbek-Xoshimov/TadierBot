@@ -762,6 +762,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (targetTabId === 'tab-events') loadPublicEvents();
     if (targetTabId === 'tab-leaderboard') loadLeaderboard();
     if (targetTabId === 'tab-cabinet') loadUserProfile();
+    if (targetTabId === 'tab-admin') {
+      const activeAdminTab = document.querySelector('.admin-subnav .admin-tab-btn.active');
+      const targetSec = activeAdminTab ? activeAdminTab.getAttribute('data-admin-sec') : 'sec-words';
+      selectAdminSection(targetSec);
+    }
   }
 
   navItems.forEach((btn) => {
@@ -968,24 +973,33 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Admin sub-navigatsiyasi (So'zlar, Testlar, Tadbirlar)
-  const adminTabBtns = document.querySelectorAll('.admin-tab-btn');
+  const adminTabBtns = document.querySelectorAll('.admin-subnav .admin-tab-btn');
   const adminSections = document.querySelectorAll('.admin-section');
+
+  function selectAdminSection(secId) {
+    const validSecId = secId || 'sec-words';
+    adminTabBtns.forEach(b => {
+      b.classList.toggle('active', b.getAttribute('data-admin-sec') === validSecId);
+    });
+
+    adminSections.forEach((sec) => {
+      sec.classList.toggle('active', sec.id === validSecId);
+    });
+
+    if (validSecId === 'sec-words') loadAdminWords();
+    if (validSecId === 'sec-events') loadAdminEvents();
+    if (validSecId === 'sec-tests') {
+      loadAdminPassages();
+      loadAdminQuizQuestions();
+    }
+  }
 
   adminTabBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
       const secId = btn.getAttribute('data-admin-sec');
-      adminTabBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-
-      adminSections.forEach((sec) => {
-        sec.classList.toggle('active', sec.id === secId);
-      });
+      if (!secId) return;
+      selectAdminSection(secId);
       triggerHaptic('light');
-      if (secId === 'sec-events') loadAdminEvents();
-      if (secId === 'sec-tests') {
-        loadAdminPassages();
-        loadAdminQuizQuestions();
-      }
     });
   });
 
@@ -1606,10 +1620,10 @@ document.addEventListener('DOMContentLoaded', () => {
     triggerHaptic('light');
     if (quizReaderTitle) quizReaderTitle.textContent = currentReadingPassage.title || 'Matnni o‘qish';
     if (quizReaderLevel) quizReaderLevel.textContent = `${currentReadingPassage.level || 'A1'} Daraja`;
-    if (quizReaderFullText) quizReaderFullText.textContent = currentReadingPassage.content || 'Matn mavjud emas';
     
+    const fileUrl = currentReadingPassage.fileUrl || currentReadingPassage.audioUrl;
+
     if (btnQuizReaderDownload) {
-      const fileUrl = currentReadingPassage.fileUrl || currentReadingPassage.audioUrl;
       if (fileUrl) {
         btnQuizReaderDownload.href = fileUrl;
         btnQuizReaderDownload.setAttribute('download', currentReadingPassage.title || 'matn.txt');
@@ -1617,6 +1631,46 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         btnQuizReaderDownload.classList.add('hidden');
       }
+    }
+
+    if (currentReadingPassage.content && currentReadingPassage.content.trim()) {
+      if (quizReaderFullText) quizReaderFullText.textContent = currentReadingPassage.content;
+    } else if (fileUrl) {
+      if (fileUrl.endsWith('.txt') || fileUrl.endsWith('.rtf')) {
+        if (quizReaderFullText) quizReaderFullText.textContent = '⏳ Fayl matni yuklanmoqda...';
+        fetch(fileUrl)
+          .then(res => res.text())
+          .then(txt => {
+            currentReadingPassage.content = txt;
+            if (quizReaderFullText) quizReaderFullText.textContent = txt;
+            if (quizPassageText) quizPassageText.textContent = txt;
+          })
+          .catch(() => {
+            if (quizReaderFullText) quizReaderFullText.textContent = 'Faylni o‘qib bo‘lmadi.';
+          });
+      } else {
+        if (quizReaderFullText) {
+          quizReaderFullText.innerHTML = `
+            <div style="text-align: center; padding: 25px 10px;">
+              <div style="font-size: 42px; margin-bottom: 12px;">📑</div>
+              <p style="margin-bottom: 16px; font-weight: 600; color: var(--text-color, #fff);">Ushbu faylni to'liq o'qish uchun pastdagi tugma orqali brauzerda oching yoki yuklab oling:</p>
+              <button type="button" class="submit-btn btn-blue" id="btn-open-file-browser" style="max-width: 220px; margin: 0 auto;">
+                🔗 Brauzerda ochish
+              </button>
+            </div>
+          `;
+          document.getElementById('btn-open-file-browser')?.addEventListener('click', () => {
+            const fullUrl = fileUrl.startsWith('http') ? fileUrl : window.location.origin + fileUrl;
+            if (tg?.openLink) {
+              tg.openLink(fullUrl);
+            } else {
+              window.open(fullUrl, '_blank');
+            }
+          });
+        }
+      }
+    } else {
+      if (quizReaderFullText) quizReaderFullText.textContent = 'Matn mavjud emas';
     }
 
     quizReaderModal?.classList.remove('hidden');
@@ -1813,7 +1867,24 @@ document.addEventListener('DOMContentLoaded', () => {
       currentReadingPassage = passage;
       if (quizPassageTitle) quizPassageTitle.textContent = passage?.title || 'Matn';
       if (quizPassageLevel) quizPassageLevel.textContent = passage?.level || 'A1';
-      if (quizPassageText) quizPassageText.textContent = passage?.content || '';
+      
+      const pFileUrl = passage?.fileUrl || passage?.audioUrl;
+      if (passage?.content && passage.content.trim()) {
+        if (quizPassageText) quizPassageText.textContent = passage.content;
+      } else if (pFileUrl && (pFileUrl.endsWith('.txt') || pFileUrl.endsWith('.rtf'))) {
+        if (quizPassageText) quizPassageText.textContent = '⏳ Matn yuklanmoqda...';
+        fetch(pFileUrl)
+          .then(res => res.text())
+          .then(txt => {
+            if (passage) passage.content = txt;
+            if (quizPassageText) quizPassageText.textContent = txt;
+          })
+          .catch(() => {
+            if (quizPassageText) quizPassageText.textContent = passage?.title || 'Matn';
+          });
+      } else {
+        if (quizPassageText) quizPassageText.textContent = passage?.title ? `📄 ${passage.title}` : 'Matn mavjud';
+      }
     }
 
     // Savol matni
@@ -1999,11 +2070,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================
   let editingQuizQuestionId = null;
   const adminPassageType = document.getElementById('admin-passage-type');
-  const adminPassageTextGroup = document.getElementById('admin-passage-text-group');
-  const adminPassageTextFile = document.getElementById('admin-passage-text-file');
-  const adminPassageContentGroup = document.getElementById('admin-passage-content-group');
-  const adminPassageAudioGroup = document.getElementById('admin-passage-audio-group');
-  const adminPassageAudioFile = document.getElementById('admin-passage-audio-file');
   const btnSavePassage = document.getElementById('btn-save-passage');
   const btnSaveTest = document.getElementById('btn-save-test');
   const formQuizTitle = document.getElementById('form-quiz-title');
@@ -2011,32 +2077,117 @@ document.addEventListener('DOMContentLoaded', () => {
   const inpSearchQuiz = document.getElementById('inp-search-quiz');
   const btnSearchQuiz = document.getElementById('btn-search-quiz');
 
-  // Matn fayli tanlanganda avtomatik sarlavhani to'ldirish
-  adminPassageTextFile?.addEventListener('change', () => {
-    if (adminPassageTextFile.files && adminPassageTextFile.files[0]) {
-      const titleInput = document.getElementById('admin-passage-title');
-      if (titleInput && (!titleInput.value || titleInput.value.trim() === '')) {
-        titleInput.value = adminPassageTextFile.files[0].name;
-      }
+  // Unified File Dropzone (Drag & Drop + Fayl tanlash)
+  const adminFileDropzone = document.getElementById('admin-file-dropzone');
+  const adminPassageFileInput = document.getElementById('admin-passage-file-input');
+  const adminDropzoneLabel = document.getElementById('admin-dropzone-label');
+  const dropzoneIdle = document.getElementById('dropzone-idle');
+  const dropzoneSelected = document.getElementById('dropzone-selected');
+  const dropzoneIcon = document.getElementById('dropzone-icon');
+  const dropzonePrimaryText = document.getElementById('dropzone-primary-text');
+  const dropzoneSecondaryText = document.getElementById('dropzone-secondary-text');
+  const dropzoneFileName = document.getElementById('dropzone-file-name');
+  const dropzoneFileSize = document.getElementById('dropzone-file-size');
+  const dropzoneFileIcon = document.getElementById('dropzone-file-icon');
+  const btnDropzoneRemove = document.getElementById('btn-dropzone-remove');
+  const btnDropzoneBrowse = document.getElementById('btn-dropzone-browse');
+
+  let adminSelectedPassageFile = null;
+
+  function formatBytes(bytes) {
+    if (!bytes || bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  }
+
+  function setDropzoneFile(file) {
+    if (!file) return;
+    adminSelectedPassageFile = file;
+    const isAudio = adminPassageType?.value === '2';
+    if (dropzoneFileIcon) dropzoneFileIcon.textContent = isAudio ? '🎧' : '📄';
+    if (dropzoneFileName) dropzoneFileName.textContent = file.name;
+    if (dropzoneFileSize) dropzoneFileSize.textContent = formatBytes(file.size);
+    dropzoneIdle?.classList.add('hidden');
+    dropzoneSelected?.classList.remove('hidden');
+
+    // Sarlavhani avtomatik to'ldirish
+    const titleInput = document.getElementById('admin-passage-title');
+    if (titleInput && (!titleInput.value || titleInput.value.trim() === '')) {
+      const cleanName = file.name.replace(/\.[^/.]+$/, "");
+      titleInput.value = cleanName;
+    }
+  }
+
+  function clearDropzoneFile() {
+    adminSelectedPassageFile = null;
+    if (adminPassageFileInput) adminPassageFileInput.value = '';
+    dropzoneSelected?.classList.add('hidden');
+    dropzoneIdle?.classList.remove('hidden');
+  }
+
+  // Fayl input tanlanganda (Tugma orqali)
+  adminPassageFileInput?.addEventListener('change', () => {
+    if (adminPassageFileInput.files && adminPassageFileInput.files[0]) {
+      setDropzoneFile(adminPassageFileInput.files[0]);
     }
   });
 
-  // Audio fayl tanlanganda avtomatik sarlavhani to'ldirish
-  adminPassageAudioFile?.addEventListener('change', () => {
-    if (adminPassageAudioFile.files && adminPassageAudioFile.files[0]) {
-      const titleInput = document.getElementById('admin-passage-title');
-      if (titleInput && (!titleInput.value || titleInput.value.trim() === '')) {
-        titleInput.value = adminPassageAudioFile.files[0].name;
-      }
+  // O'chirish (✕) tugmasi bosilganda
+  btnDropzoneRemove?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    clearDropzoneFile();
+  });
+
+  // Dropzone maydoniga bosilganda fayl tanlagichni ochish
+  adminFileDropzone?.addEventListener('click', (e) => {
+    if (e.target.closest('#btn-dropzone-remove')) return;
+    adminPassageFileInput?.click();
+  });
+
+  // Drag and Drop hodisalari (Desktop uchun sudrab tashlash)
+  ['dragenter', 'dragover'].forEach(eventName => {
+    adminFileDropzone?.addEventListener(eventName, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      adminFileDropzone.classList.add('drag-over');
+    });
+  });
+
+  ['dragleave', 'drop'].forEach(eventName => {
+    adminFileDropzone?.addEventListener(eventName, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      adminFileDropzone.classList.remove('drag-over');
+    });
+  });
+
+  adminFileDropzone?.addEventListener('drop', (e) => {
+    const dt = e.dataTransfer;
+    if (dt && dt.files && dt.files.length > 0) {
+      setDropzoneFile(dt.files[0]);
     }
   });
 
-  // Bo'lim turi o'zgarganda (Lesen yoki Audio)
+  // Bo'lim turi o'zgarganda (Lesen yoki Hören)
   adminPassageType?.addEventListener('change', () => {
     const isAudio = adminPassageType.value === '2';
-    adminPassageTextGroup?.classList.toggle('hidden', isAudio);
-    adminPassageContentGroup?.classList.toggle('hidden', isAudio);
-    adminPassageAudioGroup?.classList.toggle('hidden', !isAudio);
+    clearDropzoneFile();
+
+    if (isAudio) {
+      if (adminDropzoneLabel) adminDropzoneLabel.textContent = 'Audio faylni yuklash (.mp3, .wav, .m4a)';
+      if (adminPassageFileInput) adminPassageFileInput.accept = 'audio/*,.mp3,.wav,.m4a';
+      if (dropzoneIcon) dropzoneIcon.textContent = '🎧';
+      if (dropzonePrimaryText) dropzonePrimaryText.textContent = 'Audio faylni sudrab bu yerga tashlang';
+      if (dropzoneSecondaryText) dropzoneSecondaryText.textContent = 'yoki qurilmadan tanlang';
+    } else {
+      if (adminDropzoneLabel) adminDropzoneLabel.textContent = 'Matn faylini yuklash (.txt, .pdf, .doc)';
+      if (adminPassageFileInput) adminPassageFileInput.accept = '.txt,.pdf,.doc,.docx,.rtf,.odt';
+      if (dropzoneIcon) dropzoneIcon.textContent = '📄';
+      if (dropzonePrimaryText) dropzonePrimaryText.textContent = 'Matn faylini sudrab bu yerga tashlang';
+      if (dropzoneSecondaryText) dropzoneSecondaryText.textContent = 'yoki qurilmadan tanlang';
+    }
   });
 
   // Admin materiallar (passages) ro'yxatini dropdown ga yuklash
@@ -2236,18 +2387,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const type = parseInt(adminPassageType?.value || '1', 10);
     const level = document.getElementById('admin-passage-level')?.value || 'A1';
     let title = document.getElementById('admin-passage-title')?.value.trim();
-    let content = document.getElementById('admin-passage-content')?.value.trim();
-    const textFileInput = document.getElementById('admin-passage-text-file');
-    const audioFileInput = document.getElementById('admin-passage-audio-file');
 
-    if (type === 1 && (!textFileInput || !textFileInput.files || textFileInput.files.length === 0) && !title) {
-      notify('⚠️ Iltimos, matn faylini tanlang yoki sarlavha kiriting!');
+    if (!adminSelectedPassageFile) {
+      notify(type === 1 
+        ? '⚠️ Iltimos, matn faylini tanlang yoki sudrab tashlang!' 
+        : '⚠️ Iltimos, audio faylni tanlang yoki sudrab tashlang!');
       return;
     }
 
-    if (type === 2 && (!audioFileInput || !audioFileInput.files || audioFileInput.files.length === 0)) {
-      notify('⚠️ Iltimos, audio faylni tanlang!');
-      return;
+    if (!title) {
+      title = adminSelectedPassageFile.name.replace(/\.[^/.]+$/, "");
     }
 
     const origBtnText = btnSavePassage.innerHTML;
@@ -2255,18 +2404,18 @@ document.addEventListener('DOMContentLoaded', () => {
     btnSavePassage.innerHTML = '⏳ Yuklanmoqda...';
 
     let fileUrl = null;
+    let content = null;
 
     try {
-      // 1. Agar Lesen (type == 1) va fayl tanlangan bo'lsa
-      if (type === 1 && textFileInput && textFileInput.files && textFileInput.files.length > 0) {
+      const formData = new FormData();
+      formData.append('file', adminSelectedPassageFile);
+
+      const upHeaders = {};
+      if (tg?.initData) upHeaders['X-Telegram-Init-Data'] = tg.initData;
+
+      if (type === 1) {
+        // Matn fayli
         btnSavePassage.innerHTML = '⏳ Matn fayli yuklanmoqda...';
-        const file = textFileInput.files[0];
-        const formData = new FormData();
-        formData.append('file', file);
-
-        const upHeaders = {};
-        if (tg?.initData) upHeaders['X-Telegram-Init-Data'] = tg.initData;
-
         const upRes = await fetch('/api/quiz/upload-text', {
           method: 'POST',
           headers: upHeaders,
@@ -2283,20 +2432,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const upData = await upRes.json();
         fileUrl = upData.fileUrl;
-        if (!title && upData.fileName) title = upData.fileName;
         if (upData.content) content = upData.content;
-      }
-
-      // 2. Agar Listening (type == 2) va audio bo'lsa
-      if (type === 2) {
+      } else {
+        // Audio fayl
         btnSavePassage.innerHTML = '⏳ Audio yuklanmoqda...';
-        const file = audioFileInput.files[0];
-        const formData = new FormData();
-        formData.append('file', file);
-
-        const upHeaders = {};
-        if (tg?.initData) upHeaders['X-Telegram-Init-Data'] = tg.initData;
-
         const upRes = await fetch('/api/quiz/upload-audio', {
           method: 'POST',
           headers: upHeaders,
@@ -2315,14 +2454,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fileUrl = upData.fileUrl || upData.audioUrl;
       }
 
-      if (!title) {
-        notify('⚠️ Fayl nomi / sarlavha kiritilishi shart!');
-        btnSavePassage.disabled = false;
-        btnSavePassage.innerHTML = origBtnText;
-        return;
-      }
-
-      // 3. Material (Passage) ma'lumotlarini saqlash
+      // Materialni saqlash
       btnSavePassage.innerHTML = '⏳ Saqlanmoqda...';
       const headers = { 'Content-Type': 'application/json' };
       if (tg?.initData) headers['X-Telegram-Init-Data'] = tg.initData;
@@ -2334,7 +2466,7 @@ document.addEventListener('DOMContentLoaded', () => {
           type: type === 2 ? 'Listening' : 'Reading',
           level: level,
           title: title,
-          content: content || null,
+          content: content,
           fileUrl: fileUrl,
           audioUrl: fileUrl
         })
@@ -2343,16 +2475,20 @@ document.addEventListener('DOMContentLoaded', () => {
       if (res.ok) {
         notify('✅ Yangi material muvaffaqiyatli saqlandi!');
         document.getElementById('admin-passage-title').value = '';
-        if (document.getElementById('admin-passage-content')) {
-          document.getElementById('admin-passage-content').value = '';
-        }
-        if (textFileInput) textFileInput.value = '';
-        if (audioFileInput) audioFileInput.value = '';
+        clearDropzoneFile();
         loadAdminPassages();
       } else {
         const err = await res.json().catch(() => ({}));
         notify(`⚠️ Xatolik: ${err.message || 'Saqlab bo‘lmadi'}`);
       }
+    } catch (err) {
+      console.error('Passage saqlashda xatolik:', err);
+      notify('❌ Server bilan bog‘lanishda xatolik yuz berdi.');
+    } finally {
+      btnSavePassage.disabled = false;
+      btnSavePassage.innerHTML = origBtnText;
+    }
+  });
     } catch (err) {
       console.error('Passage saqlashda xatolik:', err);
       notify('❌ Server bilan bog‘lanishda xatolik yuz berdi.');

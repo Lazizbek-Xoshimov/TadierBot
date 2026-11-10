@@ -695,7 +695,8 @@ body {
   margin-bottom: 16px;
 }
 
-.admin-tab-btn {
+.admin-tab-btn,
+.lesen-tab-btn {
   flex: 1;
   padding: 8px;
   border: none;
@@ -708,7 +709,8 @@ body {
   transition: all 0.2s ease;
 }
 
-.admin-tab-btn.active {
+.admin-tab-btn.active,
+.lesen-tab-btn.active {
   background: var(--button-color);
   color: #fff;
 }
@@ -809,6 +811,145 @@ body {
   cursor: pointer;
   color: #fff;
   margin-top: 6px;
+}
+
+/* ==========================================
+   Fayl yuklash Dropzone (Drag & Drop + Picker)
+   ========================================== */
+.file-dropzone {
+  position: relative;
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--radius-md, 12px);
+  padding: 20px 14px;
+  text-align: center;
+  transition: all 0.25s ease;
+  cursor: pointer;
+  user-select: none;
+}
+
+.file-dropzone:hover {
+  border-color: var(--link-color, #2ea6ff);
+  background: rgba(46, 166, 255, 0.06);
+}
+
+.file-dropzone.drag-over {
+  border-color: #2dd36f;
+  background: rgba(45, 211, 111, 0.12);
+  transform: scale(1.01);
+}
+
+.hidden-file-input {
+  display: none !important;
+}
+
+.dropzone-idle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.dropzone-icon {
+  font-size: 34px;
+  line-height: 1;
+}
+
+.dropzone-text-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.dropzone-text-wrap strong {
+  font-size: 13px;
+  color: #fff;
+  font-weight: 600;
+}
+
+.dropzone-text-wrap span {
+  font-size: 11px;
+  color: var(--hint-color, #8e8e93);
+}
+
+.btn-dropzone-browse {
+  margin-top: 4px;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm, 8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  pointer-events: none;
+  transition: all 0.2s ease;
+}
+
+.dropzone-selected {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: var(--radius-sm, 8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.dropzone-file-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+  text-align: left;
+}
+
+.dropzone-file-info .file-icon {
+  font-size: 26px;
+  flex-shrink: 0;
+}
+
+.dropzone-file-info .file-details {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dropzone-file-info .file-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+}
+
+.dropzone-file-info .file-size {
+  font-size: 11px;
+  color: var(--hint-color, #8e8e93);
+}
+
+.btn-dropzone-remove {
+  background: rgba(235, 68, 90, 0.2);
+  border: 1px solid rgba(235, 68, 90, 0.4);
+  color: #eb445a;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.btn-dropzone-remove:hover {
+  background: rgba(235, 68, 90, 0.4);
 }
 
 .btn-blue { background: #2ea6ff; }
