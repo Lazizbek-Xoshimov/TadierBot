@@ -1,106 +1,77 @@
-# 📚 TadierBot — Ta'limiy Manbalar Telegram Boti
+# 🇩🇪 TadierBot — Nemis Tili Ta'lim Platformasi
 
-> 🤖 **Telegram Bot manzili:** [@Tadier_bot](https://t.me/Tadier_bot)
+> 🤖 **Telegram Bot:** [@Tadier_bot](https://t.me/Tadier_bot)  
+> 🌐 **Mini App:** Telegram ichida ishlovchi interaktiv veb-ilova
 
-**TadierBot** — foydalanuvchilarga sifatli ta'limiy materiallar (kitoblar, video darsliklar, audio mashqlar va maqolalar)ni qulay qidirish, saralash va o'rganish imkoniyatini taqdim etuvchi zamonaviy Telegram bot.
-
-Loyiha yuqori unumdorlikka ega **ASP.NET Core (.NET 10)** texnologiyasi, **Microsoft SQL Server** va **Dapper ORM** asosida Clean Architecture tamoyillariga muvofiq ishlab chiqilgan.
+**TadierBot** — nemis tilini samarali o‘rganish uchun mo‘ljallangan zamonaviy ta’lim platformasi. O‘quvchilarga til darajasini aniqlash, so‘z boyligini oshirish, o‘qish (Lesen) va tinglash (Hören) ko‘nikmalarini rivojlantirish imkoniyatini beradi.
 
 ---
 
 ## 🚀 Asosiy imkoniyatlar
 
-### 👤 Foydalanuvchilar uchun:
-* 📚 **Manbalar bo'limi:** Eng so'nggi yuklangan materiallarni inline paginatsiya orqali sahifama-sahifa ko'rish.
-* 🗂 **Kategoriyalar bo'yicha saralash:**
-  * 📚 **Kitoblar:** Darsliklar, lug'atlar va PDF qo'llanmalar.
-  * 🎬 **Videolar:** Video darslar va ko'rgazmali qo'llanmalar.
-  * 🎧 **Audio materiallar:** Eshitish (Hören) mashqlari va dars audiolari.
-  * 📝 **Maqolalar:** Grammatika qoidalari va so'z boyligi.
-* 🌐 **Til bo'yicha filtrlash:** Materiallarni tillar (`O'zbek`, `Rus`, `Ingliz`) kesimida saralash.
-* 🔍 **Tezkor qidiruv:** Kalit so'zlar bo'yicha manbalarni tezkor topish.
-* ℹ️ **Yordam bo'limi:** Botdan foydalanish bo'yicha qo'llanma va admin bilan bog'lanish havolasi.
+### 👤 O'quvchilar uchun:
+* 🎓 **Darajani aniqlash testi:** A1–B2 darajalar bo‘yicha 20 ta savoldan iborat test (Lesen va Hören bo‘limlari).
+* 📖 **Lesen (O‘qish):** Nemischa matn va kitoblarni ilova ichida to‘liq o‘qish hamda bot orqali shaxsiy chatga yuklab olish.
+* 🎧 **Hören (Tinglash):** Audio dialoglarni o‘rnatilgan pleyer orqali tinglash va bot orqali `.mp3` fayl sifatida yuklab olish.
+* 🗂 **So‘z trenajyori:** Nemischa so‘zlarni darajalar (A1–B2) bo‘yicha flesh-kartochkalar va talaffuz (TTS) orqali yodlash.
+* 🏆 **Reyting va Profil:** Natijalar, testlar tarixi va kun so‘zi.
 
-### ⚙️ Administratorlar uchun (Admin Panel):
-* ➕ **Material qo'shish:** Bosqichma-bosqich (FSM) orqali yangi manbalarni kiritish.
-* ✏️ **Tahrirlash va o'chirish:** Mavjud materiallar ma'lumotlarini yangilash yoki o'chirish.
-* 👥 **Foydalanuvchilarni boshqarish:** Foydalanuvchilar ro'yxati, ularni qidirish va bloklash/blokdan chiqarish.
-* 📊 **Statistika:** Faol foydalanuvchilar, umumiy manbalar soni va eng ko'p ko'rilgan materiallar tahlili.
-* 📢 **Ommaviy xabar (Broadcast):** Barcha bot foydalanuvchilariga bir vaqtda e'lon yoki xabarnoma yuborish.
+### ⚙️ Boshqaruv (Admin):
+* 📝 **Materiallar yuklash:** Reading (PDF, Word, TXT) va Listening (MP3, WAV) fayllarini boshqarish.
+* ❓ **Testlar boshqaruvi:** Savollar, javob variantlari va to‘g‘ri javoblarni kiritish/tahrirlash.
+* 📚 **Lug‘at bazasi:** Trenajyor uchun so‘zlar, tarjimalar va misollarni boshqarish (CRUD).
+* 📅 **Tadbirlar va E’lonlar:** Vebinar va darslarni e’lon qilish hamda ommaviy xabarnoma (Broadcast) yuborish.
 
 ---
 
-## 🛠 Texnologik stak
+## 🛠 Texnologiyalar
 
-* **Til va Platforma:** C# 14 / .NET 10 (ASP.NET Core Web API)
-* **Telegram API:** [Telegram.Bot](https://github.com/TelegramBots/Telegram.Bot) (v22+)
-* **Database & ORM:** Microsoft SQL Server, Dapper (High-performance micro-ORM)
-* **Kesh:** MemoryCache
-* **Ishlash mexanizmi:** 24/7 Long Polling (`BackgroundService`)
-* **Arxitektura:** Clean Architecture / Repository & Service Pattern
+* **Backend:** C# / .NET 10 (ASP.NET Core Web API)
+* **Telegram:** [Telegram.Bot](https://github.com/TelegramBots/Telegram.Bot) (v22+)
+* **Ma'lumotlar bazasi:** Microsoft SQL Server, Dapper ORM
+* **Frontend:** HTML5, CSS3, JavaScript (Telegram WebApp)
+* **Deploy:** Vercel (Frontend) + RunASP.NET (Backend)
 
 ---
 
 ## 📁 Loyiha strukturasi
 
 ```text
-TadierBot.WebApi/
-├── BackgroundServices/        # 24/7 Telegram Long Polling foni xizmati
-├── Common/                    # Global konstantalar, modellar va yordamchilar
-├── Configurations/            # Bot konfiguratsiyasi modellari
-├── Controllers/               # Webhook va Web API controllerlari
-├── Data/                      # Baza ulanish fabrikasi (IDbConnectionFactory)
-├── DTOs/                      # Ma'lumot uzatish obyektlari va holatlar (FSM)
-├── Extensions/                # Dependency Injection va bot kengaytmalari
-├── Helpers/                   # Kartochkalar, matn va sanani formatlovchilar
-├── Keyboards/                 # Reply va Inline klaviatura menyulari
-├── Models/                    # Baza entitiylari (User, Resource, Category, ...)
-├── Repositories/              # Ma'lumotlar bazasi bilan ishlash qatlami (Dapper)
-├── Scripts/                   # SQL migratsiya va ma'lumotlarni to'ldirish skriptlari
-├── Services/                  # Asosiy biznes-mantiq qatlami
-├── appsettings.json           # Konfiguratsiya fayli (shablon)
-└── Program.cs                 # Ilova kirish nuqtasi va servislar registratsiyasi
+TadierBot/
+├── app/                           # Telegram Mini App (Frontend)
+│   ├── index.html                 # Asosiy sahifa va modallar
+│   ├── app.js                     # TMA mantiqi va pleyerlar
+│   ├── style.css                  # Dizayn va stillar
+│   └── vercel.json                # Vercel proksi sozlamalari
+│
+└── TadierBot.WebApi/              # Backend (.NET 10 Web API)
+    ├── Controllers/               # API endpointlar
+    ├── Services/                  # Asosiy biznes-mantiq
+    ├── Repositories/              # Baza bilan ishlash (Dapper)
+    ├── BackgroundServices/        # Telegram Bot xizmati
+    ├── wwwroot/                   # Serverdagi fayllar (/texts, /audio)
+    └── Scripts/                   # SQL skriptlar
 ```
 
 ---
 
-## ⚙️ Loyihani mahalliy muhitda ishga tushirish (Local Setup)
+## ⚙️ Mahalliy muhitda ishga tushirish (Local Setup)
 
-### 1. Talablar
-* [.NET 10 SDK](https://dotnet.microsoft.com/)
-* [SQL Server](https://www.microsoft.com/en-us/sql-server) (yoki LocalDB)
+1. **Repozitoriyni klonlash:**
+   ```bash
+   git clone https://github.com/username/TadierBot.git
+   cd TadierBot
+   ```
 
-### 2. Repozitoriyni klonlash
-```bash
-git clone https://github.com/<username>/TadierBot.git
-cd TadierBot
-```
+2. **Sozlamalar:**  
+   `TadierBot.WebApi/appsettings.json` faylida baza ulanishi (`DefaultConnection`) va `BotToken`ni kiriting.
 
-### 3. Konfiguratsiya
-`TadierBot.WebApi/appsettings.json` faylini ochib, ma'lumotlarni kiriting:
+3. **Baza migratsiyasi:**  
+   `TadierBot.WebApi/Scripts/` papkasidagi SQL skriptlarni bazada bajaring.
 
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Server=localhost;Database=TadierBotDb;Trusted_Connection=True;TrustServerCertificate=True;"
-  },
-  "BotConfiguration": {
-    "BotToken": "SIZNING_TELEGRAM_BOT_TOKENINGIZ"
-  }
-}
-```
-
-### 4. Ma'lumotlar bazasini yaratish
-`TadierBot.WebApi/Scripts/` papkasidagi skriptlarni ketma-ket bazangizda ishga tushiring:
-1. `001_initial_tables.sql` — jadvallarni yaratish.
-2. `004_insert_kitoblar.sql` — kitoblar to'plami.
-3. `005_insert_videolar.sql` — video darsliklar to'plami.
-4. `006_insert_audiolar.sql` — audio mashqlar.
-5. `007_insert_maqolalar.sql` — maqolalar va grammatika qoidalari.
-
-### 5. Dasturni ishga tushirish
-```bash
-dotnet restore
-dotnet build
-dotnet run --project TadierBot.WebApi
-```
+4. **Ishga tushirish:**
+   ```bash
+   dotnet restore
+   dotnet build
+   dotnet run --project TadierBot.WebApi
+   ```
