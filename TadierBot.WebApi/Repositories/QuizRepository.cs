@@ -22,18 +22,9 @@ public class QuizRepository : IQuizRepository
     {
         using var connection = _connectionFactory.CreateConnection();
         const string sql = """
-            IF COL_LENGTH('QuizPassages', 'FileUrl') IS NOT NULL
-            BEGIN
-                INSERT INTO QuizPassages (Type, Title, Content, FileUrl, Level, CreatedAt)
-                OUTPUT INSERTED.Id
-                VALUES (@Type, @Title, @Content, @FileUrl, @Level, SYSUTCDATETIME());
-            END
-            ELSE
-            BEGIN
-                INSERT INTO QuizPassages (Type, Title, Content, AudioUrl, Level, CreatedAt)
-                OUTPUT INSERTED.Id
-                VALUES (@Type, @Title, @Content, @FileUrl, @Level, SYSUTCDATETIME());
-            END
+            INSERT INTO QuizPassages (Type, Title, Content, FileUrl, Level, CreatedAt)
+            OUTPUT INSERTED.Id
+            VALUES (@Type, @Title, @Content, @FileUrl, @Level, SYSUTCDATETIME());
         """;
         return await connection.ExecuteScalarAsync<int>(sql, passage);
     }
@@ -42,10 +33,9 @@ public class QuizRepository : IQuizRepository
     {
         using var connection = _connectionFactory.CreateConnection();
         const string sql = """
-            IF COL_LENGTH('QuizPassages', 'FileUrl') IS NOT NULL
-                SELECT Id, Type, Title, Content, FileUrl, Level, CreatedAt FROM QuizPassages WHERE Id = @Id;
-            ELSE
-                SELECT Id, Type, Title, Content, AudioUrl AS FileUrl, Level, CreatedAt FROM QuizPassages WHERE Id = @Id;
+            SELECT Id, Type, Title, Content, FileUrl, Level, CreatedAt
+            FROM QuizPassages
+            WHERE Id = @Id;
         """;
         return await connection.QuerySingleOrDefaultAsync<QuizPassage>(sql, new { Id = id });
     }
@@ -54,10 +44,10 @@ public class QuizRepository : IQuizRepository
     {
         using var connection = _connectionFactory.CreateConnection();
         const string sql = """
-            IF COL_LENGTH('QuizPassages', 'FileUrl') IS NOT NULL
-                SELECT Id, Type, Title, Content, FileUrl, Level, CreatedAt FROM QuizPassages WHERE (@Type IS NULL OR Type = @Type) ORDER BY Id DESC;
-            ELSE
-                SELECT Id, Type, Title, Content, AudioUrl AS FileUrl, Level, CreatedAt FROM QuizPassages WHERE (@Type IS NULL OR Type = @Type) ORDER BY Id DESC;
+            SELECT Id, Type, Title, Content, FileUrl, Level, CreatedAt
+            FROM QuizPassages
+            WHERE (@Type IS NULL OR Type = @Type)
+            ORDER BY Id DESC;
         """;
         return await connection.QueryAsync<QuizPassage>(sql, new { Type = type });
     }

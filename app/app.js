@@ -934,7 +934,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     lesenListContainer.innerHTML = filtered.map(item => {
-      const fileUrl = item.fileUrl || item.audioUrl;
+      const fileUrl = item.url || item.fileUrl || item.audioUrl;
       const snippet = item.content ? escapeHtml(item.content.substring(0, 110)) + (item.content.length > 110 ? '...' : '') : '';
       return `
         <div class="mini-resource-item" style="display:flex; flex-direction:column; gap:8px; padding:12px 14px; background:var(--card-bg, #1a2234); border-radius:10px; border:1px solid var(--border-color, #2a3447);">
@@ -1621,7 +1621,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (quizReaderTitle) quizReaderTitle.textContent = currentReadingPassage.title || 'Matnni o‘qish';
     if (quizReaderLevel) quizReaderLevel.textContent = `${currentReadingPassage.level || 'A1'} Daraja`;
     
-    const fileUrl = currentReadingPassage.fileUrl || currentReadingPassage.audioUrl;
+    const fileUrl = currentReadingPassage.url || currentReadingPassage.fileUrl || currentReadingPassage.audioUrl;
 
     if (btnQuizReaderDownload) {
       if (fileUrl) {
@@ -1856,7 +1856,7 @@ document.addEventListener('DOMContentLoaded', () => {
       quizAudioBox?.classList.remove('hidden');
       if (quizAudioTitle) quizAudioTitle.textContent = passage.title || 'Audio dialog';
       if (quizHtml5Audio) {
-        quizHtml5Audio.src = getAbsoluteAudioUrl(passage.audioUrl);
+        quizHtml5Audio.src = getAbsoluteAudioUrl(passage.url || passage.audioUrl);
         quizHtml5Audio.load();
       }
       if (quizCurTime) quizCurTime.textContent = '00:00';
@@ -1868,7 +1868,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (quizPassageTitle) quizPassageTitle.textContent = passage?.title || 'Matn';
       if (quizPassageLevel) quizPassageLevel.textContent = passage?.level || 'A1';
       
-      const pFileUrl = passage?.fileUrl || passage?.audioUrl;
+      const pFileUrl = passage?.url || passage?.fileUrl || passage?.audioUrl;
       if (passage?.content && passage.content.trim()) {
         if (quizPassageText) quizPassageText.textContent = passage.content;
       } else if (pFileUrl && (pFileUrl.endsWith('.txt') || pFileUrl.endsWith('.rtf'))) {
@@ -2467,6 +2467,7 @@ document.addEventListener('DOMContentLoaded', () => {
           level: level,
           title: title,
           content: content,
+          url: fileUrl,
           fileUrl: fileUrl,
           audioUrl: fileUrl
         })

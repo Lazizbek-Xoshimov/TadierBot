@@ -84,7 +84,7 @@ public class QuizService : IQuizService
                     Type = passage.Type,
                     Title = passage.Title,
                     Content = passage.Content,
-                    FileUrl = passage.FileUrl,
+                    Url = passage.Url,
                     Level = passage.Level,
                     Questions = takeQuestions.Select(q => new QuizQuestionDto
                     {
@@ -187,7 +187,7 @@ public class QuizService : IQuizService
             Type = request.Type,
             Title = request.Title.Trim(),
             Content = request.Content?.Trim(),
-            FileUrl = request.FileUrl?.Trim(),
+            Url = (request.Url ?? request.FileUrl ?? request.AudioUrl)?.Trim(),
             Level = request.Level.Trim().ToUpper(),
             CreatedAt = DateTime.UtcNow
         };

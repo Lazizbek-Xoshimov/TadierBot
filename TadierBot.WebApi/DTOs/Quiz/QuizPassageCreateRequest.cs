@@ -9,6 +9,9 @@ public class QuizPassageCreateRequest
     public string Title { get; set; } = string.Empty;
     public string? Content { get; set; }
     public string? FileUrl { get; set; }
-    public string? AudioUrl { get => FileUrl; set => FileUrl = value; }
     public string Level { get; set; } = "A1";
+
+    // Moslik uchun
+    public string? Url { get => FileUrl; set => FileUrl = value; }
+    public string? AudioUrl { get => FileUrl; set => FileUrl = value; }
 }
