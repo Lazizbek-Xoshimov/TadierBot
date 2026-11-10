@@ -888,6 +888,40 @@
       </div>
     </div>
 
+    <!-- 🎧 Hören (Audio) Kutubxonasi Modali -->
+    <div id="horen-modal" class="trainer-modal hidden" style="z-index: 2400;">
+      <div class="trainer-backdrop" id="horen-backdrop"></div>
+      <div class="trainer-sheet" style="max-height: 85vh; display: flex; flex-direction: column;">
+        <div class="trainer-header">
+          <div class="trainer-title-wrap">
+            <span class="trainer-icon">🎧</span>
+            <div>
+              <h3>Hören (Audio)</h3>
+              <p class="trainer-sub">Darajalar bo'yicha nemischa audio dialoglar</p>
+            </div>
+          </div>
+          <button class="modal-close-btn" id="btn-close-horen-modal" title="Yopish">✕</button>
+        </div>
+
+        <!-- Filter va Qidiruv qatori -->
+        <div style="padding: 10px 16px; border-bottom: 1px solid var(--border-color, #2a3447); background: var(--card-bg, #1e2638);">
+          <div class="admin-tabs" style="margin-bottom: 8px;">
+            <button class="lesen-tab-btn active btn-horen-filter" data-level="ALL">Barchasi</button>
+            <button class="lesen-tab-btn btn-horen-filter" data-level="A1">A1</button>
+            <button class="lesen-tab-btn btn-horen-filter" data-level="A2">A2</button>
+            <button class="lesen-tab-btn btn-horen-filter" data-level="B1">B1</button>
+            <button class="lesen-tab-btn btn-horen-filter" data-level="B2">B2</button>
+          </div>
+          <input type="text" id="inp-search-horen" class="form-control" placeholder="🔍 Audio mavzusi bo'yicha qidiruv...">
+        </div>
+
+        <!-- Audiolar ro'yxati -->
+        <div id="horen-list-container" style="flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px;">
+          <div style="text-align: center; color: var(--hint-color); padding: 20px;">Yuklanmoqda...</div>
+        </div>
+      </div>
+    </div>
+
     <!-- Reading: To'liq matn / hujjatni o'qish Modali -->
     <div id="quiz-reader-modal" class="trainer-modal hidden" style="z-index: 2500;">
       <div class="trainer-backdrop" id="quiz-reader-backdrop"></div>

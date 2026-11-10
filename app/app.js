@@ -1013,10 +1013,229 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  document.getElementById('card-open-audio')?.addEventListener('click', () => {
+  // ==========================================
+  // Hören (Audio) kutubxonasi modali
+  // ==========================================
+  const horenLibraryModal = document.getElementById('horen-modal');
+  const btnCloseHorenModal = document.getElementById('btn-close-horen-modal');
+  const horenLibraryBackdrop = document.getElementById('horen-backdrop');
+  const btnHorenFilters = document.querySelectorAll('.btn-horen-filter');
+  const inpSearchHoren = document.getElementById('inp-search-horen');
+  const horenListContainer = document.getElementById('horen-list-container');
+
+  let allHorenPassages = [];
+  let currentHorenLevel = 'ALL';
+  let activeHorenAudio = null;
+  let activeHorenPlayBtn = null;
+  let activeHorenFill = null;
+  let activeHorenCurTime = null;
+
+  function stopHorenAudio() {
+    if (activeHorenAudio) {
+      activeHorenAudio.pause();
+      activeHorenAudio.currentTime = 0;
+      activeHorenAudio = null;
+    }
+    if (activeHorenPlayBtn) {
+      activeHorenPlayBtn.innerHTML = '▶️';
+      activeHorenPlayBtn = null;
+    }
+    if (activeHorenFill) {
+      activeHorenFill.style.width = '0%';
+      activeHorenFill = null;
+    }
+    if (activeHorenCurTime) {
+      activeHorenCurTime.textContent = '00:00';
+      activeHorenCurTime = null;
+    }
+  }
+
+  function openHorenModal() {
     triggerHaptic('medium');
-    notify('🎧 Hören (Audio): Nemischa audiolarni matn bilan birga tinglash bo‘limi!');
+    horenLibraryModal?.classList.remove('hidden');
+    loadHorenList();
+  }
+
+  function closeHorenModal() {
+    triggerHaptic('light');
+    stopHorenAudio();
+    horenLibraryModal?.classList.add('hidden');
+  }
+
+  document.getElementById('card-open-audio')?.addEventListener('click', openHorenModal);
+  btnCloseHorenModal?.addEventListener('click', closeHorenModal);
+  horenLibraryBackdrop?.addEventListener('click', closeHorenModal);
+
+  btnHorenFilters.forEach(btn => {
+    btn.addEventListener('click', () => {
+      triggerHaptic('light');
+      btnHorenFilters.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentHorenLevel = btn.getAttribute('data-level') || 'ALL';
+      renderHorenList();
+    });
   });
+
+  inpSearchHoren?.addEventListener('input', () => {
+    renderHorenList();
+  });
+
+  async function loadHorenList() {
+    if (!horenListContainer) return;
+    horenListContainer.innerHTML = '<div style="text-align: center; color: var(--hint-color); padding: 25px;">⏳ Audiolar yuklanmoqda...</div>';
+
+    try {
+      const res = await fetch('/api/quiz/passages?type=Listening');
+      if (res.ok) {
+        allHorenPassages = await res.json();
+        renderHorenList();
+      } else {
+        horenListContainer.innerHTML = '<div style="text-align: center; color: var(--hint-color); padding: 25px;">Audiolarni yuklab bo‘lmadi.</div>';
+      }
+    } catch (err) {
+      console.error('Hören yuklashda xatolik:', err);
+      horenListContainer.innerHTML = '<div style="text-align: center; color: var(--hint-color); padding: 25px;">Server bilan bog‘lanishda xatolik yuz berdi.</div>';
+    }
+  }
+
+  function renderHorenList() {
+    if (!horenListContainer) return;
+    stopHorenAudio();
+    const query = (inpSearchHoren?.value || '').trim().toLowerCase();
+
+    const filtered = allHorenPassages.filter(item => {
+      const matchLevel = currentHorenLevel === 'ALL' || (item.level && item.level.toUpperCase() === currentHorenLevel.toUpperCase());
+      const matchQuery = !query || (item.title && item.title.toLowerCase().includes(query));
+      return matchLevel && matchQuery;
+    });
+
+    if (filtered.length === 0) {
+      horenListContainer.innerHTML = '<div style="text-align: center; color: var(--hint-color); padding: 30px 10px;">🔍 Audiolar topilmadi</div>';
+      return;
+    }
+
+    horenListContainer.innerHTML = filtered.map((item, idx) => {
+      const audioUrl = getAbsoluteAudioUrl(item.fileUrl || item.url || item.audioUrl);
+      return `
+        <div class="horen-item-card" data-idx="${idx}">
+          <div class="horen-item-header">
+            <div style="display:flex; gap:10px; align-items:center;">
+              <span style="font-size:24px;">🎧</span>
+              <div>
+                <div style="font-weight:600; font-size:14px; color:var(--text-color, #fff); line-height:1.3;">${escapeHtml(item.title)}</div>
+                <span class="badge-mini" style="font-size:10px; margin-top:3px; display:inline-block;">${escapeHtml(item.level)} Daraja</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="horen-item-player">
+            <button type="button" class="horen-play-btn" data-url="${audioUrl}" title="Ijro etish">▶️</button>
+            <div class="horen-progress-wrap">
+              <div class="horen-time-row">
+                <span class="horen-cur-time">00:00</span>
+                <span class="horen-total-time">--:--</span>
+              </div>
+              <div class="horen-track">
+                <div class="horen-fill"></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:8px; margin-top:2px;">
+            <button type="button" class="res-btn btn-send-bot-item" data-id="${item.id}" style="flex:1; text-align:center; padding:8px 12px; font-size:12px; background:var(--accent-color, #3b82f6); color:#fff; border:none; border-radius:6px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">
+              📥 Botga yuklab olish
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Har bir card dagi audioni boshqarish
+    horenListContainer.querySelectorAll('.horen-item-card').forEach(card => {
+      const playBtn = card.querySelector('.horen-play-btn');
+      const curTimeEl = card.querySelector('.horen-cur-time');
+      const totalTimeEl = card.querySelector('.horen-total-time');
+      const trackEl = card.querySelector('.horen-track');
+      const fillEl = card.querySelector('.horen-fill');
+      const rawUrl = playBtn?.getAttribute('data-url');
+
+      if (!playBtn || !rawUrl) return;
+
+      // Oldindan davomiylikni olish
+      const tempAudio = new Audio(rawUrl);
+      tempAudio.addEventListener('loadedmetadata', () => {
+        if (totalTimeEl && !isNaN(tempAudio.duration)) {
+          totalTimeEl.textContent = formatQuizTime(tempAudio.duration);
+        }
+      });
+
+      playBtn.addEventListener('click', () => {
+        triggerHaptic('light');
+
+        if (activeHorenAudio && activeHorenPlayBtn === playBtn) {
+          if (!activeHorenAudio.paused) {
+            activeHorenAudio.pause();
+            playBtn.innerHTML = '▶️';
+          } else {
+            activeHorenAudio.play();
+            playBtn.innerHTML = '⏸️';
+          }
+          return;
+        }
+
+        stopHorenAudio();
+
+        const audio = new Audio(rawUrl);
+        activeHorenAudio = audio;
+        activeHorenPlayBtn = playBtn;
+        activeHorenFill = fillEl;
+        activeHorenCurTime = curTimeEl;
+
+        playBtn.innerHTML = '⏸️';
+
+        audio.addEventListener('timeupdate', () => {
+          if (!isNaN(audio.duration) && audio.duration > 0) {
+            const pct = (audio.currentTime / audio.duration) * 100;
+            if (fillEl) fillEl.style.width = `${pct}%`;
+            if (curTimeEl) curTimeEl.textContent = formatQuizTime(audio.currentTime);
+          }
+        });
+
+        audio.addEventListener('loadedmetadata', () => {
+          if (totalTimeEl && !isNaN(audio.duration)) {
+            totalTimeEl.textContent = formatQuizTime(audio.duration);
+          }
+        });
+
+        audio.addEventListener('ended', () => {
+          stopHorenAudio();
+        });
+
+        audio.play().catch(err => {
+          console.warn('Audio ijro etilmadi:', err);
+          stopHorenAudio();
+        });
+      });
+
+      trackEl?.addEventListener('click', (e) => {
+        if (activeHorenAudio && activeHorenPlayBtn === playBtn && activeHorenAudio.duration) {
+          const rect = trackEl.getBoundingClientRect();
+          const clickX = e.clientX - rect.left;
+          const ratio = Math.max(0, Math.min(1, clickX / rect.width));
+          activeHorenAudio.currentTime = ratio * activeHorenAudio.duration;
+          if (fillEl) fillEl.style.width = `${ratio * 100}%`;
+        }
+      });
+    });
+
+    // Yuklab olish tugmalari
+    horenListContainer.querySelectorAll('.btn-send-bot-item').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = parseInt(btn.getAttribute('data-id'), 10);
+        sendPassageToBot(id, btn);
+      });
+    });
+  }
 
   // Admin sub-navigatsiyasi (So'zlar, Testlar, Tadbirlar)
   const adminTabBtns = document.querySelectorAll('.admin-subnav .admin-tab-btn');
@@ -2021,7 +2240,7 @@ document.addEventListener('DOMContentLoaded', () => {
       quizAudioBox?.classList.remove('hidden');
       if (quizAudioTitle) quizAudioTitle.textContent = passage.title || 'Audio dialog';
       if (quizHtml5Audio) {
-        quizHtml5Audio.src = getAbsoluteAudioUrl(passage.url || passage.audioUrl);
+        quizHtml5Audio.src = getAbsoluteAudioUrl(passage.fileUrl || passage.url || passage.audioUrl);
         quizHtml5Audio.load();
       }
       if (quizCurTime) quizCurTime.textContent = '00:00';

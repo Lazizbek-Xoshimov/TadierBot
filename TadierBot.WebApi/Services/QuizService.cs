@@ -368,11 +368,13 @@ public class QuizService : IQuizService
 
                 if (isAudio || ext.Equals(".mp3", StringComparison.OrdinalIgnoreCase) || ext.Equals(".m4a", StringComparison.OrdinalIgnoreCase) || ext.Equals(".wav", StringComparison.OrdinalIgnoreCase))
                 {
-                    var audioCaption = $"🎧 <b>{passage.Title}</b> ({passage.Level} Daraja)\n\n<i>Nemis tili audio dialogi</i>";
+                    var audioCaption = $"🎧 <b>{passage.Title}</b> ({passage.Level} Daraja)\n\n<i>Nemis tili audio dialogi (Hören)</i>";
                     await _botClient.SendAudio(
                         chatId: telegramId,
                         audio: inputFile,
                         caption: audioCaption,
+                        title: passage.Title,
+                        performer: "Tadier | Nemis tili",
                         parseMode: ParseMode.Html);
                 }
                 else
