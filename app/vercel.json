@@ -7,6 +7,10 @@
     {
       "source": "/audio/:path*",
       "destination": "http://tadierbot.runasp.net/audio/:path*"
+    },
+    {
+      "source": "/texts/:path*",
+      "destination": "http://tadierbot.runasp.net/texts/:path*"
     }
   ]
 }

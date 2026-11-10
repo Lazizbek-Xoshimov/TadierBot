@@ -1601,76 +1601,184 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Format seconds to mm:ss
   
-  // Reading: To'liq matnni o'qish modali
+  // Reading: To'liq fayl / matnni o'qish modali
   const btnQuizReadFull = document.getElementById('btn-quiz-read-full');
   const quizReaderModal = document.getElementById('quiz-reader-modal');
   const quizReaderTitle = document.getElementById('quiz-reader-title');
   const quizReaderLevel = document.getElementById('quiz-reader-level');
+  const quizReaderLoading = document.getElementById('quiz-reader-loading');
+  const quizReaderLoadingText = document.getElementById('quiz-reader-loading-text');
   const quizReaderFullText = document.getElementById('quiz-reader-full-text');
+  const quizReaderIframeWrap = document.getElementById('quiz-reader-iframe-wrap');
+  const quizReaderIframe = document.getElementById('quiz-reader-iframe');
+  const quizReaderFallback = document.getElementById('quiz-reader-fallback');
   const btnCloseQuizReader = document.getElementById('btn-close-quiz-reader');
   const btnQuizReaderClose = document.getElementById('btn-quiz-reader-close');
   const quizReaderBackdrop = document.getElementById('quiz-reader-backdrop');
   const btnQuizReaderDownload = document.getElementById('btn-quiz-reader-download');
+  const btnQuizReaderExternal = document.getElementById('btn-quiz-reader-external');
 
   let currentReadingPassage = null;
+
+  function getAbsoluteFileUrl(url) {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    return url.startsWith('/') ? `${window.location.origin}${url}` : `${window.location.origin}/${url}`;
+  }
 
   function openQuizReaderModal(passage = null) {
     if (passage) currentReadingPassage = passage;
     if (!currentReadingPassage) return;
     triggerHaptic('light');
-    if (quizReaderTitle) quizReaderTitle.textContent = currentReadingPassage.title || 'Matnni o‘qish';
-    if (quizReaderLevel) quizReaderLevel.textContent = `${currentReadingPassage.level || 'A1'} Daraja`;
-    
-    const fileUrl = currentReadingPassage.url || currentReadingPassage.fileUrl || currentReadingPassage.audioUrl;
 
+    const title = currentReadingPassage.title || 'Hujjatni o‘qish';
+    const level = currentReadingPassage.level || 'A1';
+    const rawFileUrl = currentReadingPassage.url || currentReadingPassage.fileUrl || currentReadingPassage.audioUrl || '';
+    const fullUrl = getAbsoluteFileUrl(rawFileUrl);
+    const content = currentReadingPassage.content ? currentReadingPassage.content.trim() : '';
+
+    if (quizReaderTitle) quizReaderTitle.textContent = title;
+    if (quizReaderLevel) quizReaderLevel.textContent = `${level} Daraja`;
+
+    // Ko'rinishlarni tozalash
+    quizReaderLoading?.classList.add('hidden');
+    quizReaderFullText?.classList.add('hidden');
+    quizReaderIframeWrap?.classList.add('hidden');
+    quizReaderFallback?.classList.add('hidden');
+    if (quizReaderIframe) quizReaderIframe.src = 'about:blank';
+
+    // 1. Yuklab olish tugmasi
     if (btnQuizReaderDownload) {
-      if (fileUrl) {
-        btnQuizReaderDownload.href = fileUrl;
-        btnQuizReaderDownload.setAttribute('download', currentReadingPassage.title || 'matn.txt');
+      if (fullUrl) {
+        btnQuizReaderDownload.href = fullUrl;
+        const ext = rawFileUrl.split('?')[0].split('.').pop() || 'file';
+        btnQuizReaderDownload.setAttribute('download', `${title.replace(/[^a-zA-Z0-9_\-]/g, '_')}.${ext}`);
         btnQuizReaderDownload.classList.remove('hidden');
       } else {
         btnQuizReaderDownload.classList.add('hidden');
       }
     }
 
-    if (currentReadingPassage.content && currentReadingPassage.content.trim()) {
-      if (quizReaderFullText) quizReaderFullText.textContent = currentReadingPassage.content;
-    } else if (fileUrl) {
-      if (fileUrl.endsWith('.txt') || fileUrl.endsWith('.rtf')) {
-        if (quizReaderFullText) quizReaderFullText.textContent = '⏳ Fayl matni yuklanmoqda...';
-        fetch(fileUrl)
-          .then(res => res.text())
+    // 2. Katta ekranda ochish tugmasi
+    if (btnQuizReaderExternal) {
+      if (fullUrl) {
+        btnQuizReaderExternal.classList.remove('hidden');
+        btnQuizReaderExternal.onclick = () => {
+          if (tg?.openLink) {
+            tg.openLink(fullUrl);
+          } else {
+            window.open(fullUrl, '_blank');
+          }
+        };
+      } else {
+        btnQuizReaderExternal.classList.add('hidden');
+      }
+    }
+
+    // 3. Matn yoki Faylni ochish
+    if (content) {
+      if (quizReaderFullText) {
+        quizReaderFullText.textContent = content;
+        quizReaderFullText.classList.remove('hidden');
+      }
+    } else if (fullUrl) {
+      const cleanUrl = rawFileUrl.split('?')[0].toLowerCase();
+      const isTxt = cleanUrl.endsWith('.txt') || cleanUrl.endsWith('.rtf');
+      const isPdf = cleanUrl.endsWith('.pdf');
+      const isOffice = cleanUrl.endsWith('.docx') || cleanUrl.endsWith('.doc') || cleanUrl.endsWith('.pptx') || cleanUrl.endsWith('.xlsx');
+
+      if (isTxt) {
+        if (quizReaderLoading) {
+          if (quizReaderLoadingText) quizReaderLoadingText.textContent = 'Matn yuklanmoqda...';
+          quizReaderLoading.classList.remove('hidden');
+        }
+        fetch(fullUrl)
+          .then(res => {
+            if (!res.ok) throw new Error('Yuklab bo‘lmadi');
+            return res.text();
+          })
           .then(txt => {
+            quizReaderLoading?.classList.add('hidden');
             currentReadingPassage.content = txt;
-            if (quizReaderFullText) quizReaderFullText.textContent = txt;
+            if (quizReaderFullText) {
+              quizReaderFullText.textContent = txt;
+              quizReaderFullText.classList.remove('hidden');
+            }
             if (quizPassageText) quizPassageText.textContent = txt;
           })
           .catch(() => {
-            if (quizReaderFullText) quizReaderFullText.textContent = 'Faylni o‘qib bo‘lmadi.';
-          });
-      } else {
-        if (quizReaderFullText) {
-          quizReaderFullText.innerHTML = `
-            <div style="text-align: center; padding: 25px 10px;">
-              <div style="font-size: 42px; margin-bottom: 12px;">📑</div>
-              <p style="margin-bottom: 16px; font-weight: 600; color: var(--text-color, #fff);">Ushbu faylni to'liq o'qish uchun pastdagi tugma orqali brauzerda oching yoki yuklab oling:</p>
-              <button type="button" class="submit-btn btn-blue" id="btn-open-file-browser" style="max-width: 220px; margin: 0 auto;">
-                🔗 Brauzerda ochish
-              </button>
-            </div>
-          `;
-          document.getElementById('btn-open-file-browser')?.addEventListener('click', () => {
-            const fullUrl = fileUrl.startsWith('http') ? fileUrl : window.location.origin + fileUrl;
-            if (tg?.openLink) {
-              tg.openLink(fullUrl);
-            } else {
-              window.open(fullUrl, '_blank');
+            quizReaderLoading?.classList.add('hidden');
+            if (quizReaderFallback) {
+              quizReaderFallback.innerHTML = `
+                <div style="text-align: center; padding: 20px 10px;">
+                  <div style="font-size: 38px; margin-bottom: 8px;">⚠️</div>
+                  <p style="font-size: 14px; color: var(--text-color, #fff); margin-bottom: 8px;">Matn faylini to‘g‘ridan-to‘g‘ri o‘qib bo‘lmadi.</p>
+                  <p style="font-size: 12px; color: var(--muted-color, #94a3b8);">Pastdagi "📥 Yuklab olish" tugmasi orqali ochishingiz mumkin.</p>
+                </div>
+              `;
+              quizReaderFallback.classList.remove('hidden');
             }
           });
+      } else if (isPdf) {
+        if (quizReaderLoading) {
+          if (quizReaderLoadingText) quizReaderLoadingText.textContent = 'PDF hujjat yuklanmoqda...';
+          quizReaderLoading.classList.remove('hidden');
+        }
+        if (quizReaderIframeWrap && quizReaderIframe) {
+          quizReaderIframeWrap.classList.remove('hidden');
+          quizReaderIframe.src = fullUrl;
+
+          let loaded = false;
+          quizReaderIframe.onload = () => {
+            loaded = true;
+            quizReaderLoading?.classList.add('hidden');
+          };
+          setTimeout(() => {
+            if (!loaded) quizReaderLoading?.classList.add('hidden');
+          }, 2000);
+        }
+      } else if (isOffice) {
+        if (quizReaderLoading) {
+          if (quizReaderLoadingText) quizReaderLoadingText.textContent = 'Hujjat ko‘rish uchun ochilmoqda...';
+          quizReaderLoading.classList.remove('hidden');
+        }
+        if (quizReaderIframeWrap && quizReaderIframe) {
+          quizReaderIframeWrap.classList.remove('hidden');
+          quizReaderIframe.src = `https://docs.google.com/viewer?url=${encodeURIComponent(fullUrl)}&embedded=true`;
+
+          let loaded = false;
+          quizReaderIframe.onload = () => {
+            loaded = true;
+            quizReaderLoading?.classList.add('hidden');
+          };
+          setTimeout(() => {
+            if (!loaded) quizReaderLoading?.classList.add('hidden');
+          }, 2500);
+        }
+      } else {
+        if (quizReaderFallback) {
+          quizReaderFallback.innerHTML = `
+            <div style="text-align: center; padding: 25px 10px;">
+              <div style="font-size: 42px; margin-bottom: 12px;">📑</div>
+              <h4 style="font-size: 15px; margin-bottom: 8px; color: var(--text-color, #fff);">${title}</h4>
+              <p style="font-size: 13px; color: var(--muted-color, #94a3b8); margin-bottom: 16px;">
+                Ushbu fayl formatini ko'rish uchun pastdagi tugmalar orqali yuklab oling yoki katta ekranda oching.
+              </p>
+            </div>
+          `;
+          quizReaderFallback.classList.remove('hidden');
         }
       }
     } else {
-      if (quizReaderFullText) quizReaderFullText.textContent = 'Matn mavjud emas';
+      if (quizReaderFallback) {
+        quizReaderFallback.innerHTML = `
+          <div style="text-align: center; padding: 25px 10px;">
+            <div style="font-size: 38px; margin-bottom: 8px;">ℹ️</div>
+            <p style="font-size: 14px; color: var(--text-color, #fff);">Ushbu savol uchun matn yoki fayl topilmadi.</p>
+          </div>
+        `;
+        quizReaderFallback.classList.remove('hidden');
+      }
     }
 
     quizReaderModal?.classList.remove('hidden');
@@ -1678,10 +1786,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function closeQuizReaderModal() {
     triggerHaptic('light');
+    if (quizReaderIframe) {
+      quizReaderIframe.src = 'about:blank';
+    }
     quizReaderModal?.classList.add('hidden');
   }
 
-  btnQuizReadFull?.addEventListener('click', openQuizReaderModal);
+  btnQuizReadFull?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openQuizReaderModal();
+  });
+  quizPassageBox?.addEventListener('click', (e) => {
+    if (!e.target.closest('#btn-quiz-read-full')) {
+      openQuizReaderModal();
+    }
+  });
   btnCloseQuizReader?.addEventListener('click', closeQuizReaderModal);
   btnQuizReaderClose?.addEventListener('click', closeQuizReaderModal);
   quizReaderBackdrop?.addEventListener('click', closeQuizReaderModal);

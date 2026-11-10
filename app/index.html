@@ -888,30 +888,48 @@
       </div>
     </div>
 
-    <!-- Reading: To'liq matnni o'qish Modali -->
+    <!-- Reading: To'liq matn / hujjatni o'qish Modali -->
     <div id="quiz-reader-modal" class="trainer-modal hidden" style="z-index: 2500;">
       <div class="trainer-backdrop" id="quiz-reader-backdrop"></div>
       <div class="trainer-sheet quiz-reader-sheet">
         <div class="trainer-header">
           <div class="trainer-title-wrap">
-            <span class="trainer-icon">📖</span>
+            <span class="trainer-icon" id="quiz-reader-icon">📄</span>
             <div>
-              <h3 id="quiz-reader-title">Matnni o'qish</h3>
+              <h3 id="quiz-reader-title">Faylni o'qish</h3>
               <p class="trainer-sub" id="quiz-reader-level">A1 Daraja</p>
             </div>
           </div>
           <button class="modal-close-btn" id="btn-close-quiz-reader" title="Yopish">✕</button>
         </div>
 
-        <div class="quiz-reader-body">
-          <div class="quiz-reader-text" id="quiz-reader-full-text" style="white-space: pre-wrap;"></div>
+        <div class="quiz-reader-body" id="quiz-reader-body">
+          <!-- Loading holati -->
+          <div id="quiz-reader-loading" class="quiz-reader-loading hidden">
+            <div class="quiz-reader-spinner">⏳</div>
+            <span id="quiz-reader-loading-text">Hujjat yuklanmoqda...</span>
+          </div>
+
+          <!-- Matn o'quvchi (TXT va matnlar uchun) -->
+          <div class="quiz-reader-text hidden" id="quiz-reader-full-text"></div>
+
+          <!-- Iframe o'quvchi (PDF va boshqa hujjatlar uchun) -->
+          <div class="quiz-reader-iframe-wrap hidden" id="quiz-reader-iframe-wrap">
+            <iframe id="quiz-reader-iframe" src="" frameborder="0" allowfullscreen></iframe>
+          </div>
+
+          <!-- Zaxira ko'rinish -->
+          <div class="quiz-reader-fallback hidden" id="quiz-reader-fallback"></div>
         </div>
 
-        <div class="quiz-reader-footer" style="display: flex; gap: 8px;">
-          <a id="btn-quiz-reader-download" href="#" download="" class="submit-btn btn-purple hidden" style="flex: 1; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center;">
+        <div class="quiz-reader-footer" id="quiz-reader-footer">
+          <a id="btn-quiz-reader-download" href="#" download="" class="submit-btn btn-purple" style="flex: 1; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 12px; padding: 10px 6px;">
             📥 Yuklab olish
           </a>
-          <button type="button" class="submit-btn btn-blue" id="btn-quiz-reader-close" style="flex: 1;">
+          <button type="button" class="submit-btn btn-blue" id="btn-quiz-reader-external" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 12px; padding: 10px 6px;">
+            🔗 Katta ekranda
+          </button>
+          <button type="button" class="submit-btn btn-emerald" id="btn-quiz-reader-close" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 12px; padding: 10px 6px;">
             ✅ Yopish
           </button>
         </div>
