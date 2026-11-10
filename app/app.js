@@ -2489,14 +2489,6 @@ document.addEventListener('DOMContentLoaded', () => {
       btnSavePassage.innerHTML = origBtnText;
     }
   });
-    } catch (err) {
-      console.error('Passage saqlashda xatolik:', err);
-      notify('❌ Server bilan bog‘lanishda xatolik yuz berdi.');
-    } finally {
-      btnSavePassage.disabled = false;
-      btnSavePassage.innerHTML = origBtnText;
-    }
-  });
 
   // Admin savolni saqlash (Yangi qo'shish yoki Mavjudini yangilash)
   btnSaveTest?.addEventListener('click', async () => {
