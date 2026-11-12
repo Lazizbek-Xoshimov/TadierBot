@@ -2169,13 +2169,29 @@ document.addEventListener('DOMContentLoaded', () => {
       const res = await fetch('/api/quiz/placement');
       if (res.ok) {
         const testData = await res.json();
-        const passages = [...(testData.readingPassages || []), ...(testData.listeningPassages || [])];
-        const questions = [];
-        passages.forEach(p => {
+        const readingPassages = testData.readingPassages || [];
+        const listeningPassages = testData.listeningPassages || [];
+        const passages = [...readingPassages, ...listeningPassages];
+
+        // 1-bo'lim: Lesen savollari (turli darajalar o'zaro tasodifiy aralashadi)
+        const readingQuestions = [];
+        readingPassages.forEach(p => {
           (p.questions || []).forEach(q => {
-            questions.push({ ...q, passageId: p.id });
+            readingQuestions.push({ ...q, passageId: p.id });
           });
         });
+        readingQuestions.sort(() => Math.random() - 0.5);
+
+        // 2-bo'lim: Hören savollari (turli darajalar o'zaro tasodifiy aralashadi)
+        const listeningQuestions = [];
+        listeningPassages.forEach(p => {
+          (p.questions || []).forEach(q => {
+            listeningQuestions.push({ ...q, passageId: p.id });
+          });
+        });
+        listeningQuestions.sort(() => Math.random() - 0.5);
+
+        const questions = [...readingQuestions, ...listeningQuestions];
 
         if (questions.length === 0) {
           if (quizLoadingMsg) quizLoadingMsg.textContent = '⚠️ Hozircha test savollari shakllantirilmagan.';

@@ -33,3 +33,7 @@ publish_out/
 # Local documentation and configs
 MINI_APP_ROADMAP.md
 /vercel.json
+
+# Static uploads and test materials
+**/wwwroot/
+test_materials/

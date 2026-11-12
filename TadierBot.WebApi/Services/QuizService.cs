@@ -59,6 +59,7 @@ public class QuizService : IQuizService
 
         var passageIds = passages.Select(p => p.Id);
         var allQuestions = (await _quizRepository.GetQuestionsByPassageIdsAsync(passageIds)).ToList();
+        if (allQuestions.Count == 0) return new List<QuizPassageDto>();
 
         // Savollarni tegishli passage'lar bo'yicha guruhlash va har safar tasodifiy (random) aralashtirish
         var questionsByPassage = allQuestions
@@ -71,28 +72,54 @@ public class QuizService : IQuizService
             .OrderBy(_ => Guid.NewGuid())
             .ToList();
 
-        var selectedDtos = new List<QuizPassageDto>();
+        if (validPassages.Count == 0) return new List<QuizPassageDto>();
+
+        // Har bir passage uchun tanlangan savollar ro'yxati
+        var selectedQuestionsByPassage = validPassages.ToDictionary(p => p.Id, _ => new List<QuizQuestion>());
         int collectedQuestions = 0;
+
+        // Barcha matnlardan navbatma-navbat (aylanma / random tartibda) savollarni yig'amiz
+        while (collectedQuestions < targetCount)
+        {
+            bool anyAddedInThisRound = false;
+
+            foreach (var passage in validPassages.OrderBy(_ => Guid.NewGuid()))
+            {
+                if (collectedQuestions >= targetCount) break;
+
+                var availQuestions = questionsByPassage[passage.Id];
+                if (availQuestions.Count > 0)
+                {
+                    var q = availQuestions[0];
+                    availQuestions.RemoveAt(0);
+
+                    selectedQuestionsByPassage[passage.Id].Add(q);
+                    collectedQuestions++;
+                    anyAddedInThisRound = true;
+                }
+            }
+
+            if (!anyAddedInThisRound) break;
+        }
+
+        var selectedDtos = new List<QuizPassageDto>();
 
         foreach (var passage in validPassages)
         {
-            if (collectedQuestions >= targetCount) break;
-
-            var passageQuestions = questionsByPassage[passage.Id];
-            int needed = targetCount - collectedQuestions;
-            var takeQuestions = passageQuestions.Take(needed).ToList();
-
-            if (takeQuestions.Count > 0)
+            var pQuestions = selectedQuestionsByPassage[passage.Id];
+            if (pQuestions.Count > 0)
             {
-                var passageDto = new QuizPassageDto
+                selectedDtos.Add(new QuizPassageDto
                 {
                     Id = passage.Id,
                     Type = passage.Type,
                     Title = passage.Title,
                     Content = passage.Content,
-                    Url = passage.Url,
+                    Url = passage.Url ?? passage.FileUrl,
+                    FileUrl = passage.FileUrl ?? passage.Url,
+                    AudioUrl = passage.AudioUrl ?? passage.FileUrl,
                     Level = passage.Level,
-                    Questions = takeQuestions.Select(q => new QuizQuestionDto
+                    Questions = pQuestions.Select(q => new QuizQuestionDto
                     {
                         Id = q.Id,
                         PassageId = q.PassageId,
@@ -103,10 +130,7 @@ public class QuizService : IQuizService
                         OptionD = q.OptionD,
                         OrderIndex = q.OrderIndex
                     }).ToList()
-                };
-
-                selectedDtos.Add(passageDto);
-                collectedQuestions += takeQuestions.Count;
+                });
             }
         }
 
